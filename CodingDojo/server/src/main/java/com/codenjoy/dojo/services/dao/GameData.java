@@ -25,6 +25,7 @@ package com.codenjoy.dojo.services.dao;
 
 import com.codenjoy.dojo.services.jdbc.ConnectionThreadPoolFactory;
 import com.codenjoy.dojo.services.jdbc.CrudConnectionThreadPool;
+import com.codenjoy.dojo.services.jdbc.MySqlConnectionThreadPoolFactory;
 import com.codenjoy.dojo.services.jdbc.ObjectMapper;
 import org.springframework.stereotype.Component;
 
@@ -36,22 +37,35 @@ public class GameData {
 
     private CrudConnectionThreadPool pool;
 
+    private String valueType;
+    private String[] columnNames;
+
+
     public GameData(ConnectionThreadPoolFactory factory) {
+
+        if(factory instanceof MySqlConnectionThreadPoolFactory) {
+            valueType = "LONGTEXT";
+            columnNames = new String[]{"`key`","`value`"};
+        } else {
+            valueType = "LONGTEXT";
+            columnNames = new String[]{"key","value"};
+        }
+
         pool = factory.create(
                 "CREATE TABLE IF NOT EXISTS game_settings (" +
                         "game_type varchar(255), " +
-                        "key varchar(255), " +
-                        "value varchar(10000));");
+                        columnNames[0]+" varchar(255), " +
+                        columnNames[1]+" "+valueType+");");
     }
 
     public String get(final String gameType, final String key) {
-        return pool.select("SELECT value FROM game_settings WHERE game_type = ? AND key = ?;",
+        return pool.select("SELECT "+columnNames[1]+" FROM game_settings WHERE game_type = ? AND "+columnNames[0]+" = ?;",
                 new Object[]{gameType, key},
                 new ObjectMapper<String>() {
                     @Override
                     public String mapFor(ResultSet resultSet) throws SQLException {
                         if (resultSet.next()) {
-                            return resultSet.getString("value");
+                            return resultSet.getString(columnNames[1]);
                         } else {
                             return null;
                         }
@@ -61,7 +75,7 @@ public class GameData {
     }
 
     public boolean exists(final String gameType, final String key) {
-        return pool.select("SELECT count(*) AS count FROM game_settings WHERE game_type = ? AND key = ?;",
+        return pool.select("SELECT count(*) AS count FROM game_settings WHERE game_type = ? AND "+columnNames[0]+" = ?;",
                 new Object[]{gameType, key},
                 new ObjectMapper<Boolean>() {
                     @Override
@@ -78,10 +92,10 @@ public class GameData {
 
     public void set(final String gameType, final String key, final String value) {
         if (exists(gameType, key)) {
-            pool.update("UPDATE game_settings SET value = ? WHERE game_type = ? AND key = ?;",
+            pool.update("UPDATE game_settings SET "+columnNames[1]+" = ? WHERE game_type = ? AND "+columnNames[0]+" = ?;",
                     new Object[]{value, gameType, key});
         } else {
-            pool.update("INSERT INTO game_settings (game_type, key, value) VALUES (?,?,?);",
+            pool.update("INSERT INTO game_settings (game_type, "+columnNames[0]+", "+columnNames[1]+") VALUES (?,?,?);",
                     new Object[] {gameType, key, value});
         }
     }
