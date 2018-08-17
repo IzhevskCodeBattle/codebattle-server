@@ -52,12 +52,18 @@ public class ActionLogger {
 
     public ActionLogger(ConnectionThreadPoolFactory factory, int ticksPerSave) {
         this.ticksPerSave = ticksPerSave;
+        String boardType;
+        if(factory instanceof MySqlConnectionThreadPoolFactory) {
+            boardType = "LONGTEXT";
+        } else {
+            boardType = "varchar(10000)";
+        }
         pool = factory.create("CREATE TABLE IF NOT EXISTS player_boards (" +
                     "time varchar(255), " +
                     "player_name varchar(255), " +
                     "game_type varchar(255), " +
                     "score varchar(255), " +
-                    "board varchar(10000));");
+                    "board "+boardType+");");
         active = false;
         count = 0;
     }
