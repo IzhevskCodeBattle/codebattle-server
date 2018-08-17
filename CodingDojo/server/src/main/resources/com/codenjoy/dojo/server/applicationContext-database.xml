@@ -22,36 +22,52 @@
   -->
 
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context"
-       xsi:schemaLocation="
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xsi:schemaLocation="
        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
 
-    <bean id="connectionThreadPollFactory"
+    <bean id="databasePoolFactory"
           class="com.codenjoy.dojo.services.jdbc.MySqlConnectionThreadPoolFactory">
         <constructor-arg value="localhost/${database.name}?user=${database.user}&amp;password=${database.password}&amp;serverTimezone=UTC"/>
     </bean>
-
+    
     <bean id="actionLogger" class="com.codenjoy.dojo.services.dao.ActionLogger">
-        <constructor-arg ref="connectionThreadPollFactory"/>
+        <constructor-arg ref="databasePoolFactory"/>
         <constructor-arg value="20"/>
     </bean>
 
+    <bean id="playerPoolFactory"
+      class="com.codenjoy.dojo.services.jdbc.SqliteConnectionThreadPoolFactory">
+        <constructor-arg value="database/saves.db"/>
+    </bean>
     <bean id="playerGameSaver" class="com.codenjoy.dojo.services.dao.PlayerGameSaver">
-        <constructor-arg ref="connectionThreadPollFactory"/>
+        <constructor-arg ref="playerPoolFactory"/>
     </bean>
 
+    <bean id="registrationPoolFactory"
+      class="com.codenjoy.dojo.services.jdbc.SqliteConnectionThreadPoolFactory">
+        <constructor-arg value="database/users.db"/>
+    </bean>
     <bean id="registration" class="com.codenjoy.dojo.services.dao.Registration">
-        <constructor-arg ref="connectionThreadPollFactory"/>
+        <constructor-arg ref="registrationPoolFactory"/>
     </bean>
 
+    <bean id="paymentPoolFactory"
+      class="com.codenjoy.dojo.services.jdbc.SqliteConnectionThreadPoolFactory">
+        <constructor-arg value="database/payment.db"/>
+    </bean>
     <bean id="payment" class="com.codenjoy.dojo.services.dao.Payment">
-        <constructor-arg ref="connectionThreadPollFactory"/>
+        <constructor-arg ref="paymentPoolFactory"/>
     </bean>
 
+    <bean id="gameDataPoolFactory"
+      class="com.codenjoy.dojo.services.jdbc.SqliteConnectionThreadPoolFactory">
+        <constructor-arg value="database/settings.db"/>
+    </bean>
     <bean id="gameData" class="com.codenjoy.dojo.services.dao.GameData">
-        <constructor-arg ref="connectionThreadPollFactory"/>
+        <constructor-arg ref="gameDataPoolFactory"/>
     </bean>
 
 </beans>
