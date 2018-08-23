@@ -36,7 +36,7 @@
         <property name="location" value="classpath:/com/codenjoy/dojo/server/codenjoy.properties"/>
     </bean>
 
-    <import resource="applicationContext-database.xml"/>
+    <import resource="applicationContext-database-sqlite.xml"/>
 
     <bean id="timerService" class="com.codenjoy.dojo.services.TimerService" init-method="init">
         <property name="period" value="1000"/>
