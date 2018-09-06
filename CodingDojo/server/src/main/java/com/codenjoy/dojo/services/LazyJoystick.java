@@ -118,7 +118,7 @@ public class LazyJoystick implements Joystick, Tickable {
         boolean directionCommandHandled = false;
 
         if (previousDirection != null && direction != null) {
-            directionCommandHandled = Turn();
+            directionCommandHandled = turn();
         }
 
         if(!directionCommandHandled) {
@@ -149,7 +149,7 @@ public class LazyJoystick implements Joystick, Tickable {
         }
     }
 
-    private boolean Turn() {
+    private boolean turn() {
         boolean directionCommandHandled = false;
         if(direction == Direction.DOWN && previousDirection == Direction.UP) {
             directionCommandHandled = true;
