@@ -26,12 +26,16 @@ package com.codenjoy.dojo.services;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class TimerService implements Runnable {
+public class TimerService implements Runnable, ApplicationListener {
     private static Logger logger = LoggerFactory.getLogger(TimerService.class);
 
     private ScheduledThreadPoolExecutor executor;
@@ -42,10 +46,27 @@ public class TimerService implements Runnable {
 
     private volatile boolean paused;
     private long period;
+    private AtomicBoolean initialized = new AtomicBoolean(false);
 
     public void init() {
-        executor = new ScheduledThreadPoolExecutor(1);
-        schedule();
+        // to prevent calling twice on child web context initialized events
+        if (initialized.compareAndSet(false, true)) {
+            logger.info("Initialize timer with period " + period);
+
+            executor = new ScheduledThreadPoolExecutor(1);
+            schedule();
+        }
+    }
+
+    /**
+     * Start timer only after context is initialized
+     * @param event
+     */
+    @Override
+    public void onApplicationEvent(ApplicationEvent event) {
+        if (event instanceof ContextRefreshedEvent) {
+            init();
+        }
     }
 
     private void schedule() {
@@ -83,12 +104,20 @@ public class TimerService implements Runnable {
     }
 
     public void changePeriod(long period) {
+        changeGamePeriod(period, true);
+    }
+
+    public void changePeriodGracefully(long period) {
+        changeGamePeriod(period, false);
+    }
+
+    private void changeGamePeriod(long period, boolean mayInterrupting) {
         this.period = period;
+
         if (period > 0){
             if (future != null){
-                future.cancel(true);
+                future.cancel(mayInterrupting);
             }
-
             schedule();
         }
     }

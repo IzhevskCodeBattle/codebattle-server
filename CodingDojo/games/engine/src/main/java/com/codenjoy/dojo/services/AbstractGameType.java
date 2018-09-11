@@ -34,6 +34,7 @@ import com.codenjoy.dojo.services.settings.SettingsImpl;
 public abstract class AbstractGameType implements GameType {
 
     protected final Settings settings;
+    protected AdminControlService adminControlService;
 
     public AbstractGameType() {
         settings = new SettingsImpl();
@@ -67,5 +68,10 @@ public abstract class AbstractGameType implements GameType {
     @Override
     public void tick() {
         // do nothing
+    }
+
+    @Override
+    public void setAdminControlService(AdminControlService adminControlService) {
+        this.adminControlService = adminControlService;
     }
 }

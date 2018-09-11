@@ -97,4 +97,9 @@ public class GameRunner extends AbstractGameType implements GameType {
         ApofigSolver.start(aiName, WebSocketRunner.Host.REMOTE_LOCAL);
         return true;
     }
+
+    @Override
+    public Object getGame() {
+        return null;
+    }
 }
