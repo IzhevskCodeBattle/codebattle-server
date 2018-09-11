@@ -99,6 +99,8 @@ public interface GameType extends Tickable {
     String getVersion();
 
     Object getGame();
+
+    default void setAdminControlService(AdminControlService adminService) {}
 }
 
 

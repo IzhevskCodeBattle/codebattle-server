@@ -30,17 +30,22 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+import javax.annotation.PostConstruct;
+
+
 @Component("gameService")
 public class GameServiceImpl implements GameService {
 
-    @Autowired private TimerService timer;
-    @Autowired private PlayerService players;
+    @Autowired
+    private AdminControlService adminControlService;
 
-    private Map<String, GameType> cache = new TreeMap<String, GameType>();
+    private Map<String, GameType> cache = new TreeMap<>();
 
-    public GameServiceImpl() {
+    @PostConstruct
+    public void preLoadGames() {
         for (Class<? extends GameType> aClass : getGameClasses()) {
             GameType gameType = loadGameType(aClass);
+            gameType.setAdminControlService(adminControlService);
             cache.put(gameType.name(), gameType);
         }
     }
@@ -50,12 +55,7 @@ public class GameServiceImpl implements GameService {
         games.addAll(findInPackage("com"));
         games.addAll(findInPackage("org"));
         games.addAll(findInPackage("net"));
-        Collections.sort(games, new Comparator<Class<? extends GameType>>() {
-            @Override
-            public int compare(Class<? extends GameType> o1, Class<? extends GameType> o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
+        games.sort(Comparator.comparing(Class::getName));
         games.remove(LockedGameType.class);
         games.remove(NullGameType.class);
         games.remove(AbstractGameType.class);

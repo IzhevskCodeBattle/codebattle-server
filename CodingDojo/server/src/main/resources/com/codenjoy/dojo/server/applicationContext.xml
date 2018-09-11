@@ -38,7 +38,7 @@
 
     <import resource="applicationContext-database-sqlite.xml"/>
 
-    <bean id="timerService" class="com.codenjoy.dojo.services.TimerService" init-method="init">
+    <bean id="timerService" class="com.codenjoy.dojo.services.TimerService">
         <property name="period" value="1000"/>
     </bean>
 
