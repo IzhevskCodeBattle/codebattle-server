@@ -25,6 +25,7 @@ package com.codenjoy.dojo.services.settings;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class SelectBox<T> extends Updatable<Integer> implements Parameter<T> {
 
@@ -88,5 +89,16 @@ public class SelectBox<T> extends Updatable<Integer> implements Parameter<T> {
     @Override
     public void select(int index) {
         set(index);
+    }
+
+    @Override
+    public SettingValueType getSettingType() {
+        return SettingValueType.SELECT_OPTION;
+    }
+
+    public List<String> getOptionsAsStrings() {
+        return options.stream()
+                .map(Object::toString)
+                .collect(Collectors.toList());
     }
 }

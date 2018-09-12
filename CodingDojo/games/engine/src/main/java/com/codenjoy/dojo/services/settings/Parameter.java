@@ -61,4 +61,8 @@ public interface Parameter<T> {
     boolean changed();
 
     void changesReacted();
+
+    default SettingValueType getSettingType() {
+        return SettingValueType.TEXT;
+    }
 }
