@@ -23,6 +23,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 
+<%@ page import="com.codenjoy.dojo.services.settings.SettingValueType" %>
+
 <html>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
 <head>
@@ -170,6 +172,7 @@
         </table>
     </form:form>
 
+
     <c:if test="${parameters.size() != 0}">
         <form:form commandName="adminSettings" action="admin31415" method="POST">
             <table class="admin-table" id="gameSettings">
@@ -179,7 +182,19 @@
                 <c:forEach items="${parameters}" var="parameter" varStatus="status">
                     <tr>
                         <td>${parameter.name}</td>
-                        <td><form:input path="parameters[${status.index}]"/></td>
+                        <td>
+                            <c:choose>
+                                <c:when test="${parameter.getSettingType() == SettingValueType.SELECT_OPTION}">
+                                    <form:select path="parameters[${status.index}]">
+                                        <form:options items="${parameter.getOptionsAsStrings()}"></form:options>
+                                    </form:select>
+                                    <br/>
+                                </c:when>
+                                <c:otherwise>
+                                    <form:input path="parameters[${status.index}]"/>
+                                </c:otherwise>
+                            </c:choose>
+                        </td>
                     </tr>
                 </c:forEach>
                 <tr>
