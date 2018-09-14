@@ -24,7 +24,6 @@ package com.codenjoy.dojo.services.dao;
 
 
 import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.dao.ActionLogger;
 import com.codenjoy.dojo.services.jdbc.SqliteConnectionThreadPoolFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -84,6 +83,7 @@ public class ActionLoggerTest {
 
         Player player = new Player(name, "127.0.0.1", PlayerTest.mockGameType(gameName), score, null);
         playerGames.add(player, game,
+                mock(PlayerController.class),
                 mock(PlayerController.class),
                 mock(PlayerController.class));
     }

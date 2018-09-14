@@ -25,22 +25,23 @@ package com.codenjoy.dojo.services;
 
 import com.codenjoy.dojo.services.hero.GameMode;
 import com.codenjoy.dojo.services.hero.HeroData;
-import com.codenjoy.dojo.services.lock.LockedGame;
 import com.codenjoy.dojo.services.lock.LockedGameTest;
 import com.codenjoy.dojo.services.settings.SimpleParameter;
 import com.codenjoy.dojo.utils.JsonUtils;
+
 import org.fest.reflect.core.Reflection;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static com.codenjoy.dojo.services.PointImpl.pt;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -299,7 +300,7 @@ public class PlayerGamesAdditionalDataTest {
 
         PlayerController controller = mock(PlayerController.class);
         controllers.add(controller);
-        return playerGames.add(player, game, controller, mock(PlayerController.class));
+        return playerGames.add(player, game, controller, mock(PlayerController.class), mock(PlayerController.class));
     }
 
     private String getNextName() {
