@@ -10,12 +10,12 @@ package com.codenjoy.dojo.services.playerdata;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -32,6 +32,8 @@ public class PlayerData implements ScreenData {
     private Object board;
     private String gameName;
     private Object score;
+    private int kills;
+    private int deaths;
     private int maxLength;
     private int length;
     private int boardSize;
@@ -40,11 +42,13 @@ public class PlayerData implements ScreenData {
     private JSONObject heroesData;
 
     public PlayerData(int boardSize, Object board, String gameName, Object score,
-                      int maxLength, int length,
+                      int kills, int deaths, int maxLength, int length,
                       String info, JSONObject scores, JSONObject heroesData) {
         this.board = board;
         this.gameName = gameName;
         this.score = score;
+        this.kills = kills;
+        this.deaths = deaths;
         this.maxLength = maxLength;
         this.length = length;
         this.boardSize = boardSize;
@@ -93,11 +97,15 @@ public class PlayerData implements ScreenData {
                         "Length:%s, " +
                         "Info:'%s', " +
                         "Scores:'%s', " +
+                        "Kills:'%s', " +
+                        "Deaths:'%s', " +
                         "HeroesData:'%s']",
                 boardSize,
                 board,
                 gameName,
                 score,
+                kills,
+                deaths,
                 maxLength,
                 length,
                 getInfo(),
@@ -115,5 +123,13 @@ public class PlayerData implements ScreenData {
 
     public int getLength() {
         return length;
+    }
+
+    public int getKills() {
+        return kills;
+    }
+
+    public int getDeaths() {
+        return deaths;
     }
 }

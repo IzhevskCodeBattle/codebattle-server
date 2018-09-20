@@ -8,12 +8,12 @@
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -28,11 +28,11 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
         return data[Object.keys(data)[0]];
     }
 
-    function sortByScore(data) {
+    function sortByScore(gameName, data) {
         var vals = new Array();
 
         for (i in data) {
-            var score = data[i];
+            var score = getScoreForGame(gameName, data[i]);
             if (!!onParseValue) {
                 score = onParseValue(score);
             }
@@ -57,20 +57,24 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
             return;
         }
         data = getFirstValue(data);
+
+        var gameName = data.gameName;
+
         data = data.scores;
         if (data == null) {
             $("#table-logs-body").empty();
             return;
         }
 
-        data = sortByScore(data);
+        data = sortByScore(gameName, data);
 
         if (!onDrawItem) {
-            onDrawItem = function(count, you, link, name, score) {
+            onDrawItem = function(count, you, link, name, scores) {
                 return '<tr>' +
                         '<td>' + count + '</td>' +
                         '<td>' + you + '<a href="' + link + '">' + name + '</a></td>' +
-                        '<td class="center">' + score + '</td>' +
+                        '<td class="center">' + getScoreForGame(gameName, scores) + '</td>' +
+                        '<td class="center">' + scores.kills + '/' + scores.deaths + '</td>' +
                     '</tr>';
             }
         }
@@ -93,6 +97,18 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
 
         $("#table-logs-body").empty().append(tbody);
         leaderboard.trigger($.Event('resize'));
+    }
+
+    function getScoreForGame(gameName, scores) {
+        if (gameName === 'battlecity') {
+            return formatEfficiency(scores.efficiency);
+        } else {
+            return scores.score;
+        }
+    }
+
+    function formatEfficiency(efficiency) {
+        return Math.round(efficiency * 100) / 100;
     }
 
     function isEmpty(map) {

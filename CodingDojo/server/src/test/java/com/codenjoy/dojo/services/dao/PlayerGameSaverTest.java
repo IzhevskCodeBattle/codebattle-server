@@ -10,12 +10,12 @@ package com.codenjoy.dojo.services.dao;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -79,7 +80,7 @@ public class PlayerGameSaverTest {
 
     private GameType getGameType(PlayerScores scores) {
         GameType gameType = mock(GameType.class);
-        when(gameType.getPlayerScores(anyInt())).thenReturn(scores);
+        when(gameType.getPlayerScores(any(ScoreData.class))).thenReturn(scores);
         return gameType;
     }
 

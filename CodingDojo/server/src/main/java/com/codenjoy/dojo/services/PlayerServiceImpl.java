@@ -10,12 +10,12 @@ package com.codenjoy.dojo.services;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -30,6 +30,7 @@ import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.transport.screen.ScreenData;
 import com.codenjoy.dojo.transport.screen.ScreenRecipient;
 import com.codenjoy.dojo.transport.screen.ScreenSender;
+
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -37,7 +38,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -93,7 +99,7 @@ public class PlayerServiceImpl implements PlayerService {
 
             registerAIFor(name, gameName);
 
-            Player player = register(new PlayerSave(name, callbackUrl, gameName, 0, null));
+            Player player = register(new PlayerSave(name, callbackUrl, gameName, 0, 0, 0, null));
 
             return player;
         } finally {
@@ -129,7 +135,7 @@ public class PlayerServiceImpl implements PlayerService {
 
     private void registerAI(String gameName, GameType gameType, String aiName) {
         if (gameType.newAI(aiName)) {
-            Player player = register(aiName, "127.0.0.1", gameName, 0, null);
+            Player player = register(aiName, "127.0.0.1", gameName, new ScoreData(), null);
         }
     }
 
@@ -143,14 +149,14 @@ public class PlayerServiceImpl implements PlayerService {
             gameType.newAI(name);
         }
 
-        return register(name, save.getCallbackUrl(), gameName, save.getScore(), save.getSave(), name.endsWith(BOT_EMAIL_SUFFIX));
+        return register(name, save.getCallbackUrl(), gameName, save.getScoreData(), save.getSave(), name.endsWith(BOT_EMAIL_SUFFIX));
     }
 
-    private Player register(String name, String callbackUrl, String gameName, Object score, String data) {
-        return register(name, callbackUrl, gameName, score, data, false);
+    private Player register(String name, String callbackUrl, String gameName, ScoreData scoreData, String data) {
+        return register(name, callbackUrl, gameName, scoreData, data, false);
     }
 
-    private Player register(String name, String callbackUrl, String gameName, Object score, String data, boolean bot) {
+    private Player register(String name, String callbackUrl, String gameName, ScoreData scoreData, String data, boolean bot) {
         Player player = get(name);
         GameType gameType = gameService.getGame(gameName);
 
@@ -158,7 +164,7 @@ public class PlayerServiceImpl implements PlayerService {
         if (newPlayer) {
             playerGames.remove(player);
 
-            PlayerScores playerScores = gameType.getPlayerScores(score);
+            PlayerScores playerScores = gameType.getPlayerScores(scoreData);
             InformationCollector informationCollector = new InformationCollector(playerScores);
 
             Game game = gameType.newGame(informationCollector, printer, data, name, bot);
@@ -257,6 +263,8 @@ public class PlayerServiceImpl implements PlayerService {
                         encoded,
                         gameType.name(),
                         player.getScore(),
+                        player.getKills(),
+                        player.getDeaths(),
                         game.getMaxScore(),
                         game.getCurrentScore(),
                         player.getMessage(),
