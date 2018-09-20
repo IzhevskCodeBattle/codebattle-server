@@ -8,12 +8,12 @@
   it under the terms of the GNU General Public License as
   published by the Free Software Foundation, either version 3 of the
   License, or (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public
   License along with this program.  If not, see
   <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -22,6 +22,7 @@
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" %>
+<%@ page import="com.codenjoy.dojo.utils.WebUtils" %>
 
 <html>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
@@ -44,7 +45,7 @@
     <script src="${ctx}/resources/js/registration.js"></script>
 </head>
 <body>
-    <div id="settings" contextPath="${ctx}" gameName="${gameName}" waitApprove="${wait_approve}"></div>
+    <div id="settings" contextPath="${WebUtils.normalizeContextPath(ctx)}" gameName="${gameName}" waitApprove="${wait_approve}"></div>
 
     <%@include file="forkMe.jsp"%>
 

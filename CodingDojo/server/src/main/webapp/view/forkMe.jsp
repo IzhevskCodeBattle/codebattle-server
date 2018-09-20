@@ -8,12 +8,12 @@
   it under the terms of the GNU General Public License as
   published by the Free Software Foundation, either version 3 of the
   License, or (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public
   License along with this program.  If not, see
   <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -27,4 +27,4 @@
 <div class="e-logo">
     <a id="company-logo" target="_blank" href="https://www.epam.com/"><img style="position: absolute; top: 0; border: 0;z-index: 100;" src="${ctx}/resources/img/epam-logo.png"></a>
 </div>
-<a id="fork-me" target="_blank" href="https://github.com/IzhevskCodeBattle/BombermanClients"><img style="position: absolute; top: 0; right: 0; border: 0;z-index: 100;" src="${ctx}/resources/img/fork-me.png"></a>
+<a id="fork-me" target="_blank" href="https://github.com/IzhevskCodeBattle/codebattle-battlecity-clients"><img style="position: absolute; top: 0; right: 0; border: 0;z-index: 100;" src="${ctx}/resources/img/fork-me.png"></a>
