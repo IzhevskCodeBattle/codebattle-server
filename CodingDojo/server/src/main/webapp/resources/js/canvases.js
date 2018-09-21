@@ -8,12 +8,12 @@
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -514,6 +514,9 @@ function initCanvases(contextPath, players, allPlayersScreen,
 
     function drawUserCanvas(playerName, data, allPlayersScreen) {
         if (currentBoardSize != data.boardSize) {    // TODO так себе решение... Почему у разных юзеров передается размер добры а не всем сразу?
+            // reload page if level size is changed. TODO: resize canvas property. Current reloadCanvasesData() does not do it properly..
+            location.reload(true);
+
             reloadCanvasesData();
         }
 
@@ -529,5 +532,4 @@ function initCanvases(contextPath, players, allPlayersScreen,
             $("#level_" + toId(playerName)).text(data.heroesData[playerName][playerName].level + 1);
         }
     }
-
 }
