@@ -10,12 +10,12 @@ package com.codenjoy.dojo.services;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -38,7 +38,7 @@ public interface GameType extends Tickable {
      * @param score значения очков перед началом игры (используется например при загрузке игры из save)
      * @return Возвращается объект который умеет в зависимости от типа события на карте подчитывать очки игроков
      */
-    PlayerScores getPlayerScores(Object score);
+    PlayerScores getPlayerScores(ScoreData score);
 
     /**
      * Так фреймворк будет стартовать новую игру для каждого пользователя

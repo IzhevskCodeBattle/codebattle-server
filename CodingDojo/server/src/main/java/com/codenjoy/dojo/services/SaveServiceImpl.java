@@ -10,12 +10,12 @@ package com.codenjoy.dojo.services;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -25,13 +25,23 @@ package com.codenjoy.dojo.services;
 
 import com.codenjoy.dojo.services.chat.ChatService;
 import com.codenjoy.dojo.services.dao.Registration;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 @Component("saveService")
 public class SaveServiceImpl implements SaveService {
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired private GameSaver saver;
     @Autowired private ChatService chatService;
@@ -64,8 +74,13 @@ public class SaveServiceImpl implements SaveService {
     }
 
     private void saveGame(PlayerGame playerGame) {
-        saver.saveGame(playerGame.getPlayer(),
-                playerGame.getGame().getSave());
+        try {
+            saver.saveGame(playerGame.getPlayer(),
+                    playerGame.getGame().getSave());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override
@@ -79,7 +94,7 @@ public class SaveServiceImpl implements SaveService {
 
     @Override
     public void load(String name, String gameName, String save) {
-        PlayerSave playerSave = new PlayerSave(name, "127.0.0.1", gameName, 0, save);
+        PlayerSave playerSave = new PlayerSave(name, "127.0.0.1", gameName, 0, 0, 0, save);
         if (playerService.contains(name)) { // TODO test me
             playerService.remove(name);
         }

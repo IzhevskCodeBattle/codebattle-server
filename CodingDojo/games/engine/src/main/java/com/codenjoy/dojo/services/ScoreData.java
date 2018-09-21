@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2016 - 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,27 +22,44 @@ package com.codenjoy.dojo.services;
  * #L%
  */
 
+public class ScoreData {
+    private int score = 0;
+    private int kills = 0;
+    private int deaths = 0;
 
-import java.math.BigDecimal;
+    public ScoreData() { }
 
-/**
- * В модельке игры класс отвечающий за подсчет очков, должен реализовать этот интерфейс.
- */
-public interface PlayerScores extends EventListener {
+    public ScoreData(int score, int kills, int deaths) {
+        this.score = score;
+        this.kills = kills;
+        this.deaths = deaths;
+    }
 
-    /**
-     * @return текущее значение очков, что успел набрать пользователь
-     */
-    Object getScore();
+    public ScoreData(int score) {
+        this.score = score;
+    }
 
-    /**
-     * @return очистка очков с возвращением последнего значения.
-     */
-    int clear();
+    public int getScore() {
+        return score;
+    }
 
-    default int getKills() { return 0;}
+    public int getKills() {
+        return kills;
+    }
 
-    default int getDeaths() { return 0;}
+    public int getDeaths() {
+        return deaths;
+    }
 
-    default BigDecimal getEfficiency() { return BigDecimal.ZERO;}
+    public void setScore(int score) {
+        this.score = score;
+    }
+
+    public void setKills(int kills) {
+        this.kills = kills;
+    }
+
+    public void setDeaths(int deaths) {
+        this.deaths = deaths;
+    }
 }

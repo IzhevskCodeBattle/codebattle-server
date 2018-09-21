@@ -10,12 +10,12 @@ package com.codenjoy.dojo.services;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -27,19 +27,25 @@ import org.apache.commons.lang.StringUtils;
 
 public class PlayerSave {
 
-    public static final PlayerSave NULL = new PlayerSave(StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY, 0, StringUtils.EMPTY);
+    public static final PlayerSave NULL = new PlayerSave(StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY,
+            0, 0, 0, StringUtils.EMPTY);
 
     private Object score;
     private String callbackUrl;
     private String gameName;
     private String name;
     private String save;
+    private int kills;
+    private int deaths;
 
-    public PlayerSave(String name, String callbackUrl, String gameName, Object score, String save) {
+    public PlayerSave(String name, String callbackUrl, String gameName, Object score,
+                      int kills, int deaths, String save) {
         this.name = name;
         this.gameName = gameName;
         this.callbackUrl = callbackUrl;
         this.score = score;
+        this.kills = kills;
+        this.deaths = deaths;
         this.save = save;
     }
 
@@ -49,6 +55,8 @@ public class PlayerSave {
         this.callbackUrl = save.getCallbackUrl();
         this.score = save.getScore();
         this.save = save.getData();
+        this.kills = save.getKills();
+        this.deaths = save.getDeaths();
     }
 
     public Object getScore() {
@@ -69,5 +77,17 @@ public class PlayerSave {
 
     public String getSave() {
         return save;
+    }
+
+    public int getKills() {
+        return kills;
+    }
+
+    public int getDeaths() {
+        return deaths;
+    }
+
+    public ScoreData getScoreData() {
+        return new ScoreData((Integer) score, kills, deaths);
     }
 }
