@@ -55,8 +55,8 @@ public class GameRunner extends AbstractGameType implements GameType {
     }
 
     @Override
-    public PlayerScores getPlayerScores(Object score) {
-        return new Scores((Integer) score, settings);
+    public PlayerScores getPlayerScores(ScoreData score) {
+        return new Scores(score.getScore(), settings);
     }
 
     @Override
@@ -101,8 +101,8 @@ public class GameRunner extends AbstractGameType implements GameType {
 
     @Override
     public boolean newAI(String aiName) {
-        ApofigSolver.start(aiName, WebSocketRunner.Host.REMOTE_LOCAL);
-        return true;
+        //ApofigSolver.start(aiName, WebSocketRunner.Host.REMOTE_LOCAL);
+        return false;
     }
 
     @Override
