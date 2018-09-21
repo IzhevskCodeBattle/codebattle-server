@@ -10,12 +10,12 @@ package com.codenjoy.dojo.services;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -46,6 +46,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 
 import static com.codenjoy.dojo.services.PointImpl.pt;
@@ -137,7 +138,7 @@ public class PlayerServiceImplTest {
         when(gameService.getGame(anyString())).thenReturn(gameType);
 
         when(gameType.getBoardSize()).thenReturn(v(15));
-        when(gameType.getPlayerScores(anyInt())).thenReturn(playerScores1, playerScores2, playerScores3);
+        when(gameType.getPlayerScores(any(ScoreData.class))).thenReturn(playerScores1, playerScores2, playerScores3);
         when(gameType.newGame(any(InformationCollector.class), any(PrinterFactory.class), anyString(), anyString())).thenReturn(game);
         when(gameType.name()).thenReturn("game");
         when(gameType.getPlots()).thenReturn(Elements.values());
@@ -456,13 +457,13 @@ public class PlayerServiceImplTest {
     @Test
     public void shouldCreatePlayerFromSavedPlayerGameWhenPlayerNotRegisterYet() {
         // given
-        PlayerSave save = new PlayerSave(VASYA, getCallbackUrl(VASYA), "game", 100, null);
+        PlayerSave save = new PlayerSave(VASYA, getCallbackUrl(VASYA), "game", 100, 0, 0, null);
 
         // when
         playerService.register(save);
 
         // then
-        verify(gameType).getPlayerScores(100);
+        verify(gameType).getPlayerScores(new ScoreData(100));
         when(playerScores1.getScore()).thenReturn(100);
 
         Player player = playerService.get(VASYA);
@@ -478,13 +479,13 @@ public class PlayerServiceImplTest {
         Player registeredPlayer = createPlayer(VASYA);
         assertEquals(VASYA_URL, registeredPlayer.getCallbackUrl());
 
-        PlayerSave save = new PlayerSave(VASYA, getCallbackUrl(VASYA), "other_game", 200, null);
+        PlayerSave save = new PlayerSave(VASYA, getCallbackUrl(VASYA), "other_game", 200, 0, 0, null);
 
         // when
         playerService.register(save);
 
         // then
-        verify(gameType).getPlayerScores(200);
+        verify(gameType).getPlayerScores(new ScoreData(200));
         when(playerScores2.getScore()).thenReturn(200);
 
         Player player = playerService.get(VASYA);
@@ -501,13 +502,13 @@ public class PlayerServiceImplTest {
         assertEquals(VASYA_URL, registeredPlayer.getCallbackUrl());
         assertEquals(0, registeredPlayer.getScore());
 
-        PlayerSave save = new PlayerSave(VASYA, getCallbackUrl(VASYA), "game", 200, null);
+        PlayerSave save = new PlayerSave(VASYA, getCallbackUrl(VASYA), "game", 200, 0, 0, null);
 
         // when
         playerService.register(save);
 
         // then
-        verify(gameType).getPlayerScores(0);
+        verify(gameType).getPlayerScores(new ScoreData(0));
         when(playerScores2.getScore()).thenReturn(0);
 
         Player player = playerService.get(VASYA);
@@ -1146,7 +1147,7 @@ public class PlayerServiceImplTest {
     public void testLoadPlayersFromSaveAndLoadAI() {
         // given
         when(gameType.newAI(anyString())).thenReturn(true);
-        PlayerSave save = new PlayerSave(VASYA_AI, getCallbackUrl(VASYA_AI), "game", 100, null);
+        PlayerSave save = new PlayerSave(VASYA_AI, getCallbackUrl(VASYA_AI), "game", 100, 0, 0, null);
 
         // when
         playerService.register(save);

@@ -10,12 +10,12 @@ package com.codenjoy.dojo.services.dao;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -27,13 +27,20 @@ import com.codenjoy.dojo.services.GameSaver;
 import com.codenjoy.dojo.services.Player;
 import com.codenjoy.dojo.services.PlayerSave;
 import com.codenjoy.dojo.services.chat.ChatMessage;
-import com.codenjoy.dojo.services.jdbc.*;
+import com.codenjoy.dojo.services.jdbc.ConnectionThreadPoolFactory;
+import com.codenjoy.dojo.services.jdbc.CrudConnectionThreadPool;
+import com.codenjoy.dojo.services.jdbc.ForStmt;
+import com.codenjoy.dojo.services.jdbc.JDBCTimeUtils;
+import com.codenjoy.dojo.services.jdbc.ObjectMapper;
+
 import org.springframework.stereotype.Component;
 
-import java.sql.*;
 import java.sql.Date;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
 
 @Component
 public class PlayerGameSaver implements GameSaver {
@@ -48,6 +55,8 @@ public class PlayerGameSaver implements GameSaver {
                         "callbackUrl varchar(255)," +
                         "gameName varchar(255)," +
                         "score int," +
+                        "kills int," +
+                        "deaths int," +
                         "save varchar(255));",
                 "CREATE TABLE IF NOT EXISTS chats (" +
                         "time varchar(255), " +
@@ -63,13 +72,15 @@ public class PlayerGameSaver implements GameSaver {
     @Override
     public void saveGame(final Player player, final String save) {
         pool.update("INSERT INTO saves " +
-                        "(time, name, callbackUrl, gameName, score, save) " +
-                        "VALUES (?,?,?,?,?,?);",
+                        "(time, name, callbackUrl, gameName, score, kills, deaths, save) " +
+                        "VALUES (?,?,?,?,?,?,?,?);",
                 new Object[]{JDBCTimeUtils.toString(new Date(System.currentTimeMillis())),
                         player.getName(),
                         player.getCallbackUrl(),
                         player.getGameName(),
                         player.getScore(),
+                        player.getKills(),
+                        player.getDeaths(),
                         save
                 });
     }
@@ -86,7 +97,9 @@ public class PlayerGameSaver implements GameSaver {
                             int score = resultSet.getInt("score");
                             String gameName = resultSet.getString("gameName");
                             String save = resultSet.getString("save");
-                            return new PlayerSave(name, callbackUrl, gameName, score, save);
+                            int kills = resultSet.getInt("kills");
+                            int deaths = resultSet.getInt("deaths");
+                            return new PlayerSave(name, callbackUrl, gameName, score, kills, deaths, save);
                         } else {
                             return PlayerSave.NULL;
                         }

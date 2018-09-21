@@ -10,12 +10,12 @@ package com.codenjoy.dojo.services;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -36,6 +36,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 
 import static junit.framework.Assert.*;
@@ -120,7 +121,7 @@ public class SaveServiceImplTest {
     @Test
     public void shouldLoadPlayer_forNotRegistered() {
         // given
-        PlayerSave save = new PlayerSave("vasia", "url", "game", 100, null);
+        PlayerSave save = new PlayerSave("vasia", "url", "game", 100, 0, 0, null);
         when(saver.loadGame("vasia")).thenReturn(save);
         allPlayersNotRegistered();
 
@@ -136,7 +137,7 @@ public class SaveServiceImplTest {
     @Test
     public void shouldLoadPlayer_forRegistered() {
         // given
-        PlayerSave save = new PlayerSave("vasia", "url", "game", 100, null);
+        PlayerSave save = new PlayerSave("vasia", "url", "game", 100, 0, 0, null);
         when(saver.loadGame("vasia")).thenReturn(save);
         allPlayersRegistered();
 
@@ -153,7 +154,7 @@ public class SaveServiceImplTest {
     @Test
     public void shouldLoadPlayerWithExternalSave_forNotRegistered() {
         // given
-        PlayerSave save = new PlayerSave("vasia", "127.0.0.1", "game", 0, "{'save':'data'}");
+        PlayerSave save = new PlayerSave("vasia", "127.0.0.1", "game", 0, 0, 0, "{'save':'data'}");
         allPlayersNotRegistered();
 
         // when
@@ -176,7 +177,7 @@ public class SaveServiceImplTest {
     @Test
     public void shouldLoadPlayerWithExternalSave_forRegistered() {
         // given
-        PlayerSave save = new PlayerSave("vasia", "127.0.0.1", "game", 0, "{'save':'data'}");
+        PlayerSave save = new PlayerSave("vasia", "127.0.0.1", "game", 0, 0, 0, "{'save':'data'}");
         allPlayersRegistered();
 
         // when
@@ -205,7 +206,7 @@ public class SaveServiceImplTest {
 
         PlayerSave save1 = new PlayerSave(activeSavedPlayer);
         PlayerSave save2 = new PlayerSave(activePlayer);
-        PlayerSave save3 = new PlayerSave("name", "http://saved:1234", "saved game", 15, "data for saved");
+        PlayerSave save3 = new PlayerSave("name", "http://saved:1234", "saved game", 15, 0, 0, "data for saved");
 
         when(saver.getSavedList()).thenReturn(Arrays.asList("activeSaved", "saved"));
         when(saver.loadGame("activeSaved")).thenReturn(save1);
