@@ -63,19 +63,32 @@ public class PlayerGames implements Iterable<PlayerGame>, Tickable {
     }
 
     public PlayerGame add(Player player, Game game,
-                          PlayerController playerController, PlayerController screenController)
+                          PlayerController playerController, PlayerController screenController, PlayerController playerControllerV2)
     {
         PlayerSpy spy = statistics.newPlayer(player);
 
         LazyJoystick joystick = new LazyJoystick(game, spy, player.isBot());
         playerController.registerPlayerTransport(player, joystick);
+
+        if (isWSV2Enabled(playerControllerV2)) {
+            playerControllerV2.registerPlayerTransport(player, joystick);
+        }
         screenController.registerPlayerTransport(player, null);
+
         PlayerGame result = new PlayerGame(player, game, joystick, () -> {
             playerController.unregisterPlayerTransport(player);
+
+            if (isWSV2Enabled(playerControllerV2)) {
+                playerControllerV2.unregisterPlayerTransport(player);
+            }
             screenController.unregisterPlayerTransport(player);
         });
         playerGames.add(result);
         return result;
+    }
+
+    private boolean isWSV2Enabled(PlayerController playerControllerV2) {
+        return playerControllerV2 != null;
     }
 
     public boolean isEmpty() {

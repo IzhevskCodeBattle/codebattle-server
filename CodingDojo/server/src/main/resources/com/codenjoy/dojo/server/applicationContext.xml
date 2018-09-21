@@ -58,9 +58,18 @@
         <property name="transport" ref="controlPlayerTransport"/>
     </bean>
 
+    <bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>
+
     <bean name="screenPlayerTransport" class="com.codenjoy.dojo.transport.ws.PlayerTransportImpl"/>
     <bean name="screenController" class="com.codenjoy.dojo.services.ScreenControllerImpl" init-method="init">
         <property name="transport" ref="screenPlayerTransport"/>
     </bean>
+
+    <beans profile="ws_v2">
+        <bean name="controlPlayerTransportV2" class="com.codenjoy.dojo.transport.ws.PlayerTransportImpl"/>
+        <bean name="playerControllerV2" class="com.codenjoy.dojo.services.PlayerControllerV2Impl" >
+            <property name="transport" ref="controlPlayerTransportV2"/>
+        </bean>
+    </beans>
 
 </beans>

@@ -24,12 +24,14 @@ package com.codenjoy.dojo.services;
 
 
 import com.codenjoy.dojo.services.dao.ActionLogger;
+import com.codenjoy.dojo.services.hero.HeroData;
 import com.codenjoy.dojo.services.playerdata.PlayerData;
 import com.codenjoy.dojo.services.printer.PrinterFactory;
 import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.transport.screen.ScreenData;
 import com.codenjoy.dojo.transport.screen.ScreenRecipient;
 import com.codenjoy.dojo.transport.screen.ScreenSender;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +58,7 @@ public class PlayerServiceImpl implements PlayerService {
 
     private ReadWriteLock lock = new ReentrantReadWriteLock(true);
     private Map<Player, String> cacheBoards = new HashMap<Player, String>();
+    private Map<Player, HeroData> cacheHeroData = new HashMap<>();
     private boolean registration = true;
     private PrinterFactory printer = new PrinterFactoryImpl();
 
@@ -68,6 +71,10 @@ public class PlayerServiceImpl implements PlayerService {
     @Autowired
     @Qualifier("playerController")
     private PlayerController playerController;
+
+    @Autowired(required = false)
+    @Qualifier("playerControllerV2")
+    private PlayerController playerControllerV2;
 
     @Autowired
     @Qualifier("screenController")
@@ -84,6 +91,9 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Value("${autoSaverEnable}")
     private boolean autoSaverEnable;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Override
     public Player register(String name, String callbackUrl, String gameName) {
@@ -176,7 +186,7 @@ public class PlayerServiceImpl implements PlayerService {
             player = new Player(name, callbackUrl,
                     gameType, playerScores, informationCollector, bot);
 
-            playerGames.add(player, game, playerController, screenController);
+            playerGames.add(player, game, playerController, screenController, playerControllerV2);
         } else {
           // do nothing
         }
@@ -227,11 +237,20 @@ public class PlayerServiceImpl implements PlayerService {
             try {
                 String board = cacheBoards.get(player);
                 playerController.requestControl(player, board);
+
+                if (isWSV2Enabled(playerControllerV2)) {
+                    playerControllerV2.requestControl(player,
+                            new BoardGameStateV2(board, cacheHeroData.get(player).getAdditionalData(), objectMapper));
+                }
             } catch (IOException e) {
                 logger.error("Unable to send control request to player " + player.getName() +
                         " URL: " + player.getCallbackUrl(), e);
             }
         }
+    }
+
+    private boolean isWSV2Enabled(PlayerController playerControllerV2) {
+        return playerControllerV2 != null;
     }
 
     private void sendScreenUpdates() {
@@ -243,6 +262,7 @@ public class PlayerServiceImpl implements PlayerService {
     private Map<ScreenRecipient, ScreenData> buildScreenData() {
         Map<ScreenRecipient, ScreenData> map = new HashMap<>();
         cacheBoards.clear();
+        cacheHeroData.clear();
 
         Map<String, GameData> gameDataMap = playerGames.getGamesDataMap();
         for (PlayerGame playerGame : playerGames) {
@@ -257,6 +277,8 @@ public class PlayerServiceImpl implements PlayerService {
 
                 GuiPlotColorDecoder decoder = gameData.getDecoder();
                 cacheBoards.put(player, decoder.encodeForClient(board));
+                cacheHeroData.put(player, game.getHero());
+
                 Object encoded = decoder.encodeForBrowser(game.wrapScreen(board));
 
                 map.put(player, new PlayerData(gameData.getBoardSize(),

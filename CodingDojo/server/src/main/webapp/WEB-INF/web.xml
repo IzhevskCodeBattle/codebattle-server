@@ -85,6 +85,17 @@
         <url-pattern>/ws/*</url-pattern>
     </servlet-mapping>
 
+    <!-- websocket servlet for player game V2 (to add additional information to message) -->
+    <servlet>
+        <servlet-name>wsPlayerControlServletV2</servlet-name>
+        <servlet-class>com.codenjoy.dojo.transport.control.PlayerControlWebSocketServletV2</servlet-class>
+        <load-on-startup>101</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>wsPlayerControlServletV2</servlet-name>
+        <url-pattern>/ws/v2/*</url-pattern>
+    </servlet-mapping>
+
     <!-- async screen controller servlet for draw board in browser -->
     <servlet>
         <servlet-name>screenControllerServlet</servlet-name>
