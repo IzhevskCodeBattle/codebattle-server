@@ -10,12 +10,12 @@ package com.codenjoy.dojo.web.controller;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -25,6 +25,7 @@ package com.codenjoy.dojo.web.controller;
 
 import com.codenjoy.dojo.services.*;
 import com.codenjoy.dojo.services.dao.ActionLogger;
+import com.codenjoy.dojo.services.settings.CheckBox;
 import com.codenjoy.dojo.services.settings.Parameter;
 import com.codenjoy.dojo.services.settings.Settings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -225,7 +226,14 @@ public class AdminController {
             List<Parameter> parameters = (List) gameSettings.getParameters();
             for (int index = 0; index < parameters.size(); index++) {
                 try {
-                    parameters.get(index).update(settings.getParameters().get(index));
+                    Parameter parameter = parameters.get(index);
+                    Object newValue = settings.getParameters().get(index);
+
+                    if (isCheckBoxParameter(parameter)) {
+                        newValue = getBooleanValue(newValue);
+                    }
+
+                    parameter.update(newValue);
                 } catch (Exception e) {
                     errors.add(e);
                 }
@@ -257,6 +265,14 @@ public class AdminController {
         return getAdmin(settings.getGameName());
     }
 
+    private boolean isCheckBoxParameter(Parameter parameter) {
+        return CheckBox.class.isAssignableFrom(parameter.getClass());
+    }
+
+    private boolean getBooleanValue(Object newValue) {
+        return newValue != null;
+    }
+
     private String getAdmin(String gameName) {
         if (gameName == null) {
             return getAdmin();
@@ -286,9 +302,9 @@ public class AdminController {
 
         AdminSettings settings = new AdminSettings();
 
-        settings.setParameters(new LinkedList<String>());
+        settings.setParameters(new LinkedList<>());
         for (Parameter p : parameters) {
-            settings.getParameters().add(p.getValue().toString());
+            settings.getParameters().add(p.getValue());
         }
 
         model.addAttribute("adminSettings", settings);
