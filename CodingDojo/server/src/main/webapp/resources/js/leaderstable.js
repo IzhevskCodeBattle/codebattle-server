@@ -28,27 +28,39 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
         return data[Object.keys(data)[0]];
     }
 
-    function sortByScore(gameName, data) {
+    function sortByGameScore(gameName, data) {
         var vals = new Array();
 
         for (i in data) {
-            var score = getScoreForGame(gameName, data[i]);
-            if (!!onParseValue) {
-                score = onParseValue(score);
-            }
-            vals.push([i, score, data[i]])
+            vals.push([i, data[i]])
         }
+
+        var sortFunc;
+        if (gameName === 'battlecity') {
+            sortFunc = sortByKillsDeaths;
+        } else {
+            sortFunc = sortByScores;
+        }
+
         vals = vals.sort(function(a, b) {
-            return b[1] - a[1];
+            return sortFunc(a[1], b[1]);
         });
 
         var result = new Object();
 
         for (i in vals) {
-            result[vals[i][0]] = vals[i][2];
+            result[vals[i][0]] = vals[i][1];
         }
 
         return result;
+    }
+
+    function sortByKillsDeaths(scoreOne, scoreTwo) {
+        return scoreTwo.kills - scoreOne.kills || scoreOne.deaths - scoreTwo.deaths;
+    }
+
+    function sortByScores(scoreOne, scoreTwo) {
+        return scoreTwo.score - scoreOne.score;
     }
 
     function drawLeaderTable(data) {
@@ -66,7 +78,7 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
             return;
         }
 
-        data = sortByScore(gameName, data);
+        data = sortByGameScore(gameName, data);
 
         if (!onDrawItem) {
             onDrawItem = function(count, you, link, name, scores) {
@@ -74,7 +86,6 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
                         '<td>' + count + '</td>' +
                         '<td>' + you + '<a href="' + link + '">' + name + '</a></td>' +
                         '<td class="center">' + getScoreForGame(gameName, scores) + '</td>' +
-                        '<td class="center">' + scores.kills + '/' + scores.deaths + '</td>' +
                     '</tr>';
             }
         }
@@ -101,14 +112,10 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
 
     function getScoreForGame(gameName, scores) {
         if (gameName === 'battlecity') {
-            return formatEfficiency(scores.efficiency);
+            return scores.kills + '/' + scores.deaths;
         } else {
             return scores.score;
         }
-    }
-
-    function formatEfficiency(efficiency) {
-        return Math.round(efficiency * 100) / 100;
     }
 
     function isEmpty(map) {

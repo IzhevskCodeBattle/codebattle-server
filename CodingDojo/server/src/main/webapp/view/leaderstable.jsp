@@ -36,8 +36,14 @@
                 </c:choose>
             </th>
             <th width="40%">Player</th>
-            <th width="30%" class="center">Score</th>
-            <th width="30%" class="center">K/D</th>
+            <c:choose>
+                <c:when test="${gameName =='battlecity'}">
+                    <th width="30%" class="center">K/D</th>
+                </c:when>
+                <c:otherwise>
+                    <th width="30%" class="center">Score</th>
+                </c:otherwise>
+            </c:choose>
             <!-- th width="25%" class="center">Max</th -->
             <!-- th width="15%" class="center">Level</th -->
         </thead>
