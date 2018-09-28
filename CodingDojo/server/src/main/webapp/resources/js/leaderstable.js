@@ -37,7 +37,7 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
 
         var sortFunc;
         if (gameName === 'battlecity') {
-            sortFunc = sortByKillsDeaths;
+            sortFunc = sortForBattleCity;
         } else {
             sortFunc = sortByScores;
         }
@@ -55,8 +55,9 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
         return result;
     }
 
-    function sortByKillsDeaths(scoreOne, scoreTwo) {
-        return scoreTwo.kills - scoreOne.kills || scoreOne.deaths - scoreTwo.deaths;
+    function sortForBattleCity(scoreOne, scoreTwo) {
+        return battleCityScoreFormula(scoreTwo) - battleCityScoreFormula(scoreOne)
+            || scoreOne.deaths - scoreTwo.deaths;
     }
 
     function sortByScores(scoreOne, scoreTwo) {
@@ -86,6 +87,7 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
                         '<td>' + count + '</td>' +
                         '<td>' + you + '<a href="' + link + '">' + name + '</a></td>' +
                         '<td class="center">' + getScoreForGame(gameName, scores) + '</td>' +
+                        getBattleCityKillsDeathsStat(gameName, scores) +
                     '</tr>';
             }
         }
@@ -110,9 +112,43 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
         leaderboard.trigger($.Event('resize'));
     }
 
+    function getBattleCityKillsDeathsStat(gameName, scores) {
+        if (gameName === 'battlecity') {
+            return '<td class="center">' + scores.kills + '/' + scores.deaths + '</td>' +
+                   '<input type="hidden" name="k-div-d-plus-1" value="' + getKillsDivideDeathsPlusOne(scores) + '"/>' +
+                   '<input type="hidden" name="k-sub-d" value="' + getKillsSubDeaths(scores) + '"/>';
+        } else {
+            return '';
+        }
+    }
+
+    function battleCityScoreFormula(scores) {
+        return roundNumber(scores.kills / (scores.deaths + scores.kills) *  scores.kills, 0);
+    }
+
+    function getKillsDivideDeathsPlusOne(scores) {
+        return roundNumber(scores.kills / (scores.deaths + 1.0), 2);
+    }
+
+    function getKillsSubDeaths(scores) {
+        return (scores.kills - scores.deaths);
+    }
+
+    function roundNumber(n, digits) {
+        if (digits === undefined) {
+            digits = 0;
+        }
+
+        var multiplicator = Math.pow(10, digits);
+        n = parseFloat((n * multiplicator).toFixed(11));
+        var test =(Math.round(n) / multiplicator);
+        return +(test.toFixed(digits));
+    }
+
+
     function getScoreForGame(gameName, scores) {
         if (gameName === 'battlecity') {
-            return scores.kills + '/' + scores.deaths;
+            return battleCityScoreFormula(scores);
         } else {
             return scores.score;
         }

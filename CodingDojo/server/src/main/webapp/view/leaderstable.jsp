@@ -38,7 +38,8 @@
             <th width="40%">Player</th>
             <c:choose>
                 <c:when test="${gameName =='battlecity'}">
-                    <th width="30%" class="center">K/D</th>
+                    <th width="20%" class="center">Score</th>
+                    <th width="20%" class="center">K/D</th>
                 </c:when>
                 <c:otherwise>
                     <th width="30%" class="center">Score</th>
