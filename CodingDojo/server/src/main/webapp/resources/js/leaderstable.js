@@ -123,7 +123,10 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
     }
 
     function battleCityScoreFormula(scores) {
-        return roundNumber(scores.kills / (scores.deaths + scores.kills) *  scores.kills, 0);
+        if (scores.deaths + scores.kills === 0 ) {
+            return 0;
+        }
+        return roundNumber(scores.kills / (scores.deaths + scores.kills) *  scores.kills, 1);
     }
 
     function getKillsDivideDeathsPlusOne(scores) {
@@ -148,7 +151,7 @@ function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValu
 
     function getScoreForGame(gameName, scores) {
         if (gameName === 'battlecity') {
-            return battleCityScoreFormula(scores);
+            return roundNumber(battleCityScoreFormula(scores), 0);
         } else {
             return scores.score;
         }
