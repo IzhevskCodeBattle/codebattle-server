@@ -47,6 +47,7 @@ public class LazyJoystick implements Joystick, Tickable {
     private int[] parameters;
     private boolean firstAct;
     private boolean bot;
+    private Direction previousDirection;
 
     public LazyJoystick(Game game, PlayerSpy player) {
         this.game = game;
@@ -66,24 +67,28 @@ public class LazyJoystick implements Joystick, Tickable {
     @Override
     public void down() {
         direction = Direction.DOWN;
+        setPreviousDirection(direction);
         firstAct = (parameters != null);
     }
 
     @Override
     public void up() {
         direction = Direction.UP;
+        setPreviousDirection(direction);
         firstAct = (parameters != null);
     }
 
     @Override
     public void left() {
         direction = Direction.LEFT;
+        setPreviousDirection(direction);
         firstAct = (parameters != null);
     }
 
     @Override
     public void right() {
         direction = Direction.RIGHT;
+        setPreviousDirection(direction);
         firstAct = (parameters != null);
     }
 
@@ -110,12 +115,20 @@ public class LazyJoystick implements Joystick, Tickable {
             game.getJoystick().act(parameters);
         }
 
-        if (direction != null) {
-            switch (direction) {
-                case DOWN: game.getJoystick().down(); break;
-                case LEFT: game.getJoystick().left(); break;
-                case RIGHT: game.getJoystick().right(); break;
-                case UP: game.getJoystick().up(); break;
+        boolean directionCommandHandled = false;
+
+        if (previousDirection != null && direction != null) {
+            directionCommandHandled = turn();
+        }
+
+        if(!directionCommandHandled) {
+            if (direction != null) {
+                switch (direction) {
+                    case DOWN: game.getJoystick().down(); break;
+                    case LEFT: game.getJoystick().left(); break;
+                    case RIGHT: game.getJoystick().right(); break;
+                    case UP: game.getJoystick().up(); break;
+                }
             }
         }
 
@@ -126,6 +139,35 @@ public class LazyJoystick implements Joystick, Tickable {
         parameters = null;
         direction = null;
         message = null;
+        previousDirection = null;
         player.act();
+    }
+
+    private void setPreviousDirection(Direction direction) {
+        if(previousDirection == null) {
+            previousDirection = direction;
+        }
+    }
+
+    private boolean turn() {
+        boolean directionCommandHandled = false;
+        if(direction == Direction.DOWN && previousDirection == Direction.UP) {
+            directionCommandHandled = true;
+            game.getJoystick().up();
+            game.getJoystick().down();
+        } else if(direction == Direction.UP && previousDirection == Direction.DOWN) {
+            directionCommandHandled = true;
+            game.getJoystick().down();
+            game.getJoystick().up();
+        } else if(direction == Direction.LEFT && previousDirection == Direction.RIGHT) {
+            directionCommandHandled = true;
+            game.getJoystick().right();
+            game.getJoystick().left();
+        } else if(direction == Direction.RIGHT && previousDirection == Direction.LEFT) {
+            directionCommandHandled = true;
+            game.getJoystick().left();
+            game.getJoystick().right();
+        }
+        return directionCommandHandled;
     }
 }
