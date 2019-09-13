@@ -24,6 +24,7 @@
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 
 <%@ page import="com.codenjoy.dojo.services.settings.SettingValueType" %>
+<%@ page import="com.codenjoy.dojo.utils.WebUtils" %>
 
 <html>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
@@ -42,7 +43,7 @@
     <script src="${ctx}/resources/js/hotkeys.js"></script>
 </head>
 <body>
-    <div id="settings" contextPath="${ctx}" gameName="${gameName}"></div>
+    <div id="settings" contextPath="${WebUtils.normalizeContextPath(ctx)}" gameName="${gameName}"></div>
 
     <%@include file="forkMe.jsp"%>
     <div class="page-header">
