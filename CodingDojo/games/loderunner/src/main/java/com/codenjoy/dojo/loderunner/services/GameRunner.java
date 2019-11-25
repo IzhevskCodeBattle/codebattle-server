@@ -97,9 +97,17 @@ public class GameRunner extends AbstractGameType implements GameType {
     }
 
     @Override
-    public void refresh() {
-        level.refresh(getMap());
+    public void quietTick(){
+        if (this.settings.changed()){
+            for (String param: this.settings.whatChanged()){
+                if (param.equalsIgnoreCase("Custom map path")){
+                    level.refresh(getMap());
+                }
+            }
+            this.settings.changesReacted();
+        }
     }
+
 
     protected String getMap() {
         String customMapPath = settings.<String>getParameter("Custom map path").getValue();
