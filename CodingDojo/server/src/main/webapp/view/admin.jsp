@@ -180,6 +180,14 @@
         </tr>
     </table>
 
+    <table class="admin-table" id="refresh">
+        <tr>
+            <td>
+                <a href="${ctx}/admin?refreshGame&gameName=${gameName}">Refresh game</a>.
+            </td>
+        </tr>
+    </table>
+
     <form:form modelAttribute="adminSettings" action="admin" method="POST">
         <table class="admin-table" id="semifinal">
             <tr colspan="2">
@@ -221,6 +229,7 @@
             </tr>
         </table>
     </form:form>
+
 
     <table class="admin-table" id="cleanGame">
         <tr>
