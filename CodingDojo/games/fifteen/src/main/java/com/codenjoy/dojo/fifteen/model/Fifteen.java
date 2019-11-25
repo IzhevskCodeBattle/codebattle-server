@@ -4,7 +4,7 @@ package com.codenjoy.dojo.fifteen.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,18 +23,17 @@ package com.codenjoy.dojo.fifteen.model;
  */
 
 import com.codenjoy.dojo.fifteen.services.Events;
-import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.Dice;
+import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.printer.BoardReader;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * О! Это самое сердце игры - борда, на которой все происходит.
- * Если какой-то из жителей борды вдруг захочет узнать что-то у нее, то лучше ему дать интефейс {@see Field}
- * Борда реализует интерфейс {@see Tickable} чтобы быть уведомленной о каждом тике игры. Обрати внимание на {Fifteen#tick()}
- */
-public class Fifteen implements Tickable, Field {
+import static com.codenjoy.dojo.services.PointImpl.pt;
+
+public class Fifteen implements Field {
     private final Level level;
     private List<Player> players;
 
@@ -48,12 +47,9 @@ public class Fifteen implements Tickable, Field {
         this.level = level;
         this.dice = dice;
         size = level.getSize();
-        players = new LinkedList<Player>();
+        players = new LinkedList<>();
     }
 
-    /**
-     * @see Tickable#tick()
-     */
     @Override
     public void tick() {
         for (Player player : players) {
@@ -76,13 +72,9 @@ public class Fifteen implements Tickable, Field {
         return true;
     }
 
-    public int size() {
-        return size;
-    }
-
     @Override
     public boolean isBarrier(int x, int y) {
-        Point pt = PointImpl.pt(x, y);
+        Point pt = pt(x, y);
         return x > size - 1 || x < 0 || y < 0 || y > size - 1 || walls.contains(pt);
     }
 
@@ -97,25 +89,8 @@ public class Fifteen implements Tickable, Field {
     }
 
     @Override
-    public Point getFreeRandom() {
-        int rndX = 0;
-        int rndY = 0;
-        int c = 0;
-        do {
-            rndX = dice.next(size);
-            rndY = dice.next(size);
-        } while (!isFree(rndX, rndY) && c++ < 100);
-
-        if (c >= 100) {
-            return PointImpl.pt(0, 0);
-        }
-
-        return PointImpl.pt(rndX, rndY);
-    }
-
-    @Override
     public boolean isFree(int x, int y) {
-        Point pt = PointImpl.pt(x, y);
+        Point pt = pt(x, y);
 
         return !digits.contains(pt) &&
                 !walls.contains(pt) &&
@@ -123,25 +98,30 @@ public class Fifteen implements Tickable, Field {
     }
 
     public List<Hero> getHeroes() {
-        List<Hero> result = new ArrayList<Hero>();
+        List<Hero> result = new ArrayList<>();
         for (Player player : players) {
             result.add(player.getHero());
         }
         return result;
     }
 
+    @Override
     public void newGame(Player player) {
         walls = level.getWalls();
         digits = level.getDigits();
         size = level.getSize();
-        List<Hero> heros = level.getHero();
         if (!players.contains(player)) {
             players.add(player);
         }
-        player.setHero(heros.get(0));
-        player.hero.init(this);
+        player.newHero(this);
     }
 
+    @Override
+    public Hero getLevelHero() {
+        return level.getHero().get(0);
+    }
+
+    @Override
     public void remove(Player player) {
         players.remove(player);
     }
@@ -154,6 +134,7 @@ public class Fifteen implements Tickable, Field {
         return digits;
     }
 
+    @Override
     public BoardReader reader() {
         return new BoardReader() {
             private int size = Fifteen.this.size;
@@ -165,11 +146,11 @@ public class Fifteen implements Tickable, Field {
 
             @Override
             public Iterable<? extends Point> elements() {
-                List<Point> result = new LinkedList<Point>();
-                result.addAll(Fifteen.this.getWalls());
-                result.addAll(Fifteen.this.getHeroes());
-                result.addAll(Fifteen.this.getDigits());
-                return result;
+                return new LinkedList<Point>() {{
+                    addAll(Fifteen.this.getWalls());
+                    addAll(Fifteen.this.getHeroes());
+                    addAll(Fifteen.this.getDigits());
+                }};
             }
         };
     }

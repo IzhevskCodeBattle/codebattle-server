@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.dao;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,14 +25,10 @@ package com.codenjoy.dojo.services.dao;
 
 import com.codenjoy.dojo.services.jdbc.ConnectionThreadPoolFactory;
 import com.codenjoy.dojo.services.jdbc.CrudConnectionThreadPool;
-import com.codenjoy.dojo.services.jdbc.ObjectMapper;
-import org.springframework.stereotype.Component;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-@Component
 public class GameData {
+
+    public static final String EMPTY_JSON = "{}";
 
     private CrudConnectionThreadPool pool;
 
@@ -44,39 +40,21 @@ public class GameData {
                         "value varchar(10000));");
     }
 
-    public String get(final String gameType, final String key) {
+    public String get(String gameType, String key) {
         return pool.select("SELECT value FROM game_settings WHERE game_type = ? AND key = ?;",
                 new Object[]{gameType, key},
-                new ObjectMapper<String>() {
-                    @Override
-                    public String mapFor(ResultSet resultSet) throws SQLException {
-                        if (resultSet.next()) {
-                            return resultSet.getString("value");
-                        } else {
-                            return null;
-                        }
-                    }
-                }
+                rs -> rs.next() ? rs.getString("value") : EMPTY_JSON
         );
     }
 
-    public boolean exists(final String gameType, final String key) {
+    public boolean exists(String gameType, String key) {
         return pool.select("SELECT count(*) AS count FROM game_settings WHERE game_type = ? AND key = ?;",
                 new Object[]{gameType, key},
-                new ObjectMapper<Boolean>() {
-                    @Override
-                    public Boolean mapFor(ResultSet resultSet) throws SQLException {
-                        if (resultSet.next()) {
-                            return resultSet.getInt("count") > 0;
-                        } else {
-                            return false;
-                        }
-                    }
-                }
+                rs -> rs.next() && rs.getInt("count") > 0
         );
     }
 
-    public void set(final String gameType, final String key, final String value) {
+    public void set(String gameType, String key, String value) {
         if (exists(gameType, key)) {
             pool.update("UPDATE game_settings SET value = ? WHERE game_type = ? AND key = ?;",
                     new Object[]{value, gameType, key});

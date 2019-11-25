@@ -2,15 +2,15 @@
  * #%L
  * jQuery JavaScript Library v3.1.0
  * https://jquery.com/
- *
+ * 
  * Includes Sizzle.js
  * https://sizzlejs.com/
  * %%
- * Copyright jQuery Foundation and other contributors
+ * Copyright (C) 2018 Codenjoy
  * %%
  * Released under the MIT license
  * https://jquery.org/license
- *
+ * 
  * Date: 2016-07-07T21:44Z
  * #L%
  */
@@ -3805,13 +3805,10 @@ var readyList = jQuery.Deferred();
 
 jQuery.fn.ready = function( fn ) {
 
-	readyList
-		.then( fn )
-
-		// Wrap jQuery.readyException in a function so that the lookup
-		// happens at the time of error handling instead of callback
-		// registration.
-		.catch( function( error ) {
+	// Wrap jQuery.readyException in a function so that the lookup
+	// happens at the time of error handling instead of callback
+	// registration.
+	readyList.then( fn )['catch']( function( error ) {
 			jQuery.readyException( error );
 		} );
 
@@ -8576,7 +8573,7 @@ function ajaxConvert( s, response, jqXHR, isSuccess ) {
 				if ( conv !== true ) {
 
 					// Unless errors are allowed to bubble, catch and return them
-					if ( conv && s.throws ) {
+					if ( conv && s['throws'] ) {
 						response = conv( response );
 					} else {
 						try {

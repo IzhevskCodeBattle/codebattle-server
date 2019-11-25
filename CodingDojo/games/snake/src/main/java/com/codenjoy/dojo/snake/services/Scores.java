@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,11 +27,6 @@ import com.codenjoy.dojo.services.PlayerScores;
 import com.codenjoy.dojo.services.settings.Parameter;
 import com.codenjoy.dojo.services.settings.Settings;
 
-/**
- * User: oleksandr.baglai
- * Date: 10/1/12
- * Time: 3:22 AM
- */
 public class Scores implements PlayerScores {
 
     private final Parameter<Integer> gameOverPenalty;
@@ -55,11 +50,12 @@ public class Scores implements PlayerScores {
 
     @Override
     public int clear() {
+        length = startSnakeLength.getValue();
         return score = 0;
     }
 
     @Override
-    public int getScore() {
+    public Integer getScore() {
         return score;
     }
 
@@ -73,6 +69,7 @@ public class Scores implements PlayerScores {
             snakeEatStone();
         }
         score = Math.max(0, score);
+        length = Math.max(startSnakeLength.getValue(), length);
     }
 
     private void snakeIsDead() {
@@ -88,5 +85,10 @@ public class Scores implements PlayerScores {
     private void snakeEatStone() {
         score -= eatStonePenalty.getValue();
         length -= eatStoneDecrease.getValue();
+    }
+
+    @Override
+    public void update(Object score) {
+        this.score = Integer.valueOf(score.toString());
     }
 }

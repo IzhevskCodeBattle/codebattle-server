@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,13 +23,8 @@ package com.codenjoy.dojo.snake.model;
  */
 
 
-import com.codenjoy.dojo.services.CharElements;
+import com.codenjoy.dojo.services.printer.CharElements;
 
-/**
- * User: oleksandr.baglai
- * Date: 10/1/12
- * Time: 3:57 AM
- */
 public enum Elements implements CharElements {
     BAD_APPLE('☻'),
     GOOD_APPLE('☺'),

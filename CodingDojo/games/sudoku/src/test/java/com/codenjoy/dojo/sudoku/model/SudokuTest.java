@@ -4,7 +4,7 @@ package com.codenjoy.dojo.sudoku.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,20 +25,15 @@ package com.codenjoy.dojo.sudoku.model;
 
 import com.codenjoy.dojo.services.EventListener;
 import com.codenjoy.dojo.services.Joystick;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.sudoku.services.Events;
 import com.codenjoy.dojo.utils.TestUtils;
 import org.junit.Test;
 
-import static junit.framework.Assert.*;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-/**
- * User: sanja
- * Date: 17.12.13
- * Time: 4:47
- */
 public class SudokuTest {
 
     public static final String INITIAL =
@@ -196,15 +191,15 @@ public class SudokuTest {
 
     @Test
     public void shouldFixCoordinates() {
-        assertEquals(1, Sudoku.fix(1));
-        assertEquals(2, Sudoku.fix(2));
-        assertEquals(3, Sudoku.fix(3));
-        assertEquals(5, Sudoku.fix(4));
-        assertEquals(6, Sudoku.fix(5));
-        assertEquals(7, Sudoku.fix(6));
-        assertEquals(9, Sudoku.fix(7));
-        assertEquals(10, Sudoku.fix(8));
-        assertEquals(11, Sudoku.fix(9));
+        assertEquals(1, Player.fix(1));
+        assertEquals(2, Player.fix(2));
+        assertEquals(3, Player.fix(3));
+        assertEquals(5, Player.fix(4));
+        assertEquals(6, Player.fix(5));
+        assertEquals(7, Player.fix(6));
+        assertEquals(9, Player.fix(7));
+        assertEquals(10, Player.fix(8));
+        assertEquals(11, Player.fix(9));
     }
 
     @Test

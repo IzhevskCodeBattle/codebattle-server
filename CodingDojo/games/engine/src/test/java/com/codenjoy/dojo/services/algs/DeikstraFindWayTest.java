@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.algs;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,8 +24,8 @@ package com.codenjoy.dojo.services.algs;
 
 
 import com.codenjoy.dojo.client.AbstractBoard;
-import com.codenjoy.dojo.client.Direction;
-import com.codenjoy.dojo.services.CharElements;
+import com.codenjoy.dojo.services.Direction;
+import com.codenjoy.dojo.services.printer.CharElements;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.utils.TestUtils;
 import org.junit.Test;
@@ -34,9 +34,6 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-/**
- * Created by indigo on 03.08.2016.
- */
 public class DeikstraFindWayTest {
 
     @Test

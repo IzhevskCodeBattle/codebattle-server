@@ -2,7 +2,7 @@
   #%L
   Codenjoy - it's a dojo-like platform from developers to developers.
   %%
-  Copyright (C) 2016 Codenjoy
+  Copyright (C) 2018 Codenjoy
   %%
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as
@@ -22,12 +22,9 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" %>
 
-<div id="glasses">
+<div id="glasses" class="glasses game" zoom-on-wheel>
     <span class="score-info width-calculator" id="width_calculator_container"></span>
     <div id="showdata"></div>
-    <div id="donate" style="display:none;">
-        <input type="button" id="want-donate" value="Помочь проекту..."/>
-    </div>
     <div id="players_container">
         <script template type="text/x-jquery-tmpl">
             <div id="div_{%= id %}" class="player-canvas">
@@ -35,23 +32,26 @@
                     <tr>
                         <td>
                             <div class="player_info">
-                                <span id="player_name" class="label label-info big">{%= name %}</span> :
-                                <span class="label label-info big" id="score_{%= id %}"></span>
+                                <h2>
+                                    <span id="player_name" class="label label-primary">{%= name %}</span> :
+                                    <span class="label label-primary" id="score_{%= id %}"></span>
+                                </h2>
                             </div>
-                            <%@include file="joystick.jsp"%>
                         </td>
                     </tr>
                     <tr style="display: {%= visible %}">
                         <td>
                             <div class="player_info">
-                                <span class="label small">Level</span> :
-                                <span class="label small" id="level_{%= id %}"></span>
+                                <h4>
+                                    <span class="label label-default">Level</span> :
+                                    <span class="label label-default" id="level_{%= id %}"></span>
+                                </h4>
                             </div>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <canvas id="{%= id %}" style="border:1px solid">
+                            <canvas id="{%= id %}">
                                 Your browser does not support the canvas element.
                             </canvas>
 

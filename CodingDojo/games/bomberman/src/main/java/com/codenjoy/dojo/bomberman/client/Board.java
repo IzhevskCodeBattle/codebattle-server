@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,7 +29,6 @@ import static com.codenjoy.dojo.services.PointImpl.pt;
 
 import com.codenjoy.dojo.client.AbstractBoard;
 import com.codenjoy.dojo.services.Point;
-import com.codenjoy.dojo.services.PointImpl;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -42,20 +41,18 @@ public class Board extends AbstractBoard<Elements> {
         return Elements.valueOf(ch);
     }
 
-    public Point getBomberman() {
-        return get(BOMBERMAN, BOMB_BOMBERMAN, DEAD_BOMBERMAN).get(0);
+    @Override
+    protected int inversionY(int y) {
+        return size - 1 - y;
     }
 
-    public Collection<Point> getOtherBombermans() {
-        return get(OTHER_BOMBERMAN, OTHER_BOMB_BOMBERMAN, OTHER_DEAD_BOMBERMAN);
-    }
-
-    public boolean isGameOver() {
-        return !get(DEAD_BOMBERMAN).isEmpty();
+    @Override
+    protected boolean withoutCorners() {
+        return true;
     }
 
     public Elements getAt(int x, int y) {
-        if (x < 0 || y < 0 || x >= size || y >= size) {
+        if (isOutOfField(x, y)) {
             return WALL;
         }
         return super.getAt(x, y);
@@ -65,7 +62,7 @@ public class Board extends AbstractBoard<Elements> {
         Collection<Point> all = getMeatChoppers();
         all.addAll(getWalls());
         all.addAll(getBombs());
-        all.addAll(getDestroyWalls());
+        all.addAll(getDestroyableWalls());
         all.addAll(getOtherBombermans());
 
         return removeDuplicates(all);
@@ -73,7 +70,7 @@ public class Board extends AbstractBoard<Elements> {
 
     @Override
     public String toString() {
-        return String.format("Board:\n%s\n" +
+        return String.format("%s\n" +
             "Bomberman at: %s\n" +
             "Other bombermans at: %s\n" +
             "Meat choppers at: %s\n" +
@@ -85,10 +82,22 @@ public class Board extends AbstractBoard<Elements> {
                 getBomberman(),
                 getOtherBombermans(),
                 getMeatChoppers(),
-                getDestroyWalls(),
+                getDestroyableWalls(),
                 getBombs(),
                 getBlasts(),
                 getFutureBlasts());
+    }
+
+    public Point getBomberman() {
+        return get(BOMBERMAN, BOMB_BOMBERMAN, DEAD_BOMBERMAN).get(0);
+    }
+
+    public Collection<Point> getOtherBombermans() {
+        return get(OTHER_BOMBERMAN, OTHER_BOMB_BOMBERMAN, OTHER_DEAD_BOMBERMAN);
+    }
+
+    public boolean isMyBombermanDead() {
+        return !get(DEAD_BOMBERMAN).isEmpty();
     }
 
     public Collection<Point> getMeatChoppers() {
@@ -99,18 +108,19 @@ public class Board extends AbstractBoard<Elements> {
         return get(WALL);
     }
 
-    public Collection<Point> getDestroyWalls() {
-        return get(DESTROY_WALL);
+    public Collection<Point> getDestroyableWalls() {
+        return get(DESTROYABLE_WALL);
     }
 
     public Collection<Point> getBombs() {
-        List<Point> result = new LinkedList<Point>();
+        List<Point> result = new LinkedList<>();
         result.addAll(get(BOMB_TIMER_1));
         result.addAll(get(BOMB_TIMER_2));
         result.addAll(get(BOMB_TIMER_3));
         result.addAll(get(BOMB_TIMER_4));
         result.addAll(get(BOMB_TIMER_5));
         result.addAll(get(BOMB_BOMBERMAN));
+        result.addAll(get(OTHER_BOMB_BOMBERMAN));
         return result;
     }
 
@@ -118,29 +128,33 @@ public class Board extends AbstractBoard<Elements> {
         return get(BOOM);
     }
 
-    public Collection<Point> getFutureBlasts() {
-        Collection<Point> result = new LinkedList<Point>();
+    public Collection<Point> getFutureBlasts() {        
         Collection<Point> bombs = getBombs();
-        bombs.addAll(get(OTHER_BOMB_BOMBERMAN));
-        bombs.addAll(get(BOMB_BOMBERMAN));
-
+        Collection<Point> result = new LinkedList<>();
         for (Point bomb : bombs) {
             result.add(bomb);
-            result.add(new PointImpl(bomb.getX() - 1, bomb.getY()));
-            result.add(new PointImpl(bomb.getX() + 1, bomb.getY()));
-            result.add(new PointImpl(bomb.getX()    , bomb.getY() - 1));
-            result.add(new PointImpl(bomb.getX()    , bomb.getY() + 1));
+            // TODO remove duplicate (check same logic inside parrent isNear for example)
+            result.add(pt(bomb.getX() - 1, bomb.getY()));
+            result.add(pt(bomb.getX() + 1, bomb.getY()));
+            result.add(pt(bomb.getX(), bomb.getY() - 1));
+            result.add(pt(bomb.getX(), bomb.getY() + 1));
         }
-        for (Point blast : result.toArray(new Point[0])) {
+        Collection<Point> result2 = new LinkedList<Point>();
+        for (Point blast : result) {
             if (blast.isOutOf(size) || getWalls().contains(blast)) {
-                result.remove(blast);
+                continue;
             }
+            result2.add(blast);
         }
-        return removeDuplicates(result);
+        return removeDuplicates(result2);
     }
 
     public boolean isBarrierAt(int x, int y) {
         return getBarriers().contains(pt(x, y));
+    }
+
+    public boolean isBarrierAt(Point point) {
+        return isBarrierAt(point.getX(), point.getY());
     }
 
 }

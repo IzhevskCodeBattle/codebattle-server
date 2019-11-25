@@ -4,7 +4,7 @@ package com.codenjoy.dojo.pong.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,5 +27,5 @@ package com.codenjoy.dojo.pong.services;
  * или, быть может, наоборот - он поднял что-то ценное и ты хочешь ему дать бонус. Вот все все ивенты.
  */
 public enum Events {
-    WIN
+    LOOSE, WIN
 }

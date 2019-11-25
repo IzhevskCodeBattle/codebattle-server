@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,13 +25,16 @@ package com.codenjoy.dojo.services;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public interface GameService {
 
-    Set<String> getGameNames();
+    List<String> getGameNames();
+
+    List<String> getOnlyGameNames();
 
     Map<String, List<String>> getSprites();
 
     GameType getGame(String name);
+
+    String getDefaultGame();
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,12 +22,6 @@ package com.codenjoy.dojo.snake.services;
  * #L%
  */
 
-
-/**
- * User: oleksandr.baglai
- * Date: 3/9/13
- * Time: 3:42 PM
- */
 public enum Events {
     KILL, EAT_STONE, EAT_APPLE;
 }

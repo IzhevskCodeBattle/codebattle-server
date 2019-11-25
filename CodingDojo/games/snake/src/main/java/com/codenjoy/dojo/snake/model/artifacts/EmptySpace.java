@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.model.artifacts;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,13 +29,13 @@ import com.codenjoy.dojo.snake.model.Hero;
 
 public class EmptySpace extends PointImpl implements Element {
 
-	public EmptySpace(Point point) {
-		super(point);
-	}
+    public EmptySpace(Point point) {
+        super(point);
+    }
 
-	@Override
-	public void affect(Hero snake) {
-		// do nothing		
-	}
+    @Override
+    public void affect(Hero snake) {
+        // do nothing
+    }
 
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,7 +23,9 @@ package com.codenjoy.dojo.services;
  */
 
 
-import com.codenjoy.dojo.services.hero.GameMode;
+import com.codenjoy.dojo.services.multiplayer.MultiplayerType;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.services.settings.Settings;
 import com.codenjoy.dojo.services.settings.SettingsImpl;
 
@@ -36,18 +38,20 @@ public abstract class AbstractGameType implements GameType {
     protected final Settings settings;
 
     public AbstractGameType() {
-        settings = new SettingsImpl();
+        settings = createSettings();
+    }
+
+    /**
+     * Этот метод можно пеоерпределить. Используется в тестовых целях.
+     * @return Настройки игры до момента, когда оно будет использовано в системе
+     */
+    protected SettingsImpl createSettings() {
+        return new SettingsImpl();
     }
 
     @Override
-    public boolean newAI(String aiName) {
-        // do nothing
-        return false;
-    }
-
-    @Override
-    public boolean isSingleBoard() {
-        return GameMode.NOT_SINGLE_MODE;
+    public MultiplayerType getMultiplayerType() {
+        return MultiplayerType.SINGLE;
     }
 
 
@@ -59,5 +63,28 @@ public abstract class AbstractGameType implements GameType {
     @Override
     public String getVersion() {
         return VersionReader.getCurrentVersion(name());
+    }
+
+    /**
+     * Этот метод будет дергаться перед всеми тиками игрушек
+     */
+    @Override
+    public void tick() {
+        // do nothing
+    }
+
+    @Override
+    public Dice getDice() {
+        return new RandomDice();
+    }
+
+    @Override
+    public PrinterFactory getPrinterFactory() {
+        return new PrinterFactoryImpl();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("GameType[%s]", name());
     }
 }

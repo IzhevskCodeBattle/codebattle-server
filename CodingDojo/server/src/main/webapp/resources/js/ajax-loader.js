@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,20 +22,21 @@
 
 var game = game || {};
 
-function loadData(url, onLoad) {
-    var pathFromUrl = '/' + location.pathname.split('/')[1] + '/';
+function getContext() {
+    var pathFromUrl = '/' + location.pathname.split('/')[1];
     var ctx = (!!game.contextPath) ? game.contextPath : pathFromUrl;
-    $.get(ctx + url, {}, function (data) {
+    return ctx;
+}
+
+function loadData(url, onLoad) {
+    $.get(getContext() + url, {}, function (data) {
         onLoad(data);
     });
 }
 
-function loadContext(onLoad) {
-    loadData('rest/context', function(ctx) {
-        game.contextPath = ctx;
-        if (!!onLoad) {
-            onLoad();
-        }
+function sendData(url, jsonData, onSend) {
+    $.post(getContext() + url, jsonData, function (data) {
+        onSend(data);
     });
 }
 

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,6 +24,7 @@ package com.codenjoy.dojo.client;
 
 
 import com.codenjoy.dojo.services.Point;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,6 +41,8 @@ public class AbstractLayeredBoardTest {
 
     public static final int LAYER_1 = 0;
     public static final int LAYER_2 = 1;
+    public static final int LAYER_3 = 2;
+    public static final int LAYER_4 = 3;
 
     private AbstractLayeredBoard board;
 
@@ -83,6 +86,47 @@ public class AbstractLayeredBoardTest {
     }
 
     @Test
+    public void shouldWork_toString_whenThreeLayers() {
+        board = board("{\"layers\":[\"" +
+                "1111" +
+                "1221" +
+                "1331" +
+                "1111" +
+                "\", \"" +
+                "    " +
+                " 4  " +
+                "  4 " +
+                "    " +
+                "\", \"" +
+                "    " +
+                "  5 " +
+                " 5  " +
+                "    " +
+                "\"]}");
+
+        assertEquals(
+                "[[1, 1, 1, 1], " +
+                "[1, 2, 3, 1], " +
+                "[1, 2, 3, 1], " +
+                "[1, 1, 1, 1]]",
+                Arrays.deepToString(board.getField(LAYER_1)));
+
+        assertEquals(
+                "[[ ,  ,  ,  ], " +
+                "[ , 4,  ,  ], " +
+                "[ ,  , 4,  ], " +
+                "[ ,  ,  ,  ]]",
+                Arrays.deepToString(board.getField(LAYER_2)));
+
+        assertEquals(
+                "[[ ,  ,  ,  ], " +
+                "[ ,  , 5,  ], " +
+                "[ , 5,  ,  ], " +
+                "[ ,  ,  ,  ]]",
+                Arrays.deepToString(board.getField(LAYER_3)));
+    }
+
+    @Test
     public void shouldWork_toString_whenOneLayer() {
         board = board(
                 "1111" +
@@ -96,6 +140,24 @@ public class AbstractLayeredBoardTest {
                 "1221\n" +
                 "1331\n" +
                 "1111\n", board.toString());
+    }
+
+    @Test
+    public void shouldWork_canGetSourceJson() {
+        board = board("{\"layers\":[\"" +
+                "1111" +
+                "1221" +
+                "1331" +
+                "1111" +
+                "\", \"" +
+                "    " +
+                " 4  " +
+                "  4 " +
+                "    " +
+                "\"], \"key\":\"value\"}");
+
+        assertEquals("value", board.source.get("key"));
+        assertEquals("[\"1111122113311111\",\"     4    4     \"]", board.source.getJSONArray("layers").toString());
     }
 
     @Test
@@ -159,23 +221,23 @@ public class AbstractLayeredBoardTest {
     @Test
     public void shouldWork_isNear_layer2() {
         assertEquals(true, board.isNear(LAYER_2, 1, 1, Elements.NONE));
-        assertEquals(false, board.isNear(LAYER_2, 2, 2, Elements.FOUR));
+        assertEquals(false, board.isNear(LAYER_2, 0, 3, Elements.FOUR));
     }
 
     @Test
     public void shouldWork_getNear_layer1() {
-        assertEquals("[1, 1, 1, 1, 2, 3, 1, 2, 3]", board.getNear(LAYER_1, 1, 1).toString());
-        assertEquals("[2, 3, 1, 2, 3, 1, 1, 1, 1]", board.getNear(LAYER_1, 2, 2).toString());
-        assertEquals("[3, 1, 1, 1]", board.getNear(LAYER_1, 3, 3).toString());
+        assertEquals("[1, 1, 1, 1, 3, 1, 2, 3]", board.getNear(LAYER_1, 1, 1).toString());
+        assertEquals("[2, 3, 1, 2, 1, 1, 1, 1]", board.getNear(LAYER_1, 2, 2).toString());
+        assertEquals("[3, 1, 1]", board.getNear(LAYER_1, 3, 3).toString());
         assertEquals("[]", board.getNear(LAYER_1, 5, 5).toString());
         assertEquals("[1]", board.getNear(LAYER_1, -1, -1).toString());
     }
 
     @Test
     public void shouldWork_getNear_layer2() {
-        assertEquals("[ ,  ,  ,  , 4,  ,  ,  , 4]", board.getNear(LAYER_2, 1, 1).toString());
-        assertEquals("[4,  ,  ,  , 4,  ,  ,  ,  ]", board.getNear(LAYER_2, 2, 2).toString());
-        assertEquals("[4,  ,  ,  ]", board.getNear(LAYER_2, 3, 3).toString());
+        assertEquals("[ ,  ,  ,  ,  ,  ,  , 4]", board.getNear(LAYER_2, 1, 1).toString());
+        assertEquals("[4,  ,  ,  ,  ,  ,  ,  ]", board.getNear(LAYER_2, 2, 2).toString());
+        assertEquals("[4,  ,  ]", board.getNear(LAYER_2, 3, 3).toString());
         assertEquals("[]", board.getNear(LAYER_2, 5, 5).toString());
         assertEquals("[ ]", board.getNear(LAYER_2, -1, -1).toString());
     }
@@ -196,20 +258,20 @@ public class AbstractLayeredBoardTest {
     @Test
     public void shouldWork_countNear_layer1() {
         assertEquals(2, board.countNear(LAYER_1, 0, 0, Elements.ONE));
-        assertEquals(0, board.countNear(LAYER_1, 0, 0, Elements.TWO));
+        assertEquals(1, board.countNear(LAYER_1, 0, 0, Elements.TWO));
         assertEquals(0, board.countNear(LAYER_1, 0, 0, Elements.THREE));
 
-        assertEquals(2, board.countNear(LAYER_1, 1, 1, Elements.ONE));
+        assertEquals(5, board.countNear(LAYER_1, 1, 1, Elements.ONE));
         assertEquals(1, board.countNear(LAYER_1, 1, 1, Elements.TWO));
-        assertEquals(1, board.countNear(LAYER_1, 1, 1, Elements.THREE));
+        assertEquals(2, board.countNear(LAYER_1, 1, 1, Elements.THREE));
 
-        assertEquals(2, board.countNear(LAYER_1, 2, 2, Elements.ONE));
-        assertEquals(1, board.countNear(LAYER_1, 2, 2, Elements.TWO));
+        assertEquals(5, board.countNear(LAYER_1, 2, 2, Elements.ONE));
+        assertEquals(2, board.countNear(LAYER_1, 2, 2, Elements.TWO));
         assertEquals(1, board.countNear(LAYER_1, 2, 2, Elements.THREE));
 
         assertEquals(2, board.countNear(LAYER_1, 3, 3, Elements.ONE));
         assertEquals(0, board.countNear(LAYER_1, 3, 3, Elements.TWO));
-        assertEquals(0, board.countNear(LAYER_1, 3, 3, Elements.THREE));
+        assertEquals(1, board.countNear(LAYER_1, 3, 3, Elements.THREE));
 
         assertEquals(0, board.countNear(LAYER_1, -1, -1, Elements.THREE));
     }
@@ -217,19 +279,19 @@ public class AbstractLayeredBoardTest {
     @Test
     public void shouldWork_countNear_layer2() {
         assertEquals(0, board.countNear(LAYER_2, 0, 0, Elements.ONE));
-        assertEquals(0, board.countNear(LAYER_2, 0, 0, Elements.FOUR));
+        assertEquals(1, board.countNear(LAYER_2, 0, 0, Elements.FOUR));
         assertEquals(2, board.countNear(LAYER_2, 0, 0, Elements.NONE));
 
         assertEquals(0, board.countNear(LAYER_2, 1, 1, Elements.ONE));
-        assertEquals(0, board.countNear(LAYER_2, 1, 1, Elements.FOUR));
-        assertEquals(4, board.countNear(LAYER_2, 1, 1, Elements.NONE));
+        assertEquals(1, board.countNear(LAYER_2, 1, 1, Elements.FOUR));
+        assertEquals(7, board.countNear(LAYER_2, 1, 1, Elements.NONE));
 
         assertEquals(0, board.countNear(LAYER_2, 2, 1, Elements.ONE));
         assertEquals(2, board.countNear(LAYER_2, 2, 1, Elements.FOUR));
-        assertEquals(2, board.countNear(LAYER_2, 2, 1, Elements.NONE));
+        assertEquals(6, board.countNear(LAYER_2, 2, 1, Elements.NONE));
 
         assertEquals(0, board.countNear(LAYER_2, 3, 3, Elements.ONE));
-        assertEquals(0, board.countNear(LAYER_2, 3, 3, Elements.FOUR));
+        assertEquals(1, board.countNear(LAYER_2, 3, 3, Elements.FOUR));
         assertEquals(2, board.countNear(LAYER_2, 3, 3, Elements.NONE));
 
         assertEquals(0, board.countNear(LAYER_2, -1, -1, Elements.THREE));

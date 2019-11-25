@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,18 +24,13 @@ package com.codenjoy.dojo.snake.client;
 
 
 import com.codenjoy.dojo.client.AbstractBoard;
-import com.codenjoy.dojo.client.Direction;
+import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.snake.model.Elements;
 
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * User: oleksandr.baglai
- * Date: 10/2/12
- * Time: 12:07 AM
- */
 public class Board extends AbstractBoard<Elements> {
 
     @Override
@@ -45,6 +40,11 @@ public class Board extends AbstractBoard<Elements> {
 
     public List<Point> getApples() {
         return get(Elements.GOOD_APPLE);
+    }
+
+    @Override
+    protected int inversionY(int y) {
+        return size - 1 - y;
     }
 
     public Direction getSnakeDirection() {

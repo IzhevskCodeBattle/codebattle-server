@@ -4,7 +4,7 @@ package com.codenjoy.dojo.chess.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,7 +26,7 @@ package com.codenjoy.dojo.chess.model;
 
 import com.codenjoy.dojo.chess.model.figures.Figure;
 import com.codenjoy.dojo.chess.model.figures.Level;
-import com.codenjoy.dojo.services.BoardReader;
+import com.codenjoy.dojo.services.printer.BoardReader;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.Tickable;
@@ -34,7 +34,7 @@ import com.codenjoy.dojo.services.Tickable;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Chess implements Tickable, Field {
+public class Chess implements Field {
 
     private List<Figure> white;
     private List<Figure> black;
@@ -65,6 +65,7 @@ public class Chess implements Tickable, Field {
         return size;
     }
 
+    @Override
     public void newGame(Player player) {
         if (!players.contains(player)) {
             players.add(player);
@@ -72,6 +73,7 @@ public class Chess implements Tickable, Field {
         player.initFigures(this);
     }
 
+    @Override
     public void remove(Player player) {
         players.remove(player);
     }
@@ -80,6 +82,7 @@ public class Chess implements Tickable, Field {
         return white;
     }
 
+    @Override
     public BoardReader reader() {
         return new BoardReader() {
             private int size = Chess.this.size;
@@ -91,12 +94,10 @@ public class Chess implements Tickable, Field {
 
             @Override
             public Iterable<? extends Point> elements() {
-                List<Point> result = new LinkedList<Point>();
-
-                result.addAll(white);
-                result.addAll(black);
-
-                return result;
+                return new LinkedList<Point>(){{
+                    addAll(white);
+                    addAll(black);
+                }};
             }
         };
     }

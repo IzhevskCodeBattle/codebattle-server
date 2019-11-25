@@ -4,7 +4,7 @@ package com.codenjoy.dojo.football.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,30 +22,26 @@ package com.codenjoy.dojo.football.model;
  * #L%
  */
 
-import com.codenjoy.dojo.services.CharElements;
+import com.codenjoy.dojo.services.printer.CharElements;
 
-/**
- * Тут указана легенда всех возможных объектов на поле и их состояний.
- * Важно помнить, что для каждой енумной константы надо создать спрайт в папке \src\main\webapp\resources\sprite.
- */
 public enum Elements implements CharElements {
 
-	NONE(' '),       // например это пустое место, куда можно перейти герою
-    WALL('☼'),       // а это внешняя разметка поля, через которую я хочу чтобы проходить нельзя было
-    HERO('☺'),		 // а это мой герой
-    HERO_W_BALL('☻'),// герой с мячом
-    BALL('*'),		 // а это мяч
-    STOPPED_BALL('∙'),		 // а это маленький мяч (остановленный)
-    TOP_GOAL('┴'),	 // верхние ворота
-    BOTTOM_GOAL('┬'),// нижние ворота
-    MY_GOAL('='),	 // мои ворота
-    ENEMY_GOAL('⌂'), // чужие ворота
-    HITED_GOAL('x'), // гол в ворота
+    NONE(' '),        // это пустое место, куда можно перейти герою
+    WALL('☼'),        // а это внешняя разметка поля, через которую я хочу чтобы проходить нельзя было
+    HERO('☺'),        // а это мой герой
+    HERO_W_BALL('☻'), // герой с мячом
+    BALL('*'),        // а это мяч
+    STOPPED_BALL('∙'),// а это маленький мяч (остановленный)
+    TOP_GOAL('┴'),    // верхние ворота
+    BOTTOM_GOAL('┬'), // нижние ворота
+    MY_GOAL('='),     // мои ворота
+    ENEMY_GOAL('⌂'),  // чужие ворота
+    HITED_GOAL('x'),  // гол в ворота
     HITED_MY_GOAL('#'), // гол в мои ворота
-    TEAM_MEMBER('♦'),		 // член моей команды
+    TEAM_MEMBER('♦'),         // член моей команды
     TEAM_MEMBER_W_BALL('♥'), // член моей команды с мячем
-    ENEMY('♣'),		 		 // член второй команды
-    ENEMY_W_BALL('♠');		 // член второй команды с мячем
+    ENEMY('♣'),              // член второй команды
+    ENEMY_W_BALL('♠');       // член второй команды с мячем
     
     final char ch;
 

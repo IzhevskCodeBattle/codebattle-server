@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.model.artifacts;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,11 +26,6 @@ package com.codenjoy.dojo.snake.model.artifacts;
 import com.codenjoy.dojo.services.PointImpl;
 import com.codenjoy.dojo.snake.model.Hero;
 
-/**
- * User: oleksandr.baglai
- * Date: 10/2/12
- * Time: 2:48 AM
- */
 public class EateablePoint extends PointImpl implements Element {
     private Runnable doItOnEat;
 

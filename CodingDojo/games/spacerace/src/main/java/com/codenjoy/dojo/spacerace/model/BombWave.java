@@ -4,7 +4,7 @@ package com.codenjoy.dojo.spacerace.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,12 +23,8 @@ package com.codenjoy.dojo.spacerace.model;
  */
 
 
-import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.PointImpl;
 
-/**
- * Created by indigo on 08.08.2015.
- */
 public class BombWave extends PointImpl {
     private Bomb bomb;
 

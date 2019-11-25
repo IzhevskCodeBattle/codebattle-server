@@ -4,7 +4,7 @@ package com.codenjoy.dojo.football.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,7 +22,7 @@ package com.codenjoy.dojo.football.client;
  * #L%
  */
 
-import com.codenjoy.dojo.client.Direction;
+import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.client.Solver;
 import com.codenjoy.dojo.football.client.Board;
 import com.codenjoy.dojo.football.client.YourSolver;
@@ -32,8 +32,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.Matchers.anyInt;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

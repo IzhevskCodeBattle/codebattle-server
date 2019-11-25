@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,49 +23,35 @@ package com.codenjoy.dojo.bomberman.services;
  */
 
 
-import com.codenjoy.dojo.bomberman.client.ai.ApofigSolver;
-import com.codenjoy.dojo.bomberman.model.Bomberman;
-import com.codenjoy.dojo.bomberman.model.Elements;
-import com.codenjoy.dojo.bomberman.model.GameSettings;
-import com.codenjoy.dojo.bomberman.model.Single;
-import com.codenjoy.dojo.client.WebSocketRunner;
+import com.codenjoy.dojo.bomberman.client.Board;
+import com.codenjoy.dojo.bomberman.client.ai.AISolver;
+import com.codenjoy.dojo.bomberman.model.*;
+import com.codenjoy.dojo.client.ClientBoard;
+import com.codenjoy.dojo.client.Solver;
 import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.hero.GameMode;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.MultiplayerType;
 import com.codenjoy.dojo.services.settings.Parameter;
 
-/**
- * User: oleksandr.baglai
- * Date: 3/9/13
- * Time: 7:18 PM
- */
 public class GameRunner extends AbstractGameType implements GameType {
 
     public static final String GAME_NAME = "bomberman";
     private GameSettings gameSettings;
-    private Bomberman board;
 
     public GameRunner() {
-        gameSettings = new OptionGameSettings(settings);
+        gameSettings = getGameSettings();
         new Scores(0, settings); // TODO сеттринги разделены по разным классам, продумать архитектуру
     }
 
-    private Bomberman newGame() {
+    @Override
+    public PlayerScores getPlayerScores(Object score) {
+        return new Scores((Integer)score, settings);
+    }
+
+    @Override
+    public GameField createGame(int levelNumber) {
         return new Bomberman(gameSettings);
-    }
-
-    @Override
-    public PlayerScores getPlayerScores(int score) {
-        return new Scores(score, settings);
-    }
-
-    @Override
-    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
-        if (board == null) {
-            board = newGame();
-        }
-        Game game = new Single(board, listener, factory);
-        game.newGame();
-        return game;
     }
 
     @Override
@@ -84,13 +70,26 @@ public class GameRunner extends AbstractGameType implements GameType {
     }
 
     @Override
-    public boolean isSingleBoard() {
-        return GameMode.SINGLE_MODE;
+    public Class<? extends Solver> getAI() {
+        return AISolver.class;
     }
 
     @Override
-    public boolean newAI(String aiName) {
-        ApofigSolver.start(aiName, WebSocketRunner.Host.REMOTE_LOCAL);
-        return true;
+    public Class<? extends ClientBoard> getBoard() {
+        return Board.class;
+    }
+
+    @Override
+    public MultiplayerType getMultiplayerType() {
+        return MultiplayerType.MULTIPLE;
+    }
+
+    @Override
+    public GamePlayer createPlayer(EventListener listener, String playerName) {
+        return new Player(listener);
+    }
+
+    protected GameSettings getGameSettings() {
+        return new OptionGameSettings(settings, getDice());
     }
 }

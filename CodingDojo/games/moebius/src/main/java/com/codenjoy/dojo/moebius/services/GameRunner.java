@@ -4,7 +4,7 @@ package com.codenjoy.dojo.moebius.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,15 +23,16 @@ package com.codenjoy.dojo.moebius.services;
  */
 
 
-import com.codenjoy.dojo.client.WebSocketRunner;
-import com.codenjoy.dojo.moebius.client.ai.ApofigSolver;
+import com.codenjoy.dojo.client.ClientBoard;
+import com.codenjoy.dojo.client.Solver;
+import com.codenjoy.dojo.moebius.client.Board;
+import com.codenjoy.dojo.moebius.client.ai.AISolver;
 import com.codenjoy.dojo.moebius.model.*;
 import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.hero.GameMode;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.MultiplayerType;
 import com.codenjoy.dojo.services.settings.Parameter;
-import com.codenjoy.dojo.services.settings.Settings;
-import com.codenjoy.dojo.services.settings.SettingsImpl;
-import org.apache.commons.lang.StringUtils;
 
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
 
@@ -44,37 +45,17 @@ public class GameRunner extends AbstractGameType implements GameType {
         new Scores(0, settings);
         size = settings.addEditBox("Size").type(Integer.class).def(15);
 
-        String map = buildMap(size.getValue());
-        level = new LevelImpl(map);
-    }
-
-    private String buildMap(int size) {
-        StringBuilder board = new StringBuilder();
-        board.append(pad(size, '╔', '═', '╗'));
-        for (int y = 1; y < size - 1; y++) {
-            board.append(pad(size, '║', ' ', '║'));
-        }
-        board.append(pad(size, '╚', '═', '╝'));
-        return board.toString();
-    }
-
-    private String pad(int len, char left, char middle, char right) {
-        return left + StringUtils.rightPad("", len - 2, middle) + right;
-    }
-
-    private Moebius newGame(EventListener listener) {
-        return new Moebius(level, new RandomDice(), listener);
+        level = new LevelImpl(size.getValue());
     }
 
     @Override
-    public PlayerScores getPlayerScores(int score) {
-        return new Scores(score, settings);
+    public GameField createGame(int levelNumber) {
+        return new Moebius(level, getDice());
     }
 
     @Override
-    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
-        Moebius moebius = newGame(listener);
-        return new Single(moebius, listener, factory);
+    public PlayerScores getPlayerScores(Object score) {
+        return new Scores((Integer) score, settings);
     }
 
     @Override
@@ -93,13 +74,22 @@ public class GameRunner extends AbstractGameType implements GameType {
     }
 
     @Override
-    public boolean isSingleBoard() {
-        return GameMode.NOT_SINGLE_MODE;
+    public Class<? extends Solver> getAI() {
+        return AISolver.class;
     }
 
     @Override
-    public boolean newAI(String aiName) {
-        ApofigSolver.start(aiName, WebSocketRunner.Host.REMOTE_LOCAL);
-        return true;
+    public Class<? extends ClientBoard> getBoard() {
+        return Board.class;
+    }
+
+    @Override
+    public MultiplayerType getMultiplayerType() {
+        return MultiplayerType.SINGLE;
+    }
+
+    @Override
+    public GamePlayer createPlayer(EventListener listener, String playerName) {
+        return new Player(listener);
     }
 }

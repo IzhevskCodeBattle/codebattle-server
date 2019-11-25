@@ -4,7 +4,7 @@ package com.codenjoy.dojo.a2048.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,7 +23,7 @@ package com.codenjoy.dojo.a2048.model;
  */
 
 
-import com.codenjoy.dojo.services.CharElements;
+import com.codenjoy.dojo.services.printer.CharElements;
 
 public enum Elements implements CharElements {
 
@@ -88,6 +88,6 @@ public enum Elements implements CharElements {
         if (this == _x) {
             return -1;
         }
-        return Integer.valueOf(super.toString().substring(1));
+        return Integer.parseInt(super.toString().substring(1));
     }
 }

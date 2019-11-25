@@ -4,7 +4,7 @@ package com.codenjoy.dojo.sampletext.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,32 +24,30 @@ package com.codenjoy.dojo.sampletext.model;
 
 
 import com.codenjoy.dojo.sampletext.services.Events;
+import com.codenjoy.dojo.sampletext.services.GameRunner;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.Game;
+import com.codenjoy.dojo.services.multiplayer.Single;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.utils.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
-/**
- * User: sanja
- * Date: 19.12.13
- * Time: 5:22
- */
 public class SingleTest {
 
     private EventListener listener1;
     private EventListener listener2;
     private EventListener listener3;
-    private Single game1;
-    private Single game2;
-    private Single game3;
+    private Game game1;
+    private Game game2;
+    private Game game3;
     private Dice dice;
+    private SampleText field;
 
     // появляется другие игроки, игра становится мультипользовательской
     @Before
@@ -60,17 +58,20 @@ public class SingleTest {
                 "question3=answer3");
 
         dice = mock(Dice.class);
-        SampleText Sample = new SampleText(level, dice);
-        PrinterFactory factory = new PrinterFactoryImpl();
+        field = new SampleText(level, dice);
+        PrinterFactory factory = new GameRunner().getPrinterFactory();
 
         listener1 = mock(EventListener.class);
-        game1 = new Single(Sample, listener1, factory);
+        game1 = new Single(new Player(listener1), factory);
+        game1.on(field);
 
         listener2 = mock(EventListener.class);
-        game2 = new Single(Sample, listener2, factory);
+        game2 = new Single(new Player(listener2), factory);
+        game2.on(field);
 
         listener3 = mock(EventListener.class);
-        game3 = new Single(Sample, listener3, factory);
+        game3 = new Single(new Player(listener3), factory);
+        game3.on(field);
 
         dice(1, 4);
         game1.newGame();
@@ -90,8 +91,8 @@ public class SingleTest {
         assertField(expected, game1);
     }
 
-    private void assertField(String expected, Single game1) {
-        assertEquals(expected, game1.getBoardAsString().toString().replace('\"', '\''));
+    private void assertField(String expected, Game game) {
+        assertEquals(expected, JsonUtils.toStringSorted(game.getBoardAsString().toString()).replace('\"', '\''));
     }
 
     private void asrtFl2(String expected) {
@@ -122,29 +123,33 @@ public class SingleTest {
 
         game3.getJoystick().message("answer3");
 
-        game1.tick();
+        field.tick();
 
         // then
-        asrtFl1("{'history':[{'valid':true,'answer':'answer1','question':'question1'}]," +
+        asrtFl1("{'history':[{'answer':'answer1','question':'question1','valid':true}]," +
                 "'nextQuestion':'question2'}");
 
-        asrtFl2("{'history':[{'valid':false,'answer':'answer2','question':'question1'}]," +
+        asrtFl2("{'history':[{'answer':'answer2','question':'question1','valid':false}]," +
                 "'nextQuestion':'question1'}");
 
-        asrtFl3("{'history':[{'valid':false,'answer':'answer3','question':'question1'}]," +
+        asrtFl3("{'history':[{'answer':'answer3','question':'question1','valid':false}]," +
                 "'nextQuestion':'question1'}");
     }
 
     // игроков можно удалять из игры
     @Test
     public void shouldRemove() {
-        game3.destroy();
+        game3.close();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("{'history':[],'nextQuestion':'question1'}");
         asrtFl2("{'history':[],'nextQuestion':'question1'}");
-        asrtFl3("{'history':[],'nextQuestion':'question1'}");
+        try {
+            asrtFl3("{'history':[],'nextQuestion':'question1'}");
+        } catch (IllegalStateException e) {
+            assertEquals("No board for this player", e.getMessage());
+        }
     }
 
     // игрока можно ресетнуть
@@ -155,19 +160,19 @@ public class SingleTest {
         game2.getJoystick().message("answer1");
         game3.getJoystick().message("answer1");
 
-        game1.tick();
+        field.tick();
 
-        asrtFl1("{'history':[{'valid':true,'answer':'answer1','question':'question1'}],'nextQuestion':'question2'}");
-        asrtFl2("{'history':[{'valid':true,'answer':'answer1','question':'question1'}],'nextQuestion':'question2'}");
-        asrtFl3("{'history':[{'valid':true,'answer':'answer1','question':'question1'}],'nextQuestion':'question2'}");
+        asrtFl1("{'history':[{'answer':'answer1','question':'question1','valid':true}],'nextQuestion':'question2'}");
+        asrtFl2("{'history':[{'answer':'answer1','question':'question1','valid':true}],'nextQuestion':'question2'}");
+        asrtFl3("{'history':[{'answer':'answer1','question':'question1','valid':true}],'nextQuestion':'question2'}");
 
         // when
         game1.newGame();
-        game1.tick();
+        field.tick();
 
         asrtFl1("{'history':[],'nextQuestion':'question1'}");
-        asrtFl2("{'history':[{'valid':true,'answer':'answer1','question':'question1'}],'nextQuestion':'question2'}");
-        asrtFl3("{'history':[{'valid':true,'answer':'answer1','question':'question1'}],'nextQuestion':'question2'}");
+        asrtFl2("{'history':[{'answer':'answer1','question':'question1','valid':true}],'nextQuestion':'question2'}");
+        asrtFl3("{'history':[{'answer':'answer1','question':'question1','valid':true}],'nextQuestion':'question2'}");
     }
 
     // игрок может ответить правильно и неправильно
@@ -178,11 +183,11 @@ public class SingleTest {
         game2.getJoystick().message("answer2");
         game3.getJoystick().message("answer3");
 
-        game1.tick();
+        field.tick();
 
-        asrtFl1("{'history':[{'valid':true,'answer':'answer1','question':'question1'}],'nextQuestion':'question2'}");
-        asrtFl2("{'history':[{'valid':false,'answer':'answer2','question':'question1'}],'nextQuestion':'question1'}");
-        asrtFl3("{'history':[{'valid':false,'answer':'answer3','question':'question1'}],'nextQuestion':'question1'}");
+        asrtFl1("{'history':[{'answer':'answer1','question':'question1','valid':true}],'nextQuestion':'question2'}");
+        asrtFl2("{'history':[{'answer':'answer2','question':'question1','valid':false}],'nextQuestion':'question1'}");
+        asrtFl3("{'history':[{'answer':'answer3','question':'question1','valid':false}],'nextQuestion':'question1'}");
 
         // then
         verify(listener1).event(Events.WIN);
@@ -190,7 +195,7 @@ public class SingleTest {
         verify(listener3).event(Events.LOOSE);
 
         // when
-        game1.tick();
+        field.tick();
 
         // then
         verifyNoMoreInteractions(listener1);

@@ -1,0 +1,9 @@
+language: java
+jdk:
+        - oraclejdk9
+script:
+        - cd CodingDojo && mvn clean install
+cache:
+  directories:
+  - .autoconf
+  - $HOME/.m2

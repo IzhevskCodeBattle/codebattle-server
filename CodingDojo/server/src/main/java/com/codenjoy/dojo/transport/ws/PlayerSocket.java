@@ -4,7 +4,7 @@ package com.codenjoy.dojo.transport.ws;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,68 +23,88 @@ package com.codenjoy.dojo.transport.ws;
  */
 
 
-import com.codenjoy.dojo.transport.PlayerResponseHandler;
-import org.eclipse.jetty.websocket.WebSocket;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.annotations.*;
 
 import java.io.IOException;
 
-public class PlayerSocket implements WebSocket.OnTextMessage {
+@WebSocket
+public class PlayerSocket {
 
-    private Connection connection;
-    private String authId;
-    private WebSocketPlayerTransport transport;
-    private PlayerResponseHandler handler = WebSocketPlayerTransport.NULL_HANDLER;
+    public static final boolean CLIENT_SEND_FIRST = true;
+    public static final boolean SERVER_SEND_FIRST = !CLIENT_SEND_FIRST;
+
+    private ResponseHandler handler = NullResponseHandler.NULL;
+    private Session session;
+    private String id;
     private boolean requested;
+    private Runnable onClose;
 
-    public PlayerSocket(String authId, WebSocketPlayerTransport transport) {
-        this.authId = authId;
-        this.transport = transport;
-        requested = false;
+    public PlayerSocket(String id, boolean whoFirst) {
+        this.id = id;
+        requested = whoFirst;
     }
 
-    @Override
-    public void onMessage(String message) {
+    @OnWebSocketMessage
+    public void onWebSocketText(String message) {
         if (requested) {
             requested = false;
-            handler.onResponseComplete(message, null);
+            handler.onResponse(this, message);
         }
     }
 
-    @Override
-    public void onOpen(Connection connection) {
-        this.connection = connection;
+    @OnWebSocketClose
+    public void onWebSocketClose(int statusCode, String reason) {
         requested = false;
+        handler.onClose(this, statusCode, reason);
+        if (session != null) {
+            session.close();
+        }
+        if (onClose != null) {
+            onClose.run();
+        }
     }
 
-    @Override
-    public void onClose(int i, String s) {
-        requested = false;
-        if (authId == null) {
-            return;
-        }
-        transport.unregisterPlayerSocket(authId);
+    @OnWebSocketConnect
+    public void onWebSocketConnect(Session session) {
+        this.session = session;
+        handler.onConnect(this, session);
+    }
+
+    @OnWebSocketError
+    public void onWebSocketError(Throwable cause) {
+        handler.onError(this, cause);
     }
 
     public void sendMessage(String message) throws IOException {
-        if (connection == null) {
+        if (session == null) {
             return;
         }
         if (!requested) {
             requested = true;
-            connection.sendMessage(message);
+            if (session.isOpen()) {
+                session.getRemote().sendString(message);
+            }
         }
     }
 
-    public void close() {
-        requested = false;
-        if (connection == null) {
-            return;
-        }
-        connection.close();
-    }
-
-    public void setHandler(PlayerResponseHandler handler) {
+    public void setHandler(ResponseHandler handler) {
         this.handler = handler;
     }
 
+    public boolean isOpen() {
+        return session != null && session.isOpen();
+    }
+
+    Session getSession() {
+        return session;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void onClose(Runnable onClose) {
+        this.onClose = onClose;
+    }
 }

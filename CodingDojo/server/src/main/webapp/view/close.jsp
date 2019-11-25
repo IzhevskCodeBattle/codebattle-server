@@ -2,7 +2,7 @@
   #%L
   Codenjoy - it's a dojo-like platform from developers to developers.
   %%
-  Copyright (C) 2016 Codenjoy
+  Copyright (C) 2018 Codenjoy
   %%
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as
@@ -23,7 +23,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" %>
 
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
-<script src="${ctx}/resources/js/jquery/jquery-3.1.0.js"></script>
+<script src="${ctx}/resources/js/jquery/jquery-3.1.0.min.js"></script>
 <script>
     $(document).ready(function () {
         window.close();

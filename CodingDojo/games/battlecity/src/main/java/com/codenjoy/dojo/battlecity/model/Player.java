@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,61 +27,59 @@ import com.codenjoy.dojo.battlecity.services.Events;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.services.EventListener;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
 
-public class Player {
+public class Player extends GamePlayer<Tank, Field> {
+
     public static final int TICKS_PER_BULLETS = 4;
 
-    private Tank tank;
-    private EventListener listener;
-    private int maxScore;
-    private int score;
+    private Tank hero;
+    private Dice dice;
+    private int killed;
 
     public Player(EventListener listener, Dice dice) {
-        this.listener = listener;
-        clearScore();
-        tank = new Tank(0, 0, Direction.UP, dice, TICKS_PER_BULLETS);
+        super(listener);
+        this.dice = dice;
+        reset();
     }
 
-    public Tank getTank() {
-        return tank;
+    public void reset() {
+        killed = 0;
     }
 
-    private void increaseScore() {
-        score = score + 1;
-        maxScore = Math.max(maxScore, score);
+    public Tank getHero() {
+        return hero;
     }
 
-    public int getMaxScore() {
-        return maxScore;
-    }
-
-    public int getScore() {
-        return score;
+    @Override
+    public boolean isAlive() {
+        return hero != null && hero.isAlive();
     }
 
     public void event(Events event) {
-        switch (event) {
-            case KILL_OTHER_TANK: increaseScore(); break;
-            case KILL_YOUR_TANK: gameOver(); break;
+        if (event.isKillYourTank()) {
+            hero.kill(null);
         }
 
-        if (listener != null) {
-            listener.event(event);
-        }
+        super.event(event);
     }
 
-    private void gameOver() {
-        tank.kill(null);
-        score = 0;
+    public int killHero() {
+        return killed++;
     }
 
-    public void clearScore() {   // TODO test me
-        score = 0;
-        maxScore = 0;
+    public void newHero(Field field) {
+        hero = new Tank(0, 0, Direction.UP, dice, TICKS_PER_BULLETS);
+        hero.removeBullets();
+        hero.init(field);
+        reset();
     }
 
-    public void newHero(Battlecity tanks) {
-        tank.removeBullets();
-        tank.setField(tanks);
+    public int score() {
+        return killed;
+    }
+
+    void setKilled(int killed) {
+        this.killed = killed;
     }
 }

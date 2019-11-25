@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 
 	WebClient wcl(dds);
 	try {
-		wcl.run("ws://tetrisj.jvmhost.net:12270/codenjoy-contest/ws", yourName);
+		wcl.run("ws://codenjoy.com:80/codenjoy-contest/ws", yourName);
 	} catch (const std::runtime_error& ex) {
 		std::cout << "Runtime error happened: " << ex.what() << std::endl;
 		EXITCODE = 1;

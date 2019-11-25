@@ -4,7 +4,7 @@ package com.codenjoy.dojo.sudoku.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,60 +25,70 @@ package com.codenjoy.dojo.sudoku.model;
 
 import com.codenjoy.dojo.services.EventListener;
 import com.codenjoy.dojo.services.Joystick;
-import com.codenjoy.dojo.sudoku.services.Events;
+import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.joystick.ActJoystick;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.PlayerHero;
 
-public class Player {
+import static com.codenjoy.dojo.services.PointImpl.pt;
 
-    private EventListener listener;
-    private int maxScore;
-    private int score;
-    private Joystick joystick;
+public class Player extends GamePlayer<PlayerHero, Field> {
+
+    private Field field;
 
     public Player(EventListener listener) {
-        this.listener = listener;
-        clearScore();
+        super(listener);
     }
 
-    private void increaseScore() {
-        score = score + 1;
-        maxScore = Math.max(maxScore, score);
+    public static final int SIZE = 9;
+
+    private boolean check(int i) {
+        if (i > SIZE || i < 1) return true;
+        return false;
     }
 
-    public int getMaxScore() {
-        return maxScore;
+    public static int fix(int x) {
+        return x + Math.abs((x - 1) / 3);
     }
 
-    public int getScore() {
-        return score;
-    }
-
-    public void event(Events event) {
-        switch (event) {
-            case FAIL: gameOver(); break;
-            case SUCCESS: increaseScore(); break;
-            case WIN: gameOver(); break;
-            case LOOSE: gameOver(); break;
-        }
-
-        if (listener != null) {
-            listener.event(event);
-        }
-    }
-
-    private void gameOver() {
-        score = 0;
-    }
-
-    public void clearScore() {
-        score = 0;
-        maxScore = 0;
-    }
-
+    @Override
     public Joystick getJoystick() {
-        return joystick;
+        return (ActJoystick) p -> {
+            if (field.isGameOver()) return;
+
+            if (p.length == 1 && p[0] == 0) {
+                field.gameOver();
+                return;
+            }
+
+            if (p.length != 3) {
+                return;
+            }
+
+            if (check(p[0])) return;
+            if (check(p[1])) return;
+            if (check(p[2])) return;
+
+            int x = fix(p[0]);
+            int y = fix(SIZE + 1 - p[1]);
+            Point pt = pt(x, y);
+
+            field.set(pt, p[2]);
+        };
     }
 
+    @Override
+    public PlayerHero getHero() {
+        return null;
+    }
+
+    @Override
     public void newHero(Field field) {
-        joystick = field.getJoystick();
+        this.field = field;
+    }
+
+    @Override
+    public boolean isAlive() {
+        return true;
     }
 }

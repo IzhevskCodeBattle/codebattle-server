@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,26 +23,16 @@ package com.codenjoy.dojo.battlecity.model;
  */
 
 
-import com.codenjoy.dojo.services.BoardReader;
+import com.codenjoy.dojo.battlecity.model.levels.Level;
+import com.codenjoy.dojo.services.multiplayer.GameField;
 
 import java.util.List;
 
-public interface Field {
-    int size();
-
-    List<Border> getBorders();
-
-    List<Tank> getTanks();
-
-    List<Construction> getConstructions();
+public interface Field extends GameField<Player>, Level {
 
     boolean isBarrier(int x, int y);
 
     boolean outOfField(int x, int y);
 
     void affect(Bullet bullet);
-
-    List<Bullet> getBullets();
-
-    BoardReader reader();
 }

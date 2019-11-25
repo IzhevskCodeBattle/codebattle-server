@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,12 +23,16 @@ package com.codenjoy.dojo.services;
  */
 
 
-import com.codenjoy.dojo.services.mocks.MockSaveService;
+import com.codenjoy.dojo.CodenjoyContestApplication;
+import com.codenjoy.dojo.config.meta.SQLiteProfile;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.mockito.Mockito.*;
 
@@ -37,35 +41,40 @@ import static org.mockito.Mockito.*;
  * Date: 17.12.13
  * Time: 21:14
  */
-@ContextConfiguration(classes = {
-        AutoSaver.class,
-        MockSaveService.class})
-@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest(classes = CodenjoyContestApplication.class)
+@RunWith(SpringRunner.class)
+@ActiveProfiles(SQLiteProfile.NAME)
+@TestPropertySource(properties = {
+        "game.save.auto=true"
+})
 public class AutoSaverTest {
 
-    @Autowired private AutoSaver autoSaver;
-    @Autowired private SaveService saveService;
+    @Autowired
+    private AutoSaver autoSaver;
+
+    @MockBean
+    private SaveService save;
 
     @Test
     public void testSaveEachNTicks() throws InterruptedException {
-        verifyNoMoreInteractions(saveService);
+        verifyNoMoreInteractions(save);
 
         autoSaver.tick();
 
-        verify(saveService, only()).loadAll();
-        reset(saveService);
+        verify(save, only()).loadAll();
+        reset(save);
 
         for (int count = 0; count < AutoSaver.TICKS - 2; count++) {
             autoSaver.tick();
         }
 
-        verifyNoMoreInteractions(saveService);
+        verifyNoMoreInteractions(save);
 
         autoSaver.tick();
 
         Thread.sleep(1000);
 
-        verify(saveService, only()).saveAll();
+        verify(save, only()).saveAll();
     }
 
 }

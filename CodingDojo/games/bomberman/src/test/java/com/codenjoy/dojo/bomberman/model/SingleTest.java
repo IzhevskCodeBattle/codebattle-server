@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,6 +25,9 @@ package com.codenjoy.dojo.bomberman.model;
 
 import com.codenjoy.dojo.bomberman.services.Events;
 import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.multiplayer.Single;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
@@ -33,25 +36,20 @@ import java.util.LinkedList;
 import static com.codenjoy.dojo.bomberman.model.BombermanTest.DestroyWallAt;
 import static com.codenjoy.dojo.bomberman.model.BombermanTest.MeatChopperAt;
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
-import static junit.framework.Assert.*;
-import static org.mockito.Matchers.any;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * User: sanja
- * Date: 20.04.13
- * Time: 13:40
- */
 public class SingleTest {
 
     public static final int SIZE = 5;
-    private Single game2;
+    private Game game2;
     private Walls walls = emptyWalls();
     private Hero bomberman2;
     private Hero bomberman1;
     private GameSettings settings;
     private Level level;
-    private Single game1;
+    private Game game1;
     private Bomberman board;
     private EventListener listener1;
     private EventListener listener2;
@@ -70,9 +68,9 @@ public class SingleTest {
         bombermanDice = mock(Dice.class);
 
         dice(bombermanDice,  0, 0);
-        bomberman1 = new HeroImpl(level, bombermanDice);
+        bomberman1 = new Hero(level, bombermanDice);
         dice(bombermanDice,  0, 0);
-        bomberman2 = new HeroImpl(level, bombermanDice);
+        bomberman2 = new Hero(level, bombermanDice);
         when(settings.getBomberman(any(Level.class))).thenReturn(bomberman1, bomberman2);
 
         when(settings.getLevel()).thenReturn(level);
@@ -84,8 +82,10 @@ public class SingleTest {
         listener1 = mock(EventListener.class);
         listener2 = mock(EventListener.class);
 
-        game1 = new Single(board, listener1, printerFactory);
-        game2 = new Single(board, listener2, printerFactory);
+        game1 = new Single(new Player(listener1), printerFactory);
+        game1.on(board);
+        game2 = new Single(new Player(listener2), printerFactory);
+        game2.on(board);
 
         game1.newGame();
         game2.newGame();
@@ -218,7 +218,7 @@ public class SingleTest {
                 "☺♥   \n", game1);
     }
 
-    private void assertBoard(String board, Single game) {
+    private void assertBoard(String board, Game game) {
         assertEquals(board, game.getBoardAsString());
     }
 
@@ -389,7 +389,7 @@ public class SingleTest {
     @Test
     public void shouldNewGamesWhenKillAll() {
         shouldBombKillAllBomberman();
-        when(settings.getBomberman(any(Level.class))).thenReturn(new HeroImpl(level, bombermanDice), new HeroImpl(level, bombermanDice));
+        when(settings.getBomberman(any(Level.class))).thenReturn(new Hero(level, bombermanDice), new Hero(level, bombermanDice));
 
         game1.newGame();
         game2.newGame();

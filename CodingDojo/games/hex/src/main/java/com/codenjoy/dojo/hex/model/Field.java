@@ -4,7 +4,7 @@ package com.codenjoy.dojo.hex.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,14 +24,15 @@ package com.codenjoy.dojo.hex.model;
 
 
 import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.multiplayer.GameField;
 
-public interface Field {
+public interface Field extends GameField<Player> {
 
     boolean isBarrier(int x, int y);
 
     Point getFreeRandom();
 
-    boolean isFree(int x, int y);
+    boolean isFree(Point pt);
 
     void addHero(int x, int y, Hero hero);
 

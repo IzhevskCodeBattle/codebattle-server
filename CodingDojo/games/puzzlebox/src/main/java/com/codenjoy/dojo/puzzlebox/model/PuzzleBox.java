@@ -4,7 +4,7 @@ package com.codenjoy.dojo.puzzlebox.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,17 +24,16 @@ package com.codenjoy.dojo.puzzlebox.model;
 
 
 import com.codenjoy.dojo.puzzlebox.services.Events;
-import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.Dice;
+import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.PointImpl;
+import com.codenjoy.dojo.services.printer.BoardReader;
 
 import java.util.LinkedList;
 import java.util.List;
+import static com.codenjoy.dojo.services.PointImpl.*;
 
-/**
- * О! Это самое сердце игры - борда, на которой все происходит.
- * Если какой-то из жителей борды вдруг захочет узнать что-то у нее, то лучше ему дать интефейс {@see Field}
- * Борда реализует интерфейс {@see Tickable} чтобы быть уведомленной о каждом тике игры. Обрати внимание на {PuzzleBox#tick()}
- */
-public class PuzzleBox implements Tickable, Field {
+public class PuzzleBox implements Field {
 
     private final Level level;
     private List<Player> players;
@@ -52,39 +51,34 @@ public class PuzzleBox implements Tickable, Field {
         targets = level.getTargets();
         this.level = level;
         size = level.getSize();
-        players = new LinkedList<Player>();
+        players = new LinkedList<>();
     }
 
-    /**
-     * @see Tickable#tick()
-     */
     @Override
     public void tick() {
         for (Player player : players) {
-            if(player.isWin()){
+            if (player.getHero().isWin()){
                 return;
             }
-            for(Box box: player.getBoxes()) {
+            for (Box box: player.getHero().getBoxes()) {
                 box.tick();
             }
         }
-
     }
 
     @Override
     public boolean isBarrier(int x, int y) {
-        Point pt = PointImpl.pt(x, y);
+        Point pt = pt(x, y);
         return x > size - 1 || x < 0 || y < 0 || y > size - 1 || walls.contains(pt) || getBoxes().contains(pt);
     }
 
     @Override
     public boolean isTarget(int x, int y) {
-        Point pt = PointImpl.pt(x, y);
-        boolean isTarget = targets.contains(pt);
-        if(isTarget) {
+        boolean result = targets.contains(pt(x, y));
+        if (result) {
             players.get(0).event(Events.FILL);
         }
-        return isTarget;
+        return result;
     }
 
     public int size() {
@@ -95,12 +89,8 @@ public class PuzzleBox implements Tickable, Field {
         if (!players.contains(player)) {
             players.add(player);
         }
-        player.setBoxes(level.getBoxes());
-        player.initBoxes(this);
-    }
-
-    public void fillEvent() {
-        players.get(0).increaseScore();
+        player.newHero(this);
+        player.getHero().setBoxes(level.getBoxes(), this);
     }
 
     public void remove(Player player) {
@@ -118,19 +108,19 @@ public class PuzzleBox implements Tickable, Field {
 
             @Override
             public Iterable<? extends Point> elements() {
-                List<Point> result = new LinkedList<Point>();
-                result.addAll(getBoxes());
-                result.addAll(walls);
-                result.addAll(targets);
-                return result;
+                return new LinkedList<Point>(){{
+                    addAll(getBoxes());
+                    addAll(walls);
+                    addAll(targets);
+                }};
             }
         };
     }
 
     public List<Box> getBoxes() {
-        List<Box> boxes = new LinkedList<Box>();
+        List<Box> boxes = new LinkedList<>();
         for (Player player : players) {
-            boxes.addAll(player.getBoxes());
+            boxes.addAll(player.getHero().getBoxes());
         }
         return boxes;
     }

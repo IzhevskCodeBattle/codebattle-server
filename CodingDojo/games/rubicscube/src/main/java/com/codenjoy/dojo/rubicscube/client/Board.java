@@ -4,7 +4,7 @@ package com.codenjoy.dojo.rubicscube.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,9 +26,6 @@ package com.codenjoy.dojo.rubicscube.client;
 import com.codenjoy.dojo.client.AbstractBoard;
 import com.codenjoy.dojo.rubicscube.model.Elements;
 
-/**
- * User: oleksandr.baglai
- */
 public class Board extends AbstractBoard<Elements> {
 
     private static final int LAYER1 = 0;

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,7 +23,7 @@ package com.codenjoy.dojo.client;
  */
 
 
-import com.codenjoy.dojo.services.CharElements;
+import com.codenjoy.dojo.services.printer.CharElements;
 import com.codenjoy.dojo.services.Point;
 
 import java.util.*;
@@ -69,6 +69,10 @@ public abstract class AbstractBoard<E extends CharElements> extends AbstractLaye
         return false;
     }
 
+    public boolean isAt(Point point, E element) {
+        return isAt(point.getX(), point.getY(), element);
+    }
+
     public E getAt(int x, int y) {
         List<E> at = getAllAt(x, y);
         if (at.isEmpty()) {
@@ -78,12 +82,20 @@ public abstract class AbstractBoard<E extends CharElements> extends AbstractLaye
         }
     }
 
+    public E getAt(Point point) {
+        return getAt(point.getX(), point.getY());
+    }
+
     public List<E> getAllAt(int x, int y) {
         List<E> result = new LinkedList<>();
         for (int layer = 0; layer < countLayers(); ++layer) {
             result.add(getAt(layer, x, y));
         }
         return result;
+    }
+
+    public List<E> getAllAt(Point point) {
+        return getAllAt(point.getX(), point.getY());
     }
 
     public String boardAsString() {
@@ -113,6 +125,10 @@ public abstract class AbstractBoard<E extends CharElements> extends AbstractLaye
         return false;
     }
 
+    public boolean isAt(Point point, E... elements) {
+        return isAt(point.getX(), point.getY(), elements);
+    }
+
     /**
      * Says if near (at left, at right, at up, at down) given position (X, Y) at given layer exists given element.
      * @param x X coordinate.
@@ -129,11 +145,17 @@ public abstract class AbstractBoard<E extends CharElements> extends AbstractLaye
         return false;
     }
 
+    public boolean isNear(Point point, E element) {
+        return isNear(point.getX(), point.getY(), element);
+    }
+
     /**
      * @param x X coordinate.
      * @param y Y coordinate.
      * @param element Element that we try to detect on near point.
-     * @return Returns count of elements with type specified near (at left, at right, at up, at down) {x,y} point.
+     * @return Returns count of elements with type specified near
+     * (at left, right, down, up, left-down, left-up,
+     *     right-down, right-up) {x,y} point.
      */
     public int countNear(int x, int y, E element) {
         int count = 0;
@@ -145,10 +167,15 @@ public abstract class AbstractBoard<E extends CharElements> extends AbstractLaye
         return count;
     }
 
+    public int countNear(Point point, E element){
+        return countNear(point.getX(), point.getY(), element);
+    }
+
     /**
      * @param x X coordinate.
      * @param y Y coordinate.
-     * @return All elements around (at left, right, down, up, left-down, left-up, right-down, right-up) position.
+     * @return All elements around (at left, right, down, up,
+     *     left-down, left-up, right-down, right-up) position.
      */
     public List<E> getNear(int x, int y) {
         List<E> result = new LinkedList<E>();
@@ -158,6 +185,10 @@ public abstract class AbstractBoard<E extends CharElements> extends AbstractLaye
         }
 
         return result;
+    }
+
+    public List<E> getNear(Point point) {
+        return getNear(point.getX(), point.getY());
     }
 
     public void set(int x, int y, char ch) {

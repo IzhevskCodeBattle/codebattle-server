@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -28,8 +28,8 @@ import org.junit.Test;
 import java.util.Arrays;
 
 import static com.codenjoy.dojo.services.PointImpl.pt;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DirectionTest {
 
@@ -72,10 +72,10 @@ public class DirectionTest {
 
     @Test
     public void test_change() {
-        check(new PointImpl(0, -1), Direction.DOWN, new PointImpl(0, 0));
-        check(new PointImpl(-1, 0), Direction.LEFT, new PointImpl(0, 0));
-        check(new PointImpl(0, 1), Direction.UP,   new PointImpl(0, 0));
-        check(new PointImpl(1, 0), Direction.RIGHT, new PointImpl(0, 0));
+        check(pt(0, -1), Direction.DOWN, pt(0, 0));
+        check(pt(-1, 0), Direction.LEFT, pt(0, 0));
+        check(pt(0, 1), Direction.UP, pt(0, 0));
+        check(pt(1, 0), Direction.RIGHT, pt(0, 0));
     }
 
     @Test

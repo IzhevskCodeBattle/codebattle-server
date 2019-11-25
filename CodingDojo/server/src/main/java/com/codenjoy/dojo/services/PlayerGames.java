@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,51 +23,133 @@ package com.codenjoy.dojo.services;
  */
 
 
-import com.codenjoy.dojo.services.hero.HeroData;
+import com.codenjoy.dojo.services.lock.LockedGame;
+import com.codenjoy.dojo.services.multiplayer.*;
+import com.codenjoy.dojo.services.nullobj.NullPlayerGame;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
+import static com.codenjoy.dojo.services.PlayerGame.by;
+import static java.util.stream.Collectors.toList;
 
 @Component
 public class PlayerGames implements Iterable<PlayerGame>, Tickable {
 
-    private static Logger logger = LoggerFactory.getLogger(PlayerGames.class);
+    private List<PlayerGame> playerGames = new LinkedList<>();
 
-    public static final int TICKS_FOR_REMOVE = 60*30; // 15 минут без игры - дисквалификация
-    private List<PlayerGame> playerGames = new LinkedList<PlayerGame>();
+    private Consumer<PlayerGame> onAdd;
+    private Consumer<PlayerGame> onRemove;
+    private ReadWriteLock lock;
+    private Spreader spreader = new Spreader();
 
-    public PlayerGames() {}
-    public PlayerGames(Statistics statistics) { // TODO
-        this.statistics = statistics;
+    public void onAdd(Consumer<PlayerGame> consumer) {
+        this.onAdd = consumer;
     }
 
-    private @Autowired Statistics statistics;
+    public void onRemove(Consumer<PlayerGame> consumer) {
+        this.onRemove = consumer;
+    }
 
+    public void init(ReadWriteLock lock) {
+        this.lock = lock;
+    }
+
+    public PlayerGames() {
+        lock = new ReentrantReadWriteLock();
+    }
+
+    // удаление текущего игрока
+    // с обслуживанием последнего оставшегося на той же карте
+    public void removeCurrent(Player player) {
+        remove(player, false);
+    }
+
+    // удаление текущего игрока
+    // без обслуживания последнего оставшегося на той же карте
     public void remove(Player player) {
+        remove(player, true);
+    }
+
+    private void remove(Player player, boolean reloadAlone) {
         int index = playerGames.indexOf(player);
         if (index == -1) return;
-        playerGames.remove(index).remove();
+        PlayerGame game = playerGames.remove(index);
+
+        if (reloadAlone) {
+            removeWithResetAlone(game.getGame());
+        }
+
+        game.remove(onRemove);
+        game.getGame().on(null);
+    }
+
+    private void removeWithResetAlone(Game game) {
+        List<PlayerGame> alone = removeAndLeaveAlone(game);
+        alone.forEach(gp -> spreader.play(gp.getGame(), gp.getGameType(), gp.getGame().getSave()));
     }
 
     public PlayerGame get(String playerName) {
-        for (PlayerGame playerGame : playerGames) {
-            if (playerGame.getPlayer().getName().equals(playerName)) {
-                return playerGame;
-            }
-        }
-        return NullPlayerGame.INSTANCE;
+        return playerGames.stream()
+                .filter(pg -> pg.getPlayer().getName().equals(playerName))
+                .findFirst()
+                .orElse(NullPlayerGame.INSTANCE);
     }
 
-    public void add(Player player, Game game, PlayerController controller) {
-        PlayerSpy spy = statistics.newPlayer(player);
+    public PlayerGame get(GamePlayer player) {
+        return playerGames.stream()
+                .filter(pg -> pg.getGame().getPlayer().equals(player))
+                .findFirst()
+                .orElse(null);
+    }
 
-        LazyJoystick joystick = new LazyJoystick(game, spy);
-        controller.registerPlayerTransport(player, joystick);
-        playerGames.add(new PlayerGame(player, game, controller, joystick));
+    public PlayerGame add(Player player, PlayerSave save) {
+        GameType gameType = player.getGameType();
+
+        GamePlayer gamePlayer = gameType.createPlayer(player.getEventListener(),
+                player.getName());
+
+        Single single = new Single(gamePlayer,
+                gameType.getPrinterFactory(),
+                gameType.getMultiplayerType());
+
+        spreader.play(single, gameType, parseSave(save));
+
+        Game game = new LockedGame(lock).wrap(single);
+
+        PlayerGame playerGame = new PlayerGame(player, game);
+        if (onAdd != null) {
+            onAdd.accept(playerGame);
+        }
+        playerGames.add(playerGame);
+        return playerGame;
+    }
+
+    JSONObject parseSave(PlayerSave save) {
+        if (save == null || PlayerSave.isSaveNull(save.getSave())) {
+            return new JSONObject();
+        }
+        return new JSONObject(save.getSave());
+    }
+
+    private List<PlayerGame> removeAndLeaveAlone(Game game) {
+        if (spreader.contains(game)) {
+            List<GamePlayer> alone = spreader.remove(game);
+            List<PlayerGame> result = alone.stream()
+                    .map(p -> get(p))
+                    .collect(toList());
+            while (result.contains(null)) { // TODO как-то странно так делать
+                result.remove(null);
+            }
+            return result;
+        } else {
+            return Arrays.asList();
+        }
     }
 
     public boolean isEmpty() {
@@ -80,13 +162,9 @@ public class PlayerGames implements Iterable<PlayerGame>, Tickable {
     }
 
     public List<Player> players() {
-        List<Player> result = new ArrayList<Player>(playerGames.size());
-
-        for (PlayerGame playerGame : playerGames) {
-            result.add(playerGame.getPlayer());
-        }
-
-        return result;
+        return playerGames.stream()
+                .map(PlayerGame::getPlayer)
+                .collect(toList());
     }
 
     public int size() {
@@ -94,29 +172,20 @@ public class PlayerGames implements Iterable<PlayerGame>, Tickable {
     }
 
     public void clear() {
-        for (PlayerGame playerGame : playerGames) {
-            playerGame.remove();
-        }
-        playerGames.clear();
+        players().forEach(this::remove);
     }
 
     public List<PlayerGame> getAll(String gameType) {
-        List<PlayerGame> result = new LinkedList<PlayerGame>();
-
-        for (PlayerGame playerGame : playerGames) {
-            if (playerGame.getPlayer().getGameName().equals(gameType)) {
-                result.add(playerGame);
-            }
-        }
-
-        return result;
+        return playerGames.stream()
+                .filter(pg -> pg.getPlayer().getGameName().equals(gameType))
+                .collect(toList());
     }
 
     public List<GameType> getGameTypes() {
-        List<GameType> result = new LinkedList<GameType>();
+        List<GameType> result = new LinkedList<>();
 
         for (PlayerGame playerGame : playerGames) {
-            GameType gameType = playerGame.getPlayer().getGameType();
+            GameType gameType = playerGame.getGameType();
             if (!result.contains(gameType)) {
                 result.add(gameType);
             }
@@ -125,97 +194,147 @@ public class PlayerGames implements Iterable<PlayerGame>, Tickable {
         return result;
     }
 
-    private void quietTick(Tickable tickable) {
-        try {
-            tickable.tick();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public void tick() {
-//        long time = System.currentTimeMillis();
+        // по всем джойстикам отправили сообщения играм
+        playerGames.forEach(PlayerGame::quietTick);
 
+        // если в TRAINING кто-то isWin то мы его относим на следующий уровень
+        // если в DISPOSABLE уровнях кто-то shouldLeave то мы его перезагружаем - от этого он появится на другом поле
+        // а для всех остальных, кто уже isGameOver - создаем новые игры на том же поле
         for (PlayerGame playerGame : playerGames) {
-            quietTick(playerGame);
-        }
-
-        quietTick(statistics);
-
-//        removeNotActivePlayers();
-
-        for (PlayerGame playerGame : playerGames) {
-            final Game game = playerGame.getGame();
+            Game game = playerGame.getGame();
+            MultiplayerType multiplayerType = playerGame.getGameType().getMultiplayerType();
             if (game.isGameOver()) {
-                quietTick(new Tickable() {
-                    @Override
-                    public void tick() {
-                        game.newGame();
+                quiet(() -> {
+                    JSONObject level = game.getSave();
+
+                    // TODO ##2 попробовать какой-то другой тип с несколькими уровнями, а не только isTraining
+                    if (game.isWin() && multiplayerType.isTraining()) {
+                        level = LevelProgress.winLevel(level);
+                        if (level != null) {
+                            reload(game, level);
+                            // TODO test me
+                            playerGame.getPlayer().getEventListener().levelChanged(game.getProgress());
+                            return;
+                        }
                     }
+
+                    if (game.shouldLeave() && multiplayerType.isDisposable()) {
+                        reload(game, level);
+                        return;
+                    }
+
+                    game.newGame();
                 });
             }
         }
 
-        List<GameType> gameTypes = getGameTypes();  // TODO потестить еще отдельно
-        for (GameType gameType : gameTypes) {
-            List<PlayerGame> games = getAll(gameType.name());
-            if (gameType.isSingleBoard()) {
-                if (!games.isEmpty()) {
-                    quietTick(games.iterator().next().getGame());
-                }
-            } else {
-                for (PlayerGame playerGame : games) {
-                    quietTick(playerGame.getGame());
-                }
+        // собираем все уникальные борды
+        // независимо от типа игры нам нужно тикнуть все
+        //      но только те, которые не DISPOSABLE и одновременно
+        //      недокомплектованные пользователями
+        playerGames.stream()
+                .map(PlayerGame::getField)
+                .distinct()
+                .filter(this::isMatchCanBeStarted)
+                .forEach(GameField::quietTick);
+
+        // ну и тикаем все GameRunner мало ли кому надо на это подписаться
+        getGameTypes().forEach(GameType::quietTick);
+    }
+
+    private boolean isMatchCanBeStarted(GameField field) {
+        return spreader.isRoomStaffed(field);
+    }
+
+    // перевод текущего игрока в новую комнату
+    // без обслуживания последнего оставшегося на той же карте
+    public void reloadCurrent(PlayerGame playerGame) {
+        Game game = playerGame.getGame();
+        reload(game, game.getSave(), false);
+    }
+
+    private void reload(Game game, JSONObject save, boolean reloadAlone) {
+        GameType gameType = getPlayer(game).getGameType();
+        if (reloadAlone) {
+            removeWithResetAlone(game);
+        }
+
+        spreader.play(game, gameType, save);
+    }
+
+    // перевод текущего игрока в новую комнату
+    // с обслуживанием последнего оставшегося на той же карте
+    public void reload(Game game, JSONObject save) {
+        reload(game, save, true);
+    }
+
+    // переводим всех игроков на новые борды
+    // при этом если надо перемешиваем их
+    public void reloadAll(boolean shuffle) {
+        new LinkedList<PlayerGame>(){{
+            addAll(playerGames);
+            if (shuffle) {
+                Collections.shuffle(this);
             }
-        }
-
-//        if (logger.isDebugEnabled()) {
-//            time = System.currentTimeMillis() - time;
-//            logger.debug("PlayerGames.tick() is {} ms", time);
-//        }
+        }}.forEach(pg -> reloadCurrent(pg));
     }
 
-    private void removeNotActivePlayers() {
-        for (Player player : statistics.getPlayers(Statistics.WAIT_TICKS_MORE_OR_EQUALS, TICKS_FOR_REMOVE)) {
-            remove(player);
+    private Player getPlayer(Game game) {
+        return playerGames.stream()
+                .filter(pg -> pg.equals(by(game)))
+                .findFirst()
+                .orElseThrow(IllegalStateException::new)
+                .getPlayer();
+    }
+
+    private void quiet(Runnable runnable) {
+        ((Tickable)() -> runnable.run()).quietTick();
+    }
+
+
+    public void clean() {
+        new LinkedList<>(playerGames)
+                .forEach(pg -> remove(pg.getPlayer()));
+    }
+
+    public List<Player> getPlayers(String gameName) {
+        return playerGames.stream()
+                .map(playerGame -> playerGame.getPlayer())
+                .filter(player -> player.getGameName().equals(gameName))
+                .collect(toList());
+    }
+
+    public void changeLevel(String playerName, int level) {
+        PlayerGame playerGame = get(playerName);
+        Game game = playerGame.getGame();
+        JSONObject save = game.getSave();
+        LevelProgress progress = new LevelProgress(save);
+        if (progress.canChange(level)) {
+            progress.change(level);
+            reload(game, progress.saveTo(new JSONObject()));
         }
     }
 
-    // TODO test me
-    public Map<String, GameData> getGamesDataMap() {
-        Map<String, GameData> additionalData = new HashMap<>();
-        for (GameType gameType : getGameTypes()) {
-            int boardSize = gameType.getBoardSize().getValue();
-            GuiPlotColorDecoder decoder = new GuiPlotColorDecoder(gameType.getPlots());
-            JSONObject scores = getScoresJSON(gameType.name());
-            JSONObject heroesData = getCoordinatesJSON(gameType.name());
-
-            additionalData.put(gameType.name(), new GameData(boardSize, decoder, scores, heroesData));
+    public void setLevel(String playerName, JSONObject save) {
+        if (save == null) {
+            return;
         }
-        return additionalData;
+        PlayerGame playerGame = get(playerName);
+        Game game = playerGame.getGame();
+        reload(game, save);
     }
 
-    // TODO test me
-    private JSONObject getCoordinatesJSON(String gameType) {
-        JSONObject result = new JSONObject();
-        for (PlayerGame playerGame : getAll(gameType)) {
-            Player player = playerGame.getPlayer();
-            Game game = playerGame.getGame();
-            HeroData data = game.getHero();
-            result.put(player.getName(), new JSONObject(data));
-        }
-        return result;
+    public PlayerGame get(int index) {
+        return playerGames.get(index);
     }
 
-    // TODO test me
-    private JSONObject getScoresJSON(String gameType) {
-        JSONObject scores = new JSONObject();
-        for (PlayerGame playerGame : getAll(gameType)) {
-            Player player = playerGame.getPlayer();
-            scores.put(player.getName(), player.getScore());
-        }
-        return scores;
+    public List<PlayerGame> all() {
+        return playerGames;
+    }
+
+    public Stream<PlayerGame> stream() {
+        return playerGames.stream();
     }
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.loderunner.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,26 +26,23 @@ package com.codenjoy.dojo.loderunner.model;
 import com.codenjoy.dojo.loderunner.services.Events;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.Game;
+import com.codenjoy.dojo.services.multiplayer.Single;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
-/**
- * User: sanja
- * Date: 19.12.13
- * Time: 5:22
- */
 public class SingleWithEnemyTest {
 
     private Dice dice;
     private EventListener listener;
-    private Single game;
-    private Loderunner loderunner;
+    private Game game;
+    private Loderunner field;
     private PrinterFactory printerFactory = new PrinterFactoryImpl();
 
     // чертик идет за тобой
@@ -60,7 +57,7 @@ public class SingleWithEnemyTest {
                 "☼######☼" +
                 "☼☼☼☼☼☼☼☼");
 
-        game.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -72,10 +69,10 @@ public class SingleWithEnemyTest {
                 "☼######☼\n" +
                 "☼☼☼☼☼☼☼☼\n");
 
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -87,8 +84,8 @@ public class SingleWithEnemyTest {
                 "☼######☼\n" +
                 "☼☼☼☼☼☼☼☼\n");
 
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -100,9 +97,9 @@ public class SingleWithEnemyTest {
                 "☼######☼\n" +
                 "☼☼☼☼☼☼☼☼\n");
 
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -114,9 +111,9 @@ public class SingleWithEnemyTest {
                 "☼######☼\n" +
                 "☼☼☼☼☼☼☼☼\n");
 
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -128,8 +125,8 @@ public class SingleWithEnemyTest {
                 "☼######☼\n" +
                 "☼☼☼☼☼☼☼☼\n");
 
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -148,7 +145,7 @@ public class SingleWithEnemyTest {
 
         game.newGame();
 
-        game.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -173,7 +170,7 @@ public class SingleWithEnemyTest {
                 "☼######☼" +
                 "☼☼☼☼☼☼☼☼");
 
-        game.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -198,7 +195,7 @@ public class SingleWithEnemyTest {
                 "☼######☼" +
                 "☼☼☼☼☼☼☼☼");
 
-        game.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -224,7 +221,7 @@ public class SingleWithEnemyTest {
                 "☼######☼" +
                 "☼☼☼☼☼☼☼☼");
 
-        game.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -249,7 +246,7 @@ public class SingleWithEnemyTest {
                 "☼######☼" +
                 "☼☼☼☼☼☼☼☼");
 
-        game.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -275,10 +272,10 @@ public class SingleWithEnemyTest {
                 "☼######☼" +
                 "☼☼☼☼☼☼☼☼");
 
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -291,15 +288,15 @@ public class SingleWithEnemyTest {
                 "☼☼☼☼☼☼☼☼\n");
 
         setupPlayer(1, 4);
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         atGame(
                 "☼☼☼☼☼☼☼☼\n" +
@@ -319,7 +316,8 @@ public class SingleWithEnemyTest {
 
     private void setupPlayer(int x, int y) {
         listener = mock(EventListener.class);
-        game = new Single(loderunner, listener, printerFactory);
+        game = new Single(new Player(listener), printerFactory);
+        game.on(field);
         when(dice.next(anyInt())).thenReturn(x, y);
         game.newGame();
     }
@@ -327,7 +325,7 @@ public class SingleWithEnemyTest {
     private void setupGm(String map) {
         Level level = new LevelImpl(map);
         dice = mock(Dice.class);
-        loderunner = new Loderunner(level, dice);
+        field = new Loderunner(level, dice);
 
         int px = level.getHeroes().get(0).getX();
         int py = level.getHeroes().get(0).getY();

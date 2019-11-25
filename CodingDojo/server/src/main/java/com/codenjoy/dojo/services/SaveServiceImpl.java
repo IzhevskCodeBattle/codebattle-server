@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,8 +23,9 @@ package com.codenjoy.dojo.services;
  */
 
 
-import com.codenjoy.dojo.services.chat.ChatService;
 import com.codenjoy.dojo.services.dao.Registration;
+import com.codenjoy.dojo.services.hash.Hash;
+import com.codenjoy.dojo.services.nullobj.NullPlayerGame;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -33,18 +34,19 @@ import java.util.*;
 @Component("saveService")
 public class SaveServiceImpl implements SaveService {
 
-    @Autowired private GameSaver saver;
-    @Autowired private ChatService chatService;
-    @Autowired private PlayerService playerService;
-    @Autowired private Registration registration;
-    @Autowired private PlayerGames playerGames;
+    @Autowired protected GameSaver saver;
+    @Autowired protected PlayerService playerService;
+    @Autowired protected Registration registration;
+    @Autowired protected PlayerGames playerGames;
+    @Autowired protected ConfigProperties config;
 
     @Override
-    public void saveAll() {
+    public long saveAll() {
+        long now = System.currentTimeMillis();
         for (PlayerGame playerGame : playerGames) {
-            saveGame(playerGame);
+            saveGame(playerGame, now);
         }
-        saver.saveChat(chatService.getMessages());
+        return now;
     }
 
     @Override
@@ -52,26 +54,50 @@ public class SaveServiceImpl implements SaveService {
         for (String playerName : saver.getSavedList()) {
             load(playerName);
         }
-        chatService.setMessages(saver.loadChat());
     }
 
     @Override
-    public void save(String name) {
+    public long save(String name) {
         PlayerGame playerGame = playerGames.get(name);
         if (playerGame != NullPlayerGame.INSTANCE) {
-            saveGame(playerGame);
+            long now = System.currentTimeMillis();
+            saveGame(playerGame, now);
+            return now;
         }
+        return -1;
     }
 
-    private void saveGame(PlayerGame playerGame) {
+    private void saveGame(PlayerGame playerGame, long time) {
         saver.saveGame(playerGame.getPlayer(),
-                playerGame.getGame().getSave());
+                playerGame.getGame().getSave().toString(),
+                time);
     }
 
     @Override
-    public void load(String name) {
+    public boolean load(String name) {
         PlayerSave save = saver.loadGame(name);
-        playerService.register(save); // TODO тут получается, что игра не загрузится, если ее подгрузить в момент когда игрок уже играет. Может это и ок. Его сперва надо отрубить
+        if (save == PlayerSave.NULL) { // TODO test me
+            save = saver.loadGame(Hash.getEmail(name, config.getEmailHash()));
+            if (save == PlayerSave.NULL) {
+                return false;
+            }
+        }
+
+        if (playerService.contains(name)) { // TODO test me
+            playerService.remove(name);
+        }
+        playerService.register(save);
+
+        return true;
+    }
+
+    @Override
+    public void load(String name, String gameName, String save) {
+        PlayerSave playerSave = new PlayerSave(name, "127.0.0.1", gameName, 0, save);
+        if (playerService.contains(name)) { // TODO test me
+            playerService.remove(name);
+        }
+        playerService.register(playerSave);
     }
 
     @Override
@@ -80,8 +106,13 @@ public class SaveServiceImpl implements SaveService {
         List<Player> active = playerService.getAll();
         for (Player player : active) {
             PlayerInfo info = new PlayerInfo(player);
-            info.setCode(registration.getCode(player.getName()));
+            info.setCode(registration.getCodeById(player.getName()));
             info.setCallbackUrl(player.getCallbackUrl());
+            info.setReadableName(registration.getNameById(player.getName()));
+            info.setAIPlayer(player.hasAI());
+            info.setScores(player.getScores()); // TODO test me
+
+            copySave(player, info);
             map.put(player.getName(), info);
         }
 
@@ -95,21 +126,25 @@ public class SaveServiceImpl implements SaveService {
                 info.setSaved(true);
             } else {
                 PlayerSave save = saver.loadGame(name);
-                String code = registration.getCode(name);
-                map.put(name, new PlayerInfo(name, code, save.getCallbackUrl(), save.getGameName(), true));
+                // TODO оптимизнуть два запроса в один
+                String code = registration.getCodeById(name);
+                String readableName = registration.getNameById(name);
+                map.put(name, new PlayerInfo(name, readableName, code, save.getCallbackUrl(), save.getGameName(), true));
             }
         }
 
-
         List<PlayerInfo> result = new LinkedList<>(map.values());
-        Collections.sort(result, new Comparator<PlayerInfo>() {
-            @Override
-            public int compare(PlayerInfo o1, PlayerInfo o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
+        Collections.sort(result, Comparator.comparing(Player::getName));
 
         return result;
+    }
+
+    void copySave(Player player, PlayerInfo info) {
+        PlayerGame playerGame = playerGames.get(player.getName());
+        Game game = playerGame.getGame();
+        if (game != null && game.getSave() != null) {
+            info.setData(game.getSave().toString());
+        }
     }
 
     @Override

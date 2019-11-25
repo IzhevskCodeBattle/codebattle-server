@@ -2,7 +2,7 @@
 -- #%L
 -- Codenjoy - it's a dojo-like platform from developers to developers.
 -- %%
--- Copyright (C) 2016 Codenjoy
+-- Copyright (C) 2018 Codenjoy
 -- %%
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as
@@ -22,9 +22,6 @@
 
 -- CREATE PRIMARY KEYS
 -- TODO continue with PK - надо как-то сделать чтобы INSERT работал как апдейт, если появляются дубликаты, с другой стороны чего они появляются?
-DELETE FROM public.chats;
-ALTER TABLE public.chats ADD PRIMARY KEY (time, name);
-
 DELETE FROM public.player_boards;
 ALTER TABLE public.player_boards ADD PRIMARY KEY (time, player_name);
 

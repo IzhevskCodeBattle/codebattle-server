@@ -4,7 +4,7 @@ package com.codenjoy.dojo.utils;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,10 +23,25 @@ package com.codenjoy.dojo.utils;
  */
 
 
+import com.codenjoy.dojo.services.EventListener;
+import com.codenjoy.dojo.services.Game;
+import com.codenjoy.dojo.services.GameType;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.Single;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+
 public class TestUtils {
+
+    public static final int COUNT_NUMBERS = 3;
 
     public static String injectN(String expected) {
         int size = (int) Math.sqrt(expected.length());
+        return inject(expected, size, "\n");
+    }
+
+    public static String injectNN(String expected) {
+        int size = (int) Math.sqrt(expected.length()/COUNT_NUMBERS)*COUNT_NUMBERS;
         return inject(expected, size, "\n");
     }
 
@@ -38,4 +53,14 @@ public class TestUtils {
         result.append(string.substring((string.length() / position) * position, string.length()));
         return result.toString();
     }
+
+    public static Game  buildGame(GameType gameType, EventListener listener, PrinterFactory factory) {
+        GameField gameField = gameType.createGame(0);
+        GamePlayer gamePlayer = gameType.createPlayer(listener, null);
+        Game game = new Single(gamePlayer, factory);
+        game.on(gameField);
+        game.newGame();
+        return game;
+    }
+
 }

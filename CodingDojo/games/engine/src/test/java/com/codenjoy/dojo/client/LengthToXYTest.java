@@ -4,7 +4,7 @@ package com.codenjoy.dojo.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,7 +26,7 @@ package com.codenjoy.dojo.client;
 import com.codenjoy.dojo.services.LengthToXY;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class LengthToXYTest {
 

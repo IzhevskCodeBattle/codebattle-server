@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -32,4 +32,15 @@ public interface Tickable {
 
     void tick();
 
+    /**
+     * Если вдруг захотим тикнуть так, чтобы ничего не поломать
+     * для других играющих, то вот
+     */
+    default void quietTick() {
+        try {
+            tick();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

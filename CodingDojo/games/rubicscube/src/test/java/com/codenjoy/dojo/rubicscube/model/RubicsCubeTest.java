@@ -4,7 +4,7 @@ package com.codenjoy.dojo.rubicscube.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,14 +26,14 @@ package com.codenjoy.dojo.rubicscube.model;
 import com.codenjoy.dojo.rubicscube.services.Events;
 import com.codenjoy.dojo.services.EventListener;
 import com.codenjoy.dojo.services.Joystick;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.utils.TestUtils;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 /**
@@ -83,7 +83,7 @@ public class RubicsCubeTest {
         listener = mock(EventListener.class);
         player = new Player(listener);
         game.newGame(player);
-        joystick = player.getJoystick();
+        joystick = player.getHero();
     }
 
     private void assertE(String expected) {

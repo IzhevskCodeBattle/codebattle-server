@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,30 +23,34 @@ package com.codenjoy.dojo.services;
  */
 
 
+import com.codenjoy.dojo.client.ClientBoard;
+import com.codenjoy.dojo.client.Solver;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.MultiplayerType;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
 import com.codenjoy.dojo.services.settings.Parameter;
 import com.codenjoy.dojo.services.settings.Settings;
 
 /**
- * Это интерфейс указывает на тим игры. Как только ты его реулизуешь -
- * на админке (http://localhost:8080/codenjoy-contest/admin31415)
+ * Это интерфейс указывает на тип игры. Как только ты его реулизуешь -
+ * на админке (http://localhost:8080/codenjoy-contest/admin)
  * будет возможность переключиться на твою игру.
  */
-public interface GameType {
+public interface GameType extends Tickable {
 
     /**
      * @param score значения очков перед началом игры (используется например при загрузке игры из save)
      * @return Возвращается объект который умеет в зависимости от типа события на карте подчитывать очки игроков
      */
-    PlayerScores getPlayerScores(int score);
+    PlayerScores getPlayerScores(Object score);
 
     /**
      * Так фреймворк будет стартовать новую игру для каждого пользователя
-     * @param listener Через этот интерфейс фреймворк будет слушать какие ивенты возникают в твоей игре
-     * @param factory Через этот интерфейс фреймворк будет инджектить принтер для отрисовки поля
-     * @param save Если игре надо передать что-то чтобы ее настроить, например сейв игрока - это то самое место
+     * @level уровень игры (опциональное поле, обычно == 0)
      * @return Экземпляр игры пользователя
      */
-    Game newGame(EventListener listener, PrinterFactory factory, String save);
+    GameField createGame(int levelNumber);
 
     /**
      * @return Размер доски. Важно, чтобы у всех пользователей были одинаковые по размеру поля
@@ -71,26 +75,47 @@ public interface GameType {
     Settings getSettings();
 
     /**
-     * Существует два режима игры. Для начала реализуй - каждый на своей отдельной доске.
-     * Позже можешь пробовать мультиплеерную игру создать.
-     * Смотри com.codenjoy.dojo.sample.model.Single
-     * Смотри com.codenjoy.dojo.sample.model.Sample
-     * @return false - если каждый будет играть на своей отдельной доске, true - если все на одной доске
+     * @return каждая игра должна предоставить своего AI который будет развлекать новопришедших игроков
      */
-    boolean isSingleBoard();
+    Class<? extends Solver> getAI();
 
     /**
-     * Каждая игра должна предоставить своего AI который будет развлекать новопришедших игроков.
-     * @param aiName имя бота
+     * @return А это борда клиентская для игры
      */
-    boolean newAI(String aiName);
+    Class<? extends ClientBoard> getBoard();
 
     /**
-     * Если подложить в 'src\main\resources\gameName\version.properties' игры строчку 'version=${project.version}'
+     * Если подложить в 'src\main\resources\gameName\version.properties' игры строчку '${project.version}_${build.time}'
      * то ее потом мождно будет прочитать с помощью VersionReader.getCurrentVersion();
      * @return версия игры
      */
     String getVersion();
+
+    /**
+     * @return Возвращает тип мультиплеера для этой игы
+     */
+    MultiplayerType getMultiplayerType();
+
+    /**
+     * Метод для создания игрового пользователя внутри игры
+     * @param listener Через этот интерфейс фреймворк будет слушать какие ивенты возникают в твоей игре
+     * @param playerName Имейл игровка зарегавшегося на сервере
+     * @return Игрок
+     */
+    GamePlayer createPlayer(EventListener listener, String playerName);
+
+    /**
+     * @return нормальный Random, но ты можешь переопределить его, например, для тестовых целей
+     */
+    Dice getDice();
+
+    /**
+     * @return Вовзращает фабрику принтеров, которая создаст
+     * в нужный момент принтер {@see Printer}, который возьмет
+     * на себя представление борды в виде строчки.
+     * Если хочешь использовать кастомный принтер - {@see PrinterFactory#get(GraphicPrinter)}
+     */
+    PrinterFactory getPrinterFactory();
 }
 
 

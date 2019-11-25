@@ -4,7 +4,7 @@ package com.codenjoy.dojo.moebius.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,6 +25,7 @@ package com.codenjoy.dojo.moebius.model;
 
 import com.codenjoy.dojo.services.LengthToXY;
 import com.codenjoy.dojo.services.Point;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -35,9 +36,28 @@ public class LevelImpl implements Level {
 
     private String map;
 
+    public LevelImpl(int size) { // TODO test me
+        this.map = buildMap(size);
+        xy = new LengthToXY(getSize());
+    }
+
     public LevelImpl(String map) {
         this.map = map;
         xy = new LengthToXY(getSize());
+    }
+
+    private String buildMap(int size) {
+        StringBuilder board = new StringBuilder();
+        board.append(pad(size, '╔', '═', '╗'));
+        for (int y = 1; y < size - 1; y++) {
+            board.append(pad(size, '║', ' ', '║'));
+        }
+        board.append(pad(size, '╚', '═', '╝'));
+        return board.toString();
+    }
+
+    private String pad(int len, char left, char middle, char right) {
+        return left + StringUtils.rightPad("", len - 2, middle) + right;
     }
 
     @Override

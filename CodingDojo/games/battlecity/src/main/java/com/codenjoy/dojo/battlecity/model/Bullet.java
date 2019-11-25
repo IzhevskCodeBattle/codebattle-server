@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,6 +24,7 @@ package com.codenjoy.dojo.battlecity.model;
 
 
 import com.codenjoy.dojo.services.Direction;
+import com.codenjoy.dojo.services.MovingObject;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.State;
 
@@ -54,8 +55,7 @@ public class Bullet extends MovingObject implements State<Elements, Player> {
         if (field.outOfField(newX, newY)) {
             onDestroy(); // TODO заимплементить взрыв
         } else {
-            x = newX;
-            y = newY;
+            move(newX, newY);
             field.affect(this);
         }
     }

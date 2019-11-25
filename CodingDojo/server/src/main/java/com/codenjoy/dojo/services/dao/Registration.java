@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.dao;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,189 +23,346 @@ package com.codenjoy.dojo.services.dao;
  */
 
 
-import com.codenjoy.dojo.services.Hash;
+import com.codenjoy.dojo.services.ConfigProperties;
+import com.codenjoy.dojo.services.hash.Hash;
 import com.codenjoy.dojo.services.jdbc.ConnectionThreadPoolFactory;
 import com.codenjoy.dojo.services.jdbc.CrudConnectionThreadPool;
-import com.codenjoy.dojo.services.jdbc.ObjectMapper;
-import com.codenjoy.dojo.services.jdbc.PostgreSQLConnectionThreadPool;
-import org.springframework.stereotype.Component;
-import org.springframework.util.DigestUtils;
+import com.codenjoy.dojo.services.security.GameAuthorities;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-@Component
+import static com.codenjoy.dojo.services.security.GameAuthoritiesConstants.ROLE_ADMIN;
+import static com.codenjoy.dojo.services.security.GameAuthoritiesConstants.ROLE_USER;
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+
 public class Registration {
 
-    private CrudConnectionThreadPool pool;
+    public static final int ADMIN_USER_ID = 0;
 
-    public Registration(ConnectionThreadPoolFactory factory) {
-        pool = factory.create(
-                "CREATE TABLE IF NOT EXISTS users (" +
-                        "email varchar(255), " +
-                        "email_approved int, " +
-                        "password varchar(255)," +
-                        "code varchar(255)," +
-                        "data varchar(255));");
+    private CrudConnectionThreadPool pool;
+    private PasswordEncoder passwordEncoder;
+    private ConfigProperties properties;
+
+    public Registration(ConnectionThreadPoolFactory factory, String adminEmail, String adminPassword, PasswordEncoder passwordEncoder, ConfigProperties properties, boolean initAdminUser) {
+        this.passwordEncoder = passwordEncoder;
+        this.properties = properties;
+        adminPassword = passwordEncoder.encode(adminPassword);
+        List<String> initialScripts = new ArrayList<>();
+        initialScripts.add("CREATE TABLE IF NOT EXISTS users (" +
+                "email varchar(255), " +
+                "id varchar(255), " +
+                "readable_name varchar(255), " +
+                "email_approved int, " +
+                "password varchar(255)," +
+                "code varchar(255)," +
+                "data varchar(255)," +
+                "roles varchar(255));");
+        if (initAdminUser) {
+            initialScripts.add(String.format("INSERT INTO users (id, email, readable_name, email_approved, password, code, data, roles)" +
+                    " select '%s', '%s', '%s', %s,  '%s', '%s', '{}', '%s, %s'" +
+                    " where not exists (select 1 from users where id = '%s')",
+                    ADMIN_USER_ID, adminEmail, "admin", "1", adminPassword, "000000000000", ROLE_ADMIN, ROLE_USER,
+                    ADMIN_USER_ID));
+        }
+        pool = factory.create(initialScripts.toArray(new String[initialScripts.size()]));
     }
 
     void removeDatabase() {
         pool.removeDatabase();
     }
 
-    public boolean approved(final String email) {
-        return pool.select("SELECT * FROM users WHERE email = ?;",
-                new Object[]{email},
-                new ObjectMapper<Boolean>() {
-                    @Override
-                    public Boolean mapFor(ResultSet resultSet) throws SQLException {
-                        if (resultSet.next()) {
-                            return resultSet.getInt("email_approved") == 1;
-                        } else {
-                            return false;
-                        }
+    public boolean approved(String id) {
+        return pool.select("SELECT * FROM users WHERE id = ?;",
+                new Object[]{id},
+                rs -> rs.next() && rs.getInt("email_approved") == 1
+        );
+    }
+
+    public boolean registered(String id) {
+        return pool.select("SELECT count(*) AS total FROM users WHERE id = ?;",
+                new Object[]{id},
+                rs -> exists(rs, " id " + id)
+        );
+    }
+
+    private Boolean exists(ResultSet rs, String details) throws SQLException {
+        if (!rs.next()) {
+            return false;
+        }
+        int count = rs.getInt("total");
+        if (count > 1) {
+            throw new IllegalStateException("Found more than one user with " + details);
+        }
+        return count > 0;
+    }
+
+    public User register(String email, String readableName) {
+        String id = Hash.getRandomId();
+        String password = passwordEncoder.encode(randomAlphanumeric(properties.getAutoGenPasswordLen()));
+
+        User user = register(id, email, readableName,
+                password, "{}", GameAuthorities.USER.roles());
+
+        if (!properties.isEmailVerificationNeeded()) {
+            approve(user.getCode());
+        }
+
+        return user;
+    }
+
+    public User register(String id, String email, String readableName, String password, String data, String... roles) {
+        roles = roles.length > 0 ? roles : GameAuthorities.USER.roles();
+        String code = Hash.getCode(id, password);
+        password = passwordEncoder.encode(password);
+        pool.update("INSERT INTO users (id, email, readable_name, email_approved, password, code, data, roles) VALUES (?,?,?,?,?,?,?,?);",
+                new Object[]{id, email, readableName, 0, password, code, data, GameAuthorities.buildRolesString(roles)});
+        return getUserByCode(code);
+    }
+
+    public String login(String id, String password) {
+        return pool.select("SELECT code, password FROM users WHERE id = ? AND email_approved != 0;",
+                new Object[]{id},
+                rs -> {
+                    if (!rs.next()) {
+                        return null;
                     }
+                    String encodedPassword = rs.getString("password");
+                    if (passwordEncoder.matches(password, encodedPassword)) {
+                        return rs.getString("code");
+                    }
+
+                    return null;
                 }
         );
     }
 
-    public boolean registered(final String email) {
+    // TODO test me
+    public String checkUser(String id) {
+        if (getCodeById(id) != null) {
+            return id;
+        } else {
+            return null;
+        }
+    }
+
+    public String checkUser(String id, String code) {
+        String stored = getIdByCode(code);
+
+        if (stored == null) {
+            return null;
+        }
+
+        if (stored.equals(id)) {
+            return id;
+        }
+
+        return null;
+    }
+
+    // TODO test me
+    public String checkUserByPassword(String id, String password) {
+        return checkUser(id, Hash.getCode(id, password));
+    }
+
+    public String getIdByCode(String code) {
+        return pool.select("SELECT id FROM users WHERE code = ?;",
+                new Object[]{code},
+                rs -> rs.next() ? rs.getString("id") : null
+        );
+    }
+
+    // TODO test me
+    public boolean emailIsUsed(String email) {
         return pool.select("SELECT count(*) AS total FROM users WHERE email = ?;",
                 new Object[]{email},
-                new ObjectMapper<Boolean>() {
-                    @Override
-                    public Boolean mapFor(ResultSet resultSet) throws SQLException {
-                        if (!resultSet.next()) {
-                            return false;
-                        }
-                        int count = resultSet.getInt("total");
-                        if (count > 1) {
-                            throw new IllegalStateException("Found more than one user with email " + email);
-                        }
-                        return count > 0;
-                    }
-                }
+                rs -> exists(rs, " email " + email)
         );
     }
 
-    public String register(final String email, final String password, String data) {
-        String code = makeCode(email, password);
-        pool.update("INSERT INTO users (email, email_approved, password, code, data) VALUES (?,?,?,?,?);",
-                new Object[]{email, 0, password, code, data});
-        return code;
-    }
-
-    public String login(final String email, final String password) {
-        return pool.select("SELECT code FROM users WHERE email = ? AND password = ? AND email_approved != 0;",
-                new Object[]{email, password},
-                new ObjectMapper<String>() {
-                    @Override
-                    public String mapFor(ResultSet resultSet) throws SQLException {
-                        if (resultSet.next()) {
-                            return resultSet.getString("code");
-                        } else {
-                            return null;
-                        }
-                    }
-                }
+    // TODO test me
+    public boolean nameIsUsed(String name) {
+        return pool.select("SELECT count(*) AS total FROM users WHERE readable_name = ?;",
+                new Object[]{name},
+                rs -> exists(rs, " name " + name)
         );
     }
 
-    public static String makeCode(String email, String password) {
-        return "" + Math.abs(email.hashCode()) + Math.abs(password.hashCode());
-    }
-
-    public String getEmail(final String code) {
-        return pool.select("SELECT email FROM users WHERE code = ?;",
-                new Object[]{code},
-                new ObjectMapper<String>() {
-                    @Override
-                    public String mapFor(ResultSet resultSet) throws SQLException {
-                        if (resultSet.next()) {
-                            return resultSet.getString("email");
-                        } else {
-                            return null;
-                        }
-                    }
-                }
+    // TODO test me
+    public String getEmailById(String id) {
+        return pool.select("SELECT email FROM users WHERE id = ?;",
+                new Object[]{id},
+                rs -> rs.next() ? rs.getString("email") : null
         );
     }
 
-    public String getCode(final String email) {
-        return pool.select("SELECT code FROM users WHERE email = ?;",
+    // TODO test me
+    public String getIdByName(String name) {
+        return pool.select("SELECT id FROM users WHERE readable_name = ?;",
+                new Object[]{name},
+                rs -> rs.next() ? rs.getString("id") : null
+        );
+    }
+
+    // TODO test me
+    public String getIdByEmail(String email) {
+        return pool.select("SELECT id FROM users WHERE email = ?;",
                 new Object[]{email},
-                new ObjectMapper<String>() {
-                    @Override
-                    public String mapFor(ResultSet resultSet) throws SQLException {
-                        if (resultSet.next()) {
-                            return resultSet.getString("code");
-                        } else {
-                            return null;
-                        }
-                    }
-                }
+                rs -> rs.next() ? rs.getString("id") : null
         );
     }
 
-    public void approve(final String code) {
-        pool.update("UPDATE users SET email_approved = ? WHERE code = ?;",
-                new Object[] {1, code});
+    public String getNameById(String id) {
+        return pool.select("SELECT readable_name FROM users WHERE id = ?;",
+                new Object[]{id},
+                rs -> rs.next() ? rs.getString("readable_name") : null
+        );
     }
 
-    class User {
-        public User(String email, int email_approved, String password, String code, String data) {
+    public String getCodeById(String id) {
+        return pool.select("SELECT code FROM users WHERE id = ?;",
+                new Object[]{id},
+                rs -> rs.next() ? rs.getString("code") : null
+        );
+    }
+
+    public void approve(String code) {
+        pool.update("UPDATE users SET email_approved = ? WHERE code = ?;",
+                new Object[]{1, code});
+    }
+
+    public void updateReadableName(String id, String name) {
+        pool.update("UPDATE users SET readable_name = ? WHERE id = ?;",
+                new Object[]{name, id});
+    }
+
+    public void updateId(String name, String id) {
+        pool.update("UPDATE users SET id = ? WHERE readable_name = ?;",
+                new Object[]{id, name});
+    }
+
+    public void updateNameAndEmail(String id, String name, String email) {
+        pool.update("UPDATE users SET readable_name = ?, email = ? WHERE id = ?;",
+                new Object[]{name, email, id});
+    }
+
+    @Data
+    @ToString(of = { "id", "email", "readableName", "approved", "code", "data" })
+    @EqualsAndHashCode(callSuper = true)
+    @Accessors(chain = true)
+    public static class User extends org.springframework.security.core.userdetails.User implements OAuth2User {
+        private String email;
+        private String id;
+        private String readableName;
+        private int approved;
+        private String code;
+        private String data;
+
+        public User() {
+            super("anonymous", "", Collections.emptyList());
+        }
+
+        public User(String id, String email, String readableName, int approved, String password, String code, String data, String... roles) {
+            super(email, password, Stream.of(roles).map(SimpleGrantedAuthority::new).collect(Collectors.toList()));
+            this.id = id;
             this.email = email;
-            this.email_approved = email_approved;
-            this.password = password;
+            this.readableName = readableName;
+            this.approved = approved;
             this.code = code;
             this.data = data;
         }
 
-        String email;
-        int email_approved;
-        String password;
-        String code;
-        String data;
+        public void setCode(String code) {
+            this.code = code;
+        }
 
         @Override
-        public String toString() {
-            return "User{" +
-                    "email='" + email + '\'' +
-                    ", email_approved=" + email_approved +
-                    ", password='" + password + '\'' +
-                    ", code='" + code + '\'' +
-                    ", data='" + data + '\'' +
-                    '}';
+        public Map<String, Object> getAttributes() {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public String getName() {
+            return id;
         }
     }
 
-    public void changePasswordsToMD5() {
-        List<User> users = getUsers();
+    public User getUserByCode(String code) {
+        return pool.select("SELECT * FROM users where code = ?", new Object[] {code}, rs -> {
+            if (!rs.next()) {
+                throw new UsernameNotFoundException(String.format("User with code '%s' does not exist", code));
+            }
+            return extractUser(rs);
+        });
+    }
 
-        for (User user : users) {
-            pool.update("UPDATE users SET password = ? WHERE code = ?;",
-                    new Object[]{Hash.md5(user.password), user.code});
-        }
+    public Optional<User> getUserByEmail(String email) {
+        return pool.select("SELECT * FROM users where email = ?", new Object[] {email}, rs -> {
+            if (!rs.next()) {
+                return Optional.empty();
+            }
+            return Optional.of(extractUser(rs));
+        });
     }
 
     public List<User> getUsers() {
-        return pool.select("SELECT * FROM users;",
-                    new ObjectMapper<List<User>>() {
-                        @Override
-                        public List<User> mapFor(ResultSet resultSet) throws SQLException {
-                            List<User> result = new LinkedList<User>();
-                            while (resultSet.next()) {
-                                result.add(new User(resultSet.getString("email"),
-                                        resultSet.getInt("email_approved"),
-                                        resultSet.getString("password"),
-                                        resultSet.getString("code"),
-                                        resultSet.getString("data")));
-                            }
-                            return result;
-                        }
-                    }
-            );
+        return pool.select("SELECT * FROM users;", rs -> {
+            List<User> result = new LinkedList<>();
+            while (rs.next()) {
+                result.add(extractUser(rs));
+            }
+            return result;
+        });
     }
+
+    private User extractUser(ResultSet rs) throws SQLException {
+        return new User(
+                rs.getString("id"),
+                rs.getString("email"),
+                rs.getString("readable_name"),
+                rs.getInt("email_approved"),
+                rs.getString("password"),
+                rs.getString("code"),
+                rs.getString("data"),
+                GameAuthorities.splitRolesString(rs.getString("roles")));
+    }
+
+    public void replace(User user) {
+        String code = user.getCode();
+        if (StringUtils.isEmpty(code)) {
+            code = Hash.getCode(user.getEmail(), user.getPassword());
+            user.setCode(code);
+        }
+
+        Object[] parameters = {user.getReadableName(), user.getEmail(), 1, passwordEncoder.encode(user.getPassword()), code, user.getData(), GameAuthorities.authoritiesToRolesString(user.getAuthorities()), user.getId()};
+        if (getCodeById(user.getId()) == null) {
+            pool.update("INSERT INTO users (readable_name, email, email_approved, password, code, data, roles, id) VALUES (?,?,?,?,?,?,?,?);",
+                    parameters);
+        } else {
+            pool.update("UPDATE users SET readable_name = ?, email = ?, email_approved = ?, password = ?, code = ?, data = ?, roles = ? WHERE id = ?;",
+                    parameters);
+        }
+    }
+
+    public void remove(String id) {
+        pool.update("DELETE FROM users WHERE id = ?;",
+                new Object[]{id});
+    }
+
+    public void removeAll() {
+        pool.update("DELETE FROM users WHERE roles NOT LIKE '%" + ROLE_ADMIN + "%';");
+    }
+
 }

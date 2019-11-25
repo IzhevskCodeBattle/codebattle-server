@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.settings;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,12 +23,13 @@ package com.codenjoy.dojo.services.settings;
  */
 
 
-public class EditBox<T> implements Parameter<T> {
+import java.util.LinkedList;
+import java.util.List;
+
+public class EditBox<T> extends TypeUpdatable<T> implements Parameter<T> {
 
     private String name;
     private T def;
-    private T value;
-    private Class<?> type;
 
     public EditBox(String name) {
         this.name = name;
@@ -36,7 +37,12 @@ public class EditBox<T> implements Parameter<T> {
 
     @Override
     public T getValue() {
-        return (value == null)?def:value;
+        return (get() == null) ? def : get();
+    }
+
+    @Override
+    public String getType() {
+        return "editbox";
     }
 
     @Override
@@ -48,10 +54,18 @@ public class EditBox<T> implements Parameter<T> {
     public void update(T value) {
         if (value instanceof String) {
             if (Integer.class.equals(type)) {
-                this.value = (T)Integer.valueOf((String)value);  // TODO потестить это
+                set((T) Integer.valueOf((String) value));
+            } else if (Boolean.class.equals(type)) {
+                set((T) Boolean.valueOf((String) value));
+            } else if (Double.class.equals(type)) {
+                set((T) Double.valueOf((String) value));
+            } else if (String.class.equals(type)) {
+                set(value);
+            } else {
+                set(tryParse(value));
             }
         } else {
-            this.value = value;
+            set(value);
         }
     }
 
@@ -67,13 +81,26 @@ public class EditBox<T> implements Parameter<T> {
     }
 
     @Override
-    public <V> Parameter<V> type(Class<V> type) {
-        this.type = type; // TODO сделать это же с другими элементами
-        return (Parameter<V>)this;
+    public void select(int index) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void select(int index) {
-        throw new UnsupportedOperationException();
+    public List<T> getOptions() {
+        return new LinkedList<T>(){{
+            add(def);
+            if (EditBox.this.get() != null) {
+                add(EditBox.this.get());
+            }
+        }};
+    }
+
+    @Override
+    public String toString() { // TODO test me and add this method to all classes
+        return String.format("%s:%s = def[%s] val[%s]",
+                name,
+                type.getSimpleName(),
+                def,
+                get());
     }
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.loderunner.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,11 +29,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * User: sanja
- * Date: 07.01.14
- * Time: 16:00
- */
 public class Enemy extends PointImpl implements Tickable, Fieldable, State<Elements, Player> {
 
     private Direction direction;
@@ -57,8 +52,8 @@ public class Enemy extends PointImpl implements Tickable, Fieldable, State<Eleme
 
     @Override
     public void tick() {
-        if (huntHim == null || (huntHim != null && !huntHim.isAlive())) {
-            List<Hero> heroes = new LinkedList<Hero>(field.getHeroes());
+        if (huntHim == null || !huntHim.isAlive()) {
+            List<Hero> heroes = new LinkedList<>(field.getHeroes());
             if (oldHurt != null) { // если я бегал за героем, который спрятался
                 heroes.remove(oldHurt); // исключаю его из поиска // TODO подумать, тут может быть кейс, когда герой один и он появился уже а я за ним бегать не могу
             }
@@ -71,6 +66,7 @@ public class Enemy extends PointImpl implements Tickable, Fieldable, State<Eleme
         if (isFall()) {
             if (field.isBrick(x, y - 1) && withGold) {
                 withGold = false;
+                // TODO герой не может оставить золото, если он залез в ямку под лестницу, золото должно появиться сбоку
                 field.leaveGold(x, y);
             }
             move(x, y - 1);

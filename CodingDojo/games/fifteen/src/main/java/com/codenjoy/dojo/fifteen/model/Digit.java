@@ -4,7 +4,7 @@ package com.codenjoy.dojo.fifteen.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,14 +22,10 @@ package com.codenjoy.dojo.fifteen.model;
  * #L%
  */
 
-
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.PointImpl;
 import com.codenjoy.dojo.services.State;
 
-/**
- * Created by Administrator on 01.08.2015.
- */
 public class Digit extends PointImpl implements State<Elements, Player> {
 
     private Elements element;

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.hex.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,7 +23,13 @@ package com.codenjoy.dojo.hex.model;
  */
 
 
-import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.Dice;
+import com.codenjoy.dojo.services.EventListener;
+import com.codenjoy.dojo.services.Game;
+import com.codenjoy.dojo.services.Joystick;
+import com.codenjoy.dojo.services.multiplayer.Single;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.utils.TestUtils;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
@@ -31,8 +37,8 @@ import org.mockito.stubbing.OngoingStubbing;
 import java.util.LinkedList;
 import java.util.List;
 
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.Matchers.anyInt;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 public class SingleTest {
@@ -51,9 +57,10 @@ public class SingleTest {
         when(level.getSize()).thenReturn(5);
 
         game = new Hex(level, dice);
-        List<Single> games = new LinkedList<Single>();
+        List<Game> games = new LinkedList<>();
         for (int index = 0; index < count; index++) {
-            Single game = new Single(this.game, listener, printerFactory);
+            Game game = new Single(new Player(listener), printerFactory);
+            game.on(this.game);
             games.add(game);
             game.newGame();
         }

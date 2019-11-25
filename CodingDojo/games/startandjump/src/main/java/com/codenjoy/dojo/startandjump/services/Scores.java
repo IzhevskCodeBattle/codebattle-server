@@ -4,7 +4,7 @@ package com.codenjoy.dojo.startandjump.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,10 +27,6 @@ import com.codenjoy.dojo.services.PlayerScores;
 import com.codenjoy.dojo.services.settings.Parameter;
 import com.codenjoy.dojo.services.settings.Settings;
 
-/**
- * Класс, который умеет подсчитывать очки за те или иные действия.
- * Обычно хочется, чтобы константы очков не были захардкоджены, потому используй объект {@see Settings} для их хранения.
- */
 public class Scores implements PlayerScores {
 
     private final Parameter<Integer> winScore;
@@ -41,7 +37,6 @@ public class Scores implements PlayerScores {
     public Scores(int startScore, Settings settings) {
         this.score = startScore;
 
-        // вот тут мы на админке увидим два поля с подписями и возожностью редактировать значение по умолчанию
         winScore = settings.addEditBox("Win score").type(Integer.class).def(30);
         losePenalty = settings.addEditBox("Lose penalty").type(Integer.class).def(100);
     }
@@ -52,7 +47,7 @@ public class Scores implements PlayerScores {
     }
 
     @Override
-    public int getScore() {
+    public Integer getScore() {
         return score;
     }
 
@@ -62,5 +57,10 @@ public class Scores implements PlayerScores {
             score += winScore.getValue();
         }
         score = Math.max(0, score);
+    }
+
+    @Override
+    public void update(Object score) {
+        this.score = Integer.valueOf(score.toString());
     }
 }

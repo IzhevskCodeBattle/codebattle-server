@@ -4,7 +4,7 @@ package com.codenjoy.dojo.loderunner.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -28,15 +28,10 @@ import com.codenjoy.dojo.services.PointImpl;
 import com.codenjoy.dojo.services.State;
 import com.codenjoy.dojo.services.Tickable;
 
-/**
- * User: sanja
- * Date: 17.12.13
- * Time: 5:06
- */
 public class Brick extends PointImpl implements Tickable, State<Elements, Player> {
 
     public static final int DRILL_TIMER = 13;
-    public static final Brick NULL = new Brick(new PointImpl(-1, -1));
+    public static final Brick NULL = new Brick(pt(-1, -1));
     private int drill;
 
     private Hero drilledBy;

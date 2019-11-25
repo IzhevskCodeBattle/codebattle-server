@@ -4,7 +4,7 @@ package com.codenjoy.dojo.startandjump.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,10 +23,6 @@ package com.codenjoy.dojo.startandjump.services;
  */
 
 
-/**
- * Ивенты, которые могут возникать в игре опиши тут. Что есть ивенты? ну убили твоего героя и ты хочешь ему очков начислить штрафных
- * или, быть может, наоборот - он поднял что-то ценное и ты хочешь ему дать бонус. Вот все все ивенты.
- */
 public enum Events {
     STILL_ALIVE, LOSE
 }

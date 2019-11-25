@@ -4,7 +4,7 @@ package com.codenjoy.dojo.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -48,14 +48,6 @@ public abstract class AbstractTextSolver<T> implements Solver<AbstractTextBoard>
         String answer = getAnswer(question);
 
         return String.format("message('%s')", answer);
-    }
-
-    public static void start(String name, Solver solver, AbstractTextBoard board, WebSocketRunner.Host server) {
-        try {
-            WebSocketRunner.run(server, name, solver, board);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
 }

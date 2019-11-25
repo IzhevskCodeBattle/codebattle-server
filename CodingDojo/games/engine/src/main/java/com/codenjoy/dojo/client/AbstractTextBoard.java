@@ -4,7 +4,7 @@ package com.codenjoy.dojo.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,7 +23,9 @@ package com.codenjoy.dojo.client;
  */
 
 
-import org.apache.commons.lang.StringUtils;
+import com.codenjoy.dojo.utils.JsonUtils;
+import com.codenjoy.dojo.utils.UnicodeUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public abstract class AbstractTextBoard implements ClientBoard {
 
@@ -31,7 +33,7 @@ public abstract class AbstractTextBoard implements ClientBoard {
 
     @Override
     public ClientBoard forString(String data) {
-        this.data = data;
+        this.data = UnicodeUtils.unescapeJava(data);
         return this;
     }
 
@@ -41,5 +43,10 @@ public abstract class AbstractTextBoard implements ClientBoard {
 
     public String getData() {
         return data;
+    }
+
+    @Override
+    public String toString() {
+        return "BoardData " + JsonUtils.prettyPrint(data);
     }
 }

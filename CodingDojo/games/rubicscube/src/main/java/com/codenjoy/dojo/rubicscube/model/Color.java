@@ -4,7 +4,7 @@ package com.codenjoy.dojo.rubicscube.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,13 +23,9 @@ package com.codenjoy.dojo.rubicscube.model;
  */
 
 
-/**
- * User: sanja
- * Date: 08.10.13
- * Time: 4:50
- */
 public enum Color {
-    RED('R'), GREEN('G'), YELLOW('Y'), WHITE('W'), ORANGE('O'), BLUE('B');
+    RED('R'), GREEN('G'), YELLOW('Y'),
+    WHITE('W'), ORANGE('O'), BLUE('B');
 
     private char color;
 

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.sudoku.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,8 +23,13 @@ package com.codenjoy.dojo.sudoku.model;
  */
 
 
-import com.codenjoy.dojo.services.Joystick;
+import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.multiplayer.GameField;
 
-public interface Field {
-    Joystick getJoystick();
+public interface Field extends GameField<Player> {
+    boolean isGameOver();
+
+    void gameOver();
+
+    void set(Point pt, int n);
 }

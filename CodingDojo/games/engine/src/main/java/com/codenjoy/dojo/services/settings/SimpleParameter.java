@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.settings;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,6 +22,10 @@ package com.codenjoy.dojo.services.settings;
  * #L%
  */
 
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
 
 public class SimpleParameter<T> implements Parameter<T> {
 
@@ -41,13 +45,18 @@ public class SimpleParameter<T> implements Parameter<T> {
     }
 
     @Override
+    public String getType() {
+        return "noui";
+    }
+
+    @Override
     public String getName() {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void update(Object value) {
-        this.value = (T)value;
+        this.value = (T) value;
     }
 
     @Override
@@ -61,8 +70,28 @@ public class SimpleParameter<T> implements Parameter<T> {
     }
 
     @Override
+    public Parameter<T> parser(Function<String, T> parser) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void select(int index) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean changed() {
+        return false;
+    }
+
+    @Override
+    public void changesReacted() {
+        // do nothing
+    }
+
+    @Override
+    public List<T> getOptions() {
+        return Arrays.asList(value);
     }
 
     @Override

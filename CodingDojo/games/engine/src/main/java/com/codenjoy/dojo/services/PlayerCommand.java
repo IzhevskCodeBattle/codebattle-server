@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,22 +23,39 @@ package com.codenjoy.dojo.services;
  */
 
 
+import org.slf4j.Logger;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PlayerCommand {
 
-    private Joystick joystick;
-    private String commandString;
+    private static Logger logger = DLoggerFactory.getLogger(PlayerCommand.class);
 
-    public PlayerCommand(Joystick joystick, String commandString) {
+    public static final int MAX_COMMAND_LENGTH = 100;
+    private static final String COMMAND = "(left|right|up|down|(act(\\((-?\\d*,?)+\\))?)|(message(\\('(.*)'\\))?))";
+    private static Pattern PATTERN = Pattern.compile(COMMAND, Pattern.CASE_INSENSITIVE);
+
+    private Joystick joystick;
+    private String command;
+
+    public PlayerCommand(Joystick joystick, String command) {
         this.joystick = joystick;
-        this.commandString = commandString.replaceAll(", +", ",").replaceAll(" +,", ",");
+        if (!command.startsWith("message('")) {
+            this.command = command.replaceAll(", +", ",").replaceAll(" +,", ",");
+        } else {
+            this.command = command.replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r");
+        }
+    }
+
+    public static boolean isValid(String command) {
+        return command != null
+                && command.length() < MAX_COMMAND_LENGTH
+                && PATTERN.matcher(command).find();
     }
 
     public void execute(){
-        Pattern pattern = Pattern.compile("(left|right|up|down|(act(\\((-?\\d*,?)+\\))?)|(message(\\('(.*)'\\))?))", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(commandString);
+        Matcher matcher = PATTERN.matcher(command);
         while (matcher.find()) {
             String command = matcher.group(0);
             if (command == null) {
@@ -61,9 +78,12 @@ public class PlayerCommand {
                         joystick.act();
                     } else {
                         String[] split = p.split("[\\(,\\)]");
-                        int[] parameters = new int[split.length - 1];
-                        for (int index = 1; index < split.length; index++) {
-                            parameters[index - 1] = Integer.valueOf(split[index]);
+                        int[] parameters = new int[0];
+                        if (split.length != 0) {
+                            parameters = new int[split.length - 1];
+                            for (int index = 1; index < split.length; index++) {
+                                parameters[index - 1] = Integer.parseInt(split[index]);
+                            }
                         }
                         joystick.act(parameters);
                     }
@@ -72,14 +92,13 @@ public class PlayerCommand {
                     if (p == null) {
                         joystick.message("");
                     } else {
-                        joystick.message(p);
+                        joystick.message(p.replaceAll("\\\\n", "\n").replaceAll("\\\\r", "\r"));
                     }
                 } else {
-                    System.out.println(commandString);
+                    logger.warn(String.format("Unexpected command part '%s' in command '%s'", command, this.command));
                 }
             } catch (Exception e) {
-                System.out.println("Error during process command + " + command);
-                e.printStackTrace();
+                logger.error(String.format("Error during process command '%s'", this.command), e);
             }
         }
     }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,7 +25,10 @@ package com.codenjoy.dojo.bomberman.model;
 
 import com.codenjoy.dojo.bomberman.services.Events;
 import com.codenjoy.dojo.services.*;
-import junit.framework.Assert;
+import com.codenjoy.dojo.services.multiplayer.Single;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
@@ -35,10 +38,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
-import static junit.framework.Assert.*;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 /**
@@ -49,7 +52,7 @@ import static org.mockito.Mockito.*;
 public class BombermanTest {
 
     public int SIZE = 5;
-    private Single game;
+    private Game game;
     private Joystick hero;
     private Level level;
     private WallsImpl walls;
@@ -59,7 +62,7 @@ public class BombermanTest {
     private Dice bombermanDice;
     private Player player;
     private List bombermans;
-    private Bomberman bomberman;
+    private Bomberman field;
     private PrinterFactory printer = new PrinterFactoryImpl();
 
     @Before
@@ -83,19 +86,20 @@ public class BombermanTest {
 
     private void initBomberman() {
         dice(bombermanDice, 0, 0);
-        HeroImpl bomberman = new HeroImpl(level, bombermanDice);
-        when(settings.getBomberman(level)).thenReturn(bomberman);
-        this.hero = bomberman;
+        Hero hero = new Hero(level, bombermanDice);
+        when(settings.getBomberman(level)).thenReturn(hero);
+        this.hero = hero;
     }
 
     private void givenBoard(int size) {
         when(settings.getBoardSize()).thenReturn(v(size));
-        bomberman = new Bomberman(settings);
-        game = new Single(bomberman, listener, printer);
+        field = new Bomberman(settings);
+        player = new Player(listener);
+        game = new Single(player, printer);
+        game.on(field);
         dice(bombermanDice, 0, 0);
         game.newGame();
         hero = game.getJoystick();
-        player = game.getPlayer();
     }
 
     @Test
@@ -109,7 +113,7 @@ public class BombermanTest {
 
     @Test
     public void shouldBoard_whenStartGame2() {
-        assertEquals(SIZE, bomberman.size());
+        assertEquals(SIZE, field.size());
     }
 
     @Test
@@ -124,7 +128,7 @@ public class BombermanTest {
     @Test
     public void shouldBombermanOnBoardOneRightStep_whenCallRightCommand() {
         hero.right();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -136,10 +140,10 @@ public class BombermanTest {
     @Test
     public void shouldBombermanOnBoardTwoRightSteps_whenCallRightCommandTwice() {
         hero.right();
-        game.tick();
+        field.tick();
 
         hero.right();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -151,7 +155,7 @@ public class BombermanTest {
     @Test
     public void shouldBombermanOnBoardOneUpStep_whenCallDownCommand() {
         hero.up();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -163,13 +167,13 @@ public class BombermanTest {
     @Test
     public void shouldBombermanWalkUp() {
         hero.up();
-        game.tick();
+        field.tick();
 
         hero.up();
-        game.tick();
+        field.tick();
 
         hero.down();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -181,7 +185,7 @@ public class BombermanTest {
     @Test
     public void shouldBombermanStop_whenGoToWallDown() {
         hero.down();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -191,20 +195,20 @@ public class BombermanTest {
     }
 
     private void assertBombermanAt(int x, int y) {
-        assertEquals(x, player.getBomberman().getX());
-        assertEquals(y, player.getBomberman().getY());
+        assertEquals(x, player.getHero().getX());
+        assertEquals(y, player.getHero().getY());
     }
 
     @Test
     public void shouldBombermanWalkLeft() {
         hero.right();
-        game.tick();
+        field.tick();
 
         hero.right();
-        game.tick();
+        field.tick();
 
         hero.left();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -216,7 +220,7 @@ public class BombermanTest {
     @Test
     public void shouldBombermanStop_whenGoToWallLeft() {
         hero.left();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -250,7 +254,7 @@ public class BombermanTest {
     private void gotoMaxUp() {
         for (int y = 0; y <= SIZE + 1; y++) {
             hero.up();
-            game.tick();
+            field.tick();
         }
     }
 
@@ -260,7 +264,7 @@ public class BombermanTest {
         hero.up();
         hero.left();
         hero.right();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -272,7 +276,7 @@ public class BombermanTest {
         hero.left();
         hero.down();
         hero.up();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -284,7 +288,7 @@ public class BombermanTest {
     @Test
     public void shouldBombDropped_whenBombermanDropBomb() {
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -296,13 +300,13 @@ public class BombermanTest {
     @Test
     public void shouldBombDropped_whenBombermanDropBombAtAnotherPlace() {
         hero.up();
-        game.tick();
+        field.tick();
 
         hero.right();
-        game.tick();
+        field.tick();
 
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -316,14 +320,14 @@ public class BombermanTest {
         canDropBombs(3);
 
         hero.up();
-        game.tick();
+        field.tick();
         hero.act();
-        game.tick();
+        field.tick();
 
         hero.right();
-        game.tick();
+        field.tick();
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -350,7 +354,7 @@ public class BombermanTest {
 
         hero.up();
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -360,7 +364,7 @@ public class BombermanTest {
 
         hero.up();
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -370,7 +374,7 @@ public class BombermanTest {
 
         hero.up();
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "☺    \n" +
@@ -385,10 +389,10 @@ public class BombermanTest {
         canDropBombs(2);
 
         hero.act();
-        game.tick();
+        field.tick();
 
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -396,10 +400,10 @@ public class BombermanTest {
                 "     \n" +
                 "☻    \n");
 
-        assertEquals(1, bomberman.getBombs().size());
+        assertEquals(1, field.getBombs().size());
 
         hero.right();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -408,7 +412,7 @@ public class BombermanTest {
                 "2☺   \n");
 
         hero.right();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -416,7 +420,7 @@ public class BombermanTest {
                 "     \n" +
                 "1 ☺  \n");
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -424,7 +428,7 @@ public class BombermanTest {
                 "     \n" +
                 "҉ ☺  \n");
 
-        game.tick();   // бомб больше нет, иначе тут был бы взрыв второй
+        field.tick();   // бомб больше нет, иначе тут был бы взрыв второй
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -436,12 +440,12 @@ public class BombermanTest {
     @Test
     public void shouldBoom_whenDroppedBombHas5Ticks() {
         hero.act();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -449,7 +453,7 @@ public class BombermanTest {
                 "     \n" +
                 "1 ☺  \n");
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -470,7 +474,7 @@ public class BombermanTest {
                 "҉҉☺  \n");
 
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -484,11 +488,11 @@ public class BombermanTest {
     public void shouldKillBoomberman_whenBombExploded() {
         hero.act();
         hero.right();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
-        game.tick();
+        field.tick();
 
         assertBombermanAlive();
         asrtBrd("     \n" +
@@ -497,7 +501,7 @@ public class BombermanTest {
                 "     \n" +
                 "1☺   \n");
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -506,7 +510,7 @@ public class BombermanTest {
                 "҉Ѡ   \n");
         assertBombermanDie();
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -526,7 +530,7 @@ public class BombermanTest {
         killBomber();
 
         hero.left();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -537,14 +541,14 @@ public class BombermanTest {
 
     private void killBomber() {
         hero.up();
-        game.tick();
+        field.tick();
         hero.right();
         hero.act();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -558,7 +562,7 @@ public class BombermanTest {
         killBomber();
 
         hero.up();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -572,7 +576,7 @@ public class BombermanTest {
         killBomber();
 
         hero.down();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -586,7 +590,7 @@ public class BombermanTest {
         killBomber();
 
         hero.right();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -600,7 +604,7 @@ public class BombermanTest {
         killBomber();
 
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -613,12 +617,12 @@ public class BombermanTest {
     @Test
     public void shouldKillBoomberman_whenBombExploded_blastWaveAffect_fromLeft() {
         hero.act();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -627,7 +631,7 @@ public class BombermanTest {
                 "1☺   \n");
         assertBombermanAlive();
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -636,7 +640,7 @@ public class BombermanTest {
                 "҉Ѡ   \n");
         assertBombermanDie();
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -649,13 +653,13 @@ public class BombermanTest {
     @Test
     public void shouldKillBoomberman_whenBombExploded_blastWaveAffect_fromRight() {
         hero.right();
-        game.tick();
+        field.tick();
         hero.act();
-        game.tick();
+        field.tick();
         hero.left();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -664,7 +668,7 @@ public class BombermanTest {
                 "☺1   \n");
         assertBombermanAlive();
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -673,7 +677,7 @@ public class BombermanTest {
                 "Ѡ҉҉  \n");
         assertBombermanDie();
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -687,11 +691,11 @@ public class BombermanTest {
     public void shouldKillBoomberman_whenBombExploded_blastWaveAffect_fromUp() {
         hero.up();
         hero.act();
-        game.tick();
+        field.tick();
         hero.down();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -700,7 +704,7 @@ public class BombermanTest {
                 "☺    \n");
         assertBombermanAlive();
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -709,7 +713,7 @@ public class BombermanTest {
                 "Ѡ    \n");
         assertBombermanDie();
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -726,13 +730,13 @@ public class BombermanTest {
     @Test
     public void shouldKillBoomberman_whenBombExploded_blastWaveAffect_fromDown() {
         hero.down();
-        game.tick();
+        field.tick();
         hero.act();
-        game.tick();
+        field.tick();
         hero.up();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -741,7 +745,7 @@ public class BombermanTest {
                 "1    \n");
         assertBombermanAlive();
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -750,7 +754,7 @@ public class BombermanTest {
                 "҉҉   \n");
         assertBombermanDie();
 
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -763,17 +767,17 @@ public class BombermanTest {
     @Test
     public void shouldNoKillBoomberman_whenBombExploded_blastWaveAffect_fromDownRight() {
         hero.down();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
+        field.tick();
         hero.act();
-        game.tick();
+        field.tick();
         hero.up();
-        game.tick();
+        field.tick();
         hero.left();
-        game.tick();
+        field.tick();
 
-        game.tick();
+        field.tick();
 
         assertBombermanAlive();
         asrtBrd("     \n" +
@@ -782,7 +786,7 @@ public class BombermanTest {
                 "☺    \n" +
                 " 1   \n");
 
-        game.tick();
+        field.tick();
 
         assertBombermanAlive();
         asrtBrd("     \n" +
@@ -800,13 +804,13 @@ public class BombermanTest {
     @Test
     public void shouldBlastAfter_whenBombExposed() {
         hero.act();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -821,13 +825,13 @@ public class BombermanTest {
         gotoMaxRight();
 
         hero.act();
-        game.tick();
+        field.tick();
         hero.left();
-        game.tick();
+        field.tick();
         hero.left();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("  ☺҉҉\n" +
                 "    ҉\n" +
@@ -840,12 +844,12 @@ public class BombermanTest {
     public void shouldBlastAfter_whenBombExposed_bombermanDie() {
         gotoBoardCenter();
         hero.act();
-        game.tick();
+        field.tick();
         hero.down();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "  ҉  \n" +
@@ -855,7 +859,7 @@ public class BombermanTest {
 
         assertBombermanDie();
 
-        game.tick();
+        field.tick();
         asrtBrd("     \n" +
                 "     \n" +
                 "     \n" +
@@ -868,15 +872,15 @@ public class BombermanTest {
     private void gotoBoardCenter() {
         for (int y = 0; y < SIZE / 2; y++) {
             hero.up();
-            game.tick();
+            field.tick();
             hero.right();
-            game.tick();
+            field.tick();
         }
     }
 
     private void asrtBrd(String expected) {
         assertEquals(expected, printer.getPrinter(
-                bomberman.reader(), player).print());
+                field.reader(), player).print());
     }
 
     // появляются стенки, которые конфигурятся извне
@@ -904,7 +908,7 @@ public class BombermanTest {
         givenBoardWithWalls();
 
         hero.down();
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼\n" +
                 "☼   ☼\n" +
@@ -918,7 +922,7 @@ public class BombermanTest {
         givenBoardWithWalls();
 
         hero.left();
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼\n" +
                 "☼   ☼\n" +
@@ -956,7 +960,7 @@ public class BombermanTest {
     private void gotoMaxRight() {
         for (int x = 0; x <= SIZE + 1; x++) {
             hero.right();
-            game.tick();
+            field.tick();
         }
     }
 
@@ -995,12 +999,12 @@ public class BombermanTest {
     @Test
     public void shouldBombermanStop_whenGotoBomb() {
         hero.act();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
+        field.tick();
 
         hero.left();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -1014,7 +1018,7 @@ public class BombermanTest {
     public void shouldBombermanWalkAndDropBombsTogetherInOneTact_bombFirstly() {
         hero.act();
         hero.right();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -1027,7 +1031,7 @@ public class BombermanTest {
     public void shouldBombermanWalkAndDropBombsTogetherInOneTact_moveFirstly() {
         hero.right();
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -1036,7 +1040,7 @@ public class BombermanTest {
                 " ☻   \n");
 
         hero.right();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -1048,9 +1052,9 @@ public class BombermanTest {
     @Test
     public void shouldBombermanWalkAndDropBombsTogetherInOneTact_bombThanMove() {
         hero.act();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -1062,9 +1066,9 @@ public class BombermanTest {
     @Test
     public void shouldBombermanWalkAndDropBombsTogetherInOneTact_moveThanBomb() {
         hero.right();
-        game.tick();
+        field.tick();
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -1073,7 +1077,7 @@ public class BombermanTest {
                 " ☻   \n");
 
         hero.right();
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -1095,7 +1099,7 @@ public class BombermanTest {
                 "☼1  ☼\n" +
                 "☼☼☼☼☼\n");
 
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼\n" +
                 "☼  ☺☼\n" +
@@ -1175,20 +1179,20 @@ public class BombermanTest {
 
         hero.act();
         goOut();
-        game.tick();
+        field.tick();
 
         asrtBrd(expected);
     }
 
     private void goOut() {
         hero.right();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
+        field.tick();
         hero.up();
-        game.tick();
+        field.tick();
         hero.up();
-        game.tick();
+        field.tick();
     }
 
     // я немогу модифицировать список бомб на доске, меняя getBombs
@@ -1198,14 +1202,14 @@ public class BombermanTest {
         canDropBombs(2);
         hero.act();
         hero.right();
-        game.tick();
+        field.tick();
         hero.act();
         hero.right();
-        game.tick();
+        field.tick();
 
-        List<Bomb> bombs1 = bomberman.getBombs();
-        List<Bomb> bombs2 = bomberman.getBombs();
-        List<Bomb> bombs3 = bomberman.getBombs();
+        List<Bomb> bombs1 = field.getBombs();
+        List<Bomb> bombs2 = field.getBombs();
+        List<Bomb> bombs3 = field.getBombs();
         assertSame(bombs1, bombs2);
         assertSame(bombs2, bombs3);
         assertSame(bombs3, bombs1);
@@ -1224,14 +1228,14 @@ public class BombermanTest {
         assertSame(bomb22, bomb23);
         assertSame(bomb23, bomb21);
 
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
 
         assertFalse(bomb11.isExploded());
         assertFalse(bomb12.isExploded());
         assertFalse(bomb13.isExploded());
 
-        game.tick();
+        field.tick();
 
         assertTrue(bomb11.isExploded());
         assertTrue(bomb12.isExploded());
@@ -1241,7 +1245,7 @@ public class BombermanTest {
         assertFalse(bomb22.isExploded());
         assertFalse(bomb23.isExploded());
 
-        game.tick();
+        field.tick();
 
         assertTrue(bomb21.isExploded());
         assertTrue(bomb22.isExploded());
@@ -1252,17 +1256,17 @@ public class BombermanTest {
     public void shouldReturnShouldNotSynchronizedBombsList_whenUseBoardApi() {
         hero.act();
         hero.right();
-        game.tick();
+        field.tick();
 
-        List<Bomb> bombs1 = bomberman.getBombs();
+        List<Bomb> bombs1 = field.getBombs();
         assertEquals(1, bombs1.size());
 
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
-        List<Bomb> bombs2 = bomberman.getBombs();
+        List<Bomb> bombs2 = field.getBombs();
         assertEquals(0, bombs2.size());
         assertEquals(0, bombs1.size());
         assertSame(bombs1, bombs2);
@@ -1272,16 +1276,16 @@ public class BombermanTest {
     public void shouldChangeBlast_whenUseBoardApi() {  // TODO а нода вообще такое? стреляет по перформансу перекладывать объекты и усложняет код
         hero.act();
         hero.right();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
-        List<Blast> blasts1 = bomberman.getBlasts();
-        List<Blast> blasts2 = bomberman.getBlasts();
-        List<Blast> blasts3 = bomberman.getBlasts();
+        List<Blast> blasts1 = field.getBlasts();
+        List<Blast> blasts2 = field.getBlasts();
+        List<Blast> blasts3 = field.getBlasts();
         assertSame(blasts1, blasts2);
         assertSame(blasts2, blasts3);
         assertSame(blasts3, blasts1);
@@ -1305,9 +1309,9 @@ public class BombermanTest {
     public void shouldNoChangeWall_whenUseBoardApi() {
         givenBoardWithWalls();
 
-        Walls walls1 = bomberman.getWalls();
-        Walls walls2 = bomberman.getWalls();
-        Walls walls3 = bomberman.getWalls();
+        Walls walls1 = field.getWalls();
+        Walls walls2 = field.getWalls();
+        Walls walls3 = field.getWalls();
         assertNotSame(walls1, walls2);
         assertNotSame(walls2, walls3);
         assertNotSame(walls3, walls1);
@@ -1316,16 +1320,16 @@ public class BombermanTest {
         Iterator<Wall> iterator2 = walls2.iterator();
         Iterator<Wall> iterator3 = walls3.iterator();
 
-        PointImpl wall11 = iterator1.next();
-        PointImpl wall12 = iterator2.next();
-        PointImpl wall13 = iterator3.next();
+        Point wall11 = iterator1.next();
+        Point wall12 = iterator2.next();
+        Point wall13 = iterator3.next();
         assertNotSame(wall11, wall12);
         assertNotSame(wall12, wall13);
         assertNotSame(wall13, wall11);
 
-        PointImpl wall21 = iterator1.next();
-        PointImpl wall22 = iterator2.next();
-        PointImpl wall23 = iterator3.next();
+        Point wall21 = iterator1.next();
+        Point wall22 = iterator2.next();
+        Point wall23 = iterator3.next();
         assertNotSame(wall21, wall22);
         assertNotSame(wall22, wall23);
         assertNotSame(wall23, wall21);
@@ -1357,7 +1361,7 @@ public class BombermanTest {
                 "#1  #\n" +
                 "#####\n");
 
-        game.tick();
+        field.tick();
 
         asrtBrd("#####\n" +
                 "#  ☺#\n" +
@@ -1392,7 +1396,7 @@ public class BombermanTest {
                 "☼☼☼☼☼☼☼☼☼☼☼\n");
 
         dice(meatChppperDice, 1, Direction.DOWN.value());
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼☼☼☼☼☼☼\n" +
                 "☼         ☼\n" +
@@ -1407,11 +1411,11 @@ public class BombermanTest {
                 "☼☼☼☼☼☼☼☼☼☼☼\n");
 
         dice(meatChppperDice, 1);
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼☼☼☼☼☼☼\n" +
                 "☼         ☼\n" +
@@ -1426,7 +1430,7 @@ public class BombermanTest {
                 "☼☼☼☼☼☼☼☼☼☼☼\n");
 
         dice(meatChppperDice, 0, Direction.LEFT.value());
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼☼☼☼☼☼☼\n" +
                 "☼         ☼\n" +
@@ -1440,13 +1444,13 @@ public class BombermanTest {
                 "☼☺        ☼\n" +
                 "☼☼☼☼☼☼☼☼☼☼☼\n");
 
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼☼☼☼☼☼☼\n" +
                 "☼         ☼\n" +
@@ -1461,7 +1465,7 @@ public class BombermanTest {
                 "☼☼☼☼☼☼☼☼☼☼☼\n");
 
         dice(meatChppperDice, 1, Direction.RIGHT.value());
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼☼☼☼☼☼☼\n" +
                 "☼         ☼\n" +
@@ -1476,11 +1480,11 @@ public class BombermanTest {
                 "☼☼☼☼☼☼☼☼☼☼☼\n");
 
         dice(meatChppperDice, 0, Direction.LEFT.value());
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
 
         dice(meatChppperDice, Direction.LEFT.value());
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼☼☼☼☼☼☼\n" +
                 "☼         ☼\n" +
@@ -1495,7 +1499,7 @@ public class BombermanTest {
                 "☼☼☼☼☼☼☼☼☼☼☼\n");
 
         dice(meatChppperDice, Direction.DOWN.value());
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼☼☼☼☼☼☼\n" +
                 "☼         ☼\n" +
@@ -1509,7 +1513,7 @@ public class BombermanTest {
                 "☼☺        ☼\n" +
                 "☼☼☼☼☼☼☼☼☼☼☼\n");
 
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼☼☼☼☼☼☼\n" +
                 "☼         ☼\n" +
@@ -1562,25 +1566,25 @@ public class BombermanTest {
                 "☼☼☼☼☼☼☼☼☼☼☼\n");
 
         dice(meatChppperDice, 1, Direction.DOWN.value());
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         dice(meatChppperDice, 1, Direction.LEFT.value());
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
         hero.act();
         hero.up();
-        game.tick();
+        field.tick();
         hero.up();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼☼☼☼☼☼☼\n" +
                 "☼         ☼\n" +
@@ -1594,7 +1598,7 @@ public class BombermanTest {
                 "☼1 &      ☼\n" +
                 "☼☼☼☼☼☼☼☼☼☼☼\n");
 
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼☼☼☼☼☼☼\n" +
                 "☼         ☼\n" +
@@ -1609,7 +1613,7 @@ public class BombermanTest {
                 "☼☼☼☼☼☼☼☼☼☼☼\n");
 
         dice(meatChppperDice, SIZE - 2, SIZE - 2, Direction.DOWN.value());
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼☼☼☼☼☼☼\n" +
                 "☼         ☼\n" +
@@ -1633,10 +1637,10 @@ public class BombermanTest {
 
     @Test
     public void shouldNoEventsWhenBombermanNotMove() {
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         verifyNoMoreInteractions(listener);
     }
@@ -1653,13 +1657,13 @@ public class BombermanTest {
 
         hero.act();
         hero.right();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -1695,13 +1699,13 @@ public class BombermanTest {
 
         hero.act();
         hero.right();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -1747,84 +1751,78 @@ public class BombermanTest {
 
         hero.act();
         hero.up();
-        game.tick();
+        field.tick();
 
         hero.act();
         hero.up();
-        game.tick();
+        field.tick();
 
         hero.act();
         hero.up();
-        game.tick();
+        field.tick();
 
         hero.act();
         hero.up();
-        game.tick();
+        field.tick();
         asrtBrd(" ☺   \n" +
                 "#4   \n" +
                 "&3   \n" +
                 "#2   \n" +
                 "&1   \n");
-        assertScores(0, 0);
 
         hero.right();
-        game.tick();
+        field.tick();
         asrtBrd("  ☺  \n" +
                 "#3   \n" +
                 "&2   \n" +
                 "#1   \n" +
                 "x҉҉  \n");
-        assertScores(1, 1);
 
-        game.tick();
+        field.tick();
         asrtBrd("  ☺  \n" +
                 "#2   \n" +
                 "&1   \n" +
                 "H҉҉  \n" +
                 "&҉   \n");
-        assertScores(2, 2);
 
-        game.tick();
+        field.tick();
         asrtBrd("  ☺  \n" +
                 "#1   \n" +
                 "x҉҉  \n" +
                 "#҉   \n" +
                 "&    \n");
-        assertScores(3, 3);
 
-        game.tick();
+        field.tick();
         asrtBrd(" ҉☺  \n" +
                 "H҉҉  \n" +
                 "&҉   \n" +
                 "#    \n" +
                 "&    \n");
-        assertScores(4, 4);
 
         hero.left();
-        game.tick();
+        field.tick();
         hero.down();
         hero.act();
-        game.tick();
+        field.tick();
         asrtBrd("     \n" +
                 "#☻   \n" +
                 "&    \n" +
                 "#    \n" +
                 "&    \n");
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
         asrtBrd(" ҉   \n" +
                 "HѠ҉  \n" +
                 "&҉   \n" +
                 "#    \n" +
                 "&    \n");
-        assertScores(0, 5);
 
         assertBombermanDie();
 
         initBomberman();
-        game.tick();
+        field.tick();
         game.newGame();
         asrtBrd("     \n" +
                 "#    \n" +
@@ -1834,23 +1832,17 @@ public class BombermanTest {
 
         hero.act();
         hero.right();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
         asrtBrd("     \n" +
                 "#    \n" +
                 "&    \n" +
                 "#҉   \n" +
                 "x҉҉☺ \n");
-        assertScores(1, 5);
-    }
-
-    private void assertScores(int expectedCurrent, int expectedMax) {
-        assertEquals(expectedCurrent, game.getCurrentScore());
-        assertEquals(expectedMax, game.getMaxScore());
     }
 
     // если я двинулся за пределы стены и тут же поставил бомбу, то бомба упадет на моем текущем месте
@@ -1858,13 +1850,13 @@ public class BombermanTest {
     public void shouldMoveOnBoardAndDropBombTogether() {
         givenBoardWithOriginalWalls();
         hero.up();
-        game.tick();
+        field.tick();
         hero.up();
-        game.tick();
+        field.tick();
 
         hero.left();
         hero.act();
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼\n" +
                 "☼☻  ☼\n" +
@@ -1885,16 +1877,16 @@ public class BombermanTest {
                 "☼☼☼☼☼\n");
 
         hero.up();
-        game.tick();
+        field.tick();
         hero.up();
-        game.tick();
+        field.tick();
         hero.right();
         hero.act();
-        game.tick();
+        field.tick();
         hero.left();
-        game.tick();
+        field.tick();
         hero.down();
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼\n" +
                 "☼ 2&☼\n" +
@@ -1903,7 +1895,7 @@ public class BombermanTest {
                 "☼☼☼☼☼\n");
 
         dice(meatChppperDice, 1, Direction.LEFT.value());
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼\n" +
                 "☼ & ☼\n" +
@@ -1920,12 +1912,12 @@ public class BombermanTest {
 
         hero.act();
         hero.up();
-        game.tick();
+        field.tick();
         hero.up();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("       \n" +
                 "       \n" +
@@ -1944,14 +1936,14 @@ public class BombermanTest {
 
         hero.act();
         hero.up();
-        game.tick();
+        field.tick();
         hero.up();
-        game.tick();
+        field.tick();
         hero.up();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("       \n" +
                 "҉      \n" +
@@ -1966,17 +1958,17 @@ public class BombermanTest {
     public void shouldMeatChopperAppearAfterKill() {
         bombsPower(3);
         dice(meatChppperDice, 3, 0, Direction.DOWN.value());
-        withWalls(new MeatChoppers(new WallsImpl(), bomberman, v(1), meatChppperDice));
+        withWalls(new MeatChoppers(new WallsImpl(), field, v(1), meatChppperDice));
         givenBoard(SIZE);
 
         hero.act();
         hero.up();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "҉    \n" +
@@ -1985,7 +1977,7 @@ public class BombermanTest {
                 "҉҉҉x \n");
 
         dice(meatChppperDice, 2, 2, Direction.DOWN.value());
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "     \n" +
@@ -1998,17 +1990,17 @@ public class BombermanTest {
     public void shouldMeatChopperNotAppearWhenDestroyWall() {
         bombsPower(3);
         dice(meatChppperDice, 4, 4, Direction.RIGHT.value());
-        withWalls(new MeatChoppers(new DestroyWallAt(3, 0, new WallsImpl()), bomberman, v(1), meatChppperDice));
+        withWalls(new MeatChoppers(new DestroyWallAt(3, 0, new WallsImpl()), field, v(1), meatChppperDice));
         givenBoard(SIZE);
 
         hero.act();
         hero.up();
-        game.tick();
+        field.tick();
         hero.right();
-        game.tick();
-        game.tick();
-        game.tick();
-        game.tick();
+        field.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         asrtBrd("    &\n" +
                 "҉    \n" +
@@ -2017,7 +2009,7 @@ public class BombermanTest {
                 "҉҉҉H \n");
 
         dice(meatChppperDice, Direction.DOWN.value());
-        game.tick();
+        field.tick();
 
         asrtBrd("     \n" +
                 "    &\n" +
@@ -2031,7 +2023,7 @@ public class BombermanTest {
     public void shouldMeatChopperNotApperOnBommber() {
         shouldMonsterCanMoveOnBomb();
         hero.down();
-        game.tick();
+        field.tick();
 
         asrtBrd("☼☼☼☼☼\n" +
                 "☼x҉҉☼\n" +
@@ -2043,7 +2035,7 @@ public class BombermanTest {
         when(bombermans.contains(anyObject())).thenReturn(true);
 
         try {
-            game.tick();
+            field.tick();
 //            fail(); // TODO надо с этим разобраться
         } catch (IllegalStateException e) {
             assertEquals("java.lang.IllegalStateException: Dead loop at MeatChoppers.regenerate!", e.toString());

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.minesweeper.client.ai;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -28,7 +28,7 @@ import com.codenjoy.dojo.minesweeper.client.Board;
 import com.codenjoy.dojo.minesweeper.model.Elements;
 import com.utils.BoardImpl;
 import com.utils.Point;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;

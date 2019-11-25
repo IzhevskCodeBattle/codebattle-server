@@ -4,7 +4,7 @@ package com.codenjoy.dojo.hex.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,7 +23,7 @@ package com.codenjoy.dojo.hex.model;
  */
 
 
-import com.codenjoy.dojo.services.CharElements;
+import com.codenjoy.dojo.services.printer.CharElements;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -63,20 +63,18 @@ public enum Elements implements CharElements {
     }
 
     public static List<Elements> heroesElements() {
-        List<Elements> result = new LinkedList<Elements>(Arrays.asList(Elements.values()));
-        result.remove(Elements.NONE);
-        result.remove(Elements.WALL);
-        result.remove(Elements.MY_HERO);
-        return result;
+        return new LinkedList<Elements>(Arrays.asList(Elements.values())) {{
+            remove(Elements.NONE);
+            remove(Elements.WALL);
+            remove(Elements.MY_HERO);
+        }};
     }
 
     public static Elements valueOf(char ch) {
-        for (Elements el : Elements.values()) {
-            if (el.ch == ch) {
-                return el;
-            }
-        }
-        throw new IllegalArgumentException("No such element for " + ch);
+        return Arrays.stream(Elements.values())
+                .filter(el -> el.ch == ch)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No such element for " + ch));
     }
 
 }

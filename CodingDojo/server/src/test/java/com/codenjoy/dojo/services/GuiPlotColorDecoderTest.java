@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,20 +23,17 @@ package com.codenjoy.dojo.services;
  */
 
 
+import com.codenjoy.dojo.utils.JsonUtils;
+import lombok.SneakyThrows;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-/**
- * User: oleksandr.baglai
- * Date: 3/23/13
- * Time: 3:53 PM
- */
 public class GuiPlotColorDecoderTest {
 
     enum Elements {
@@ -106,34 +103,39 @@ public class GuiPlotColorDecoderTest {
     public void shouldEncodeJsonWithLayers() {
         GuiPlotColorDecoder decoder = new GuiPlotColorDecoder(Elements.values());
 
-        assertEquals(fix("{'key2':'value2','layers':['ABCD','DCBA','DCAB','DABC'],'key1':'value1'}"),
-                decoder.encodeForBrowser(new JSONObject("{'key1':'value1','layers':['1234','4321','4312','4123'],'key2':'value2'}")).toString());
+        assertEncode(decoder, "{'key1':'value1','key2':'value2','layers':['ABCD','DCBA','DCAB','DABC']}",
+                "{'key1':'value1','layers':['1234','4321','4312','4123'],'key2':'value2'}");
 
-        assertEquals(fix("{'key2':'value2','layers':[],'key1':'value1'}"),
-                decoder.encodeForBrowser(new JSONObject("{'key1':'value1','layers':[],'key2':'value2'}")).toString());
+        assertEncode(decoder, "{'key1':'value1','key2':'value2','layers':[]}",
+                "{'key1':'value1','layers':[],'key2':'value2'}");
 
-        assertEquals(fix("{'layers':[]}"),
-                decoder.encodeForBrowser(new JSONObject("{'layers':[]}")).toString());
+        assertEncode(decoder, "{'layers':[]}",
+                "{'layers':[]}");
 
-        assertEquals(fix("{'layers':['ABCD','DABC']}"),
-                decoder.encodeForBrowser(new JSONObject("{'layers':['1234','4123']}")).toString());
+        assertEncode(decoder, "{'layers':['ABCD','DABC']}",
+                "{'layers':['1234','4123']}");
+    }
+
+    private void assertEncode(GuiPlotColorDecoder decoder, String expected, String input) {
+        assertEquals(fix(JsonUtils.toStringSorted(expected)),
+                JsonUtils.toStringSorted(decoder.encodeForBrowser(new JSONObject(input)).toString()));
     }
 
     @Test
     public void shouldEncodeJsonWithoutLayers() {
         GuiPlotColorDecoder decoder = new GuiPlotColorDecoder(Elements.values());
 
-        assertEquals(fix("{'key3':['1234','4321','4312','4123'],'key2':'value2','key1':'value1'}"),
-                decoder.encodeForBrowser(new JSONObject("{'key1':'value1','key3':['1234','4321','4312','4123'],'key2':'value2'}")).toString());
+        assertEncode(decoder, "{'key1':'value1','key2':'value2','key3':['1234','4321','4312','4123']}",
+                "{'key1':'value1','key3':['1234','4321','4312','4123'],'key2':'value2'}");
 
-        assertEquals(fix("{'key3':[],'key2':'value2','key1':'value1'}"),
-                decoder.encodeForBrowser(new JSONObject("{'key1':'value1','key3':[],'key2':'value2'}")).toString());
+        assertEncode(decoder, "{'key1':'value1','key2':'value2','key3':[]}",
+                "{'key1':'value1','key3':[],'key2':'value2'}");
 
-        assertEquals(fix("{'key3':[]}"),
-                decoder.encodeForBrowser(new JSONObject("{'key3':[]}")).toString());
+        assertEncode(decoder, "{'key3':[]}",
+                "{'key3':[]}");
 
-        assertEquals(fix("{'key3':['1234','4123']}"),
-                decoder.encodeForBrowser(new JSONObject("{'key3':['1234','4123']}")).toString());
+        assertEncode(decoder, "{'key3':['1234','4123']}",
+                "{'key3':['1234','4123']}");
     }
 
     @Test
@@ -141,7 +143,7 @@ public class GuiPlotColorDecoderTest {
         GuiPlotColorDecoder decoder = new GuiPlotColorDecoder(Elements.values());
 
         try {
-            decoder.encodeForBrowser(new Boolean(true));
+            decoder.encodeForBrowser(Boolean.TRUE);
             fail("Expected exception");
         } catch (IllegalArgumentException e) {
             Assert.assertEquals("You can use only String or JSONObject as board", e.getMessage());
@@ -167,8 +169,8 @@ public class GuiPlotColorDecoderTest {
         assertEquals(fix("ABCD"),
                 decoder.encodeForBrowser("12\n34").toString());
 
-        assertEquals(fix("{'layers':['ABCD','DABC']}"),
-                decoder.encodeForBrowser(new JSONObject("{'layers':['1234'\n,'4123']}")).toString());
+        assertEncode(decoder, "{'layers':['ABCD','DABC']}",
+                "{'layers':['1234'\n,'4123']}");
     }
 
     private String fix(String json) {
@@ -182,6 +184,7 @@ public class GuiPlotColorDecoderTest {
         assertEquals("1234", decoder.encodeForClient("12\n34"));
         assertEquals("4321", decoder.encodeForClient("43\n21"));
 
-        assertEquals(fix("{'layers':['1234','4123']}"), decoder.encodeForClient(new JSONObject("{'layers':['1234'\n,'4123']}")));
+        assertEquals(fix("{'layers':['1234','4123']}"),
+                decoder.encodeForClient(new JSONObject("{'layers':['1234'\n,'4123']}")));
     }
 }

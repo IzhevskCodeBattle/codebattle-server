@@ -4,7 +4,7 @@ package com.codenjoy.dojo.sampletext.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,6 +26,7 @@ package com.codenjoy.dojo.sampletext.model;
 import com.codenjoy.dojo.sampletext.services.Events;
 import com.codenjoy.dojo.services.EventListener;
 import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -33,83 +34,48 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Класс игрока. Тут кроме героя может подсчитываться очки. Тут же ивенты передабтся лиснеру фреймворка.
+ * Класс игрока. Тут кроме героя может подсчитываться очки.
+ * Тут же ивенты передабтся лиснеру фреймворка.
  */
-public class Player {
+public class Player extends GamePlayer<Hero, Field> {
 
-    private EventListener listener;
     private Field field;
-    private int maxScore;
-    private int score;
-    private List<QuestionAnswer> history = new LinkedList<>();
+    private List<QuestionAnswer> history;
+    private int questionIndex;
     Hero hero;
 
-    /**
-     * @param listener Это шпийон от фреймоврка. Ты должен все ивенты которые касаются конкретного пользователя сормить ему.
-     */
     public Player(EventListener listener) {
-        this.listener = listener;
-        clearScore();
-    }
-
-    private void increaseScore() {
-        score = score + 1;
-        maxScore = Math.max(maxScore, score);
-    }
-
-    public int getMaxScore() {
-        return maxScore;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    /**
-     * Борда может файрить ивенты юзера с помощью этого метода
-     * @param event тип ивента
-     */
-    public void event(Events event) {
-        switch (event) {
-            case LOOSE: gameOver(); break;
-            case WIN: increaseScore(); break;
-        }
-
-        if (listener != null) {
-            listener.event(event);
-        }
-    }
-
-    private void gameOver() {
-//        history.clear();
-//        score = 0;
+        super(listener);
+        history = new LinkedList<>();
     }
 
     public void clearScore() {
-        history.clear();
-        score = 0;
-        maxScore = 0;
+        if (history != null) {
+            history.clear();
+        }
+        questionIndex = 0;
     }
 
     public Hero getHero() {
         return hero;
     }
 
-    /**
-     * Когда создается новая игра для пользователя, кто-то должен создать героя
-     * @param field борда
-     */
     public void newHero(Field field) {
         hero = new Hero();
         this.field = field;
         hero.init(field);
     }
 
+    @Override
+    public boolean isAlive() {
+        return hero != null && hero.isAlive();
+    }
+
     public String getNextQuestion() { // TODO test me
-        if (field.isLastQuestion(score)) {
-            return "Congratulations!! Mo more questions!";
+        if (field.isLastQuestion(questionIndex)) {
+            return "You win!";
         }
-        return field.getQuestion(score);
+        return field.getQuestion(questionIndex);
     }
 
     public List<QuestionAnswer> getHistory() {
@@ -122,15 +88,17 @@ public class Player {
         hero.tick();
 
         String answer = hero.popAnswer();
-        if (answer != null && !field.isLastQuestion(score)) {
-            String question = field.getQuestion(score);
-            String validAnswer = field.getAnswer(score);
+        if (answer != null && !field.isLastQuestion(questionIndex)) {
+            String question = field.getQuestion(questionIndex);
+            String validAnswer = field.getAnswer(questionIndex);
             if (validAnswer.equals(answer)) {
                 logSuccess(question, answer);
                 event(Events.WIN);
+                questionIndex++;
             } else {
                 logFailure(question, answer);
                 event(Events.LOOSE);
+                questionIndex = 0;
             }
         }
     }

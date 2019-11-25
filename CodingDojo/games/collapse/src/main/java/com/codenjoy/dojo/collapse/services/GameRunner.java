@@ -4,7 +4,7 @@ package com.codenjoy.dojo.collapse.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,11 +23,15 @@ package com.codenjoy.dojo.collapse.services;
  */
 
 
-import com.codenjoy.dojo.client.WebSocketRunner;
-import com.codenjoy.dojo.collapse.client.ai.ApofigSolver;
+import com.codenjoy.dojo.client.ClientBoard;
+import com.codenjoy.dojo.client.Solver;
+import com.codenjoy.dojo.collapse.client.Board;
+import com.codenjoy.dojo.collapse.client.ai.AISolver;
 import com.codenjoy.dojo.collapse.model.*;
 import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.hero.GameMode;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.MultiplayerType;
 import com.codenjoy.dojo.services.settings.Parameter;
 
 public class GameRunner extends AbstractGameType implements GameType {
@@ -40,20 +44,16 @@ public class GameRunner extends AbstractGameType implements GameType {
     }
 
     @Override
-    public PlayerScores getPlayerScores(int score) {
-        return new Scores(score, settings);
+    public PlayerScores getPlayerScores(Object score) {
+        return new Scores((Integer) score, settings);
     }
 
     @Override
-    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
+    public GameField createGame(int levelNumber) {
         Integer size = settings.getParameter("Field size").type(Integer.class).getValue();
-        LevelBuilder builder = new LevelBuilder(new RandomDice(), size);
+        LevelBuilder builder = new LevelBuilder(getDice(), size);
         Level level = new LevelImpl(builder.getBoard());
-        Collapse collapse = new Collapse(level, new RandomDice());
-
-        Game game = new Single(collapse, listener, settings, factory);
-        game.newGame();
-        return game;
+        return new Collapse(level, getDice());
     }
 
     @Override
@@ -72,13 +72,22 @@ public class GameRunner extends AbstractGameType implements GameType {
     }
 
     @Override
-    public boolean isSingleBoard() {
-        return GameMode.NOT_SINGLE_MODE;
+    public Class<? extends Solver> getAI() {
+        return AISolver.class;
     }
 
     @Override
-    public boolean newAI(String aiName) {
-        ApofigSolver.start(aiName, WebSocketRunner.Host.REMOTE_LOCAL);
-        return true;
+    public Class<? extends ClientBoard> getBoard() {
+        return Board.class;
+    }
+
+    @Override
+    public MultiplayerType getMultiplayerType() {
+        return MultiplayerType.SINGLE;
+    }
+
+    @Override
+    public GamePlayer createPlayer(EventListener listener, String playerName) {
+        return new Player(listener);
     }
 }

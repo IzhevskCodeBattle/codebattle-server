@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.settings;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,12 +24,12 @@ package com.codenjoy.dojo.services.settings;
 
 
 import java.util.List;
+import java.util.function.Function;
 
-public class SelectBox<T> implements Parameter<T> {
+public class SelectBox<T> extends Updatable<Integer> implements Parameter<T> {
 
     private String name;
     private List<T> options;
-    private Integer selected;
     private Integer def;
 
     public SelectBox(String name, List<T> options) {
@@ -39,7 +39,16 @@ public class SelectBox<T> implements Parameter<T> {
 
     @Override
     public T getValue() {
-        return (selected == null)?(def == null)?null:options.get(def):options.get(selected);
+        return (get() == null) ?
+                ((def == null) ?
+                        null :
+                        options.get(def)) :
+                options.get(get());
+    }
+
+    @Override
+    public String getType() {
+        return "selectbox";
     }
 
     @Override
@@ -50,7 +59,7 @@ public class SelectBox<T> implements Parameter<T> {
     @Override
     public void update(T value) {
         checkIsPresent(value);
-        this.selected = options.indexOf(value);
+        set(options.indexOf(value));
 
     }
 
@@ -73,11 +82,21 @@ public class SelectBox<T> implements Parameter<T> {
     }
 
     public <V> Parameter<V> type(Class<V> integerClass) {
-        return (Parameter<V>)this;
+        return (Parameter<V>) this;
+    }
+
+    @Override
+    public Parameter<T> parser(Function<String, T> parser) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void select(int index) {
-        this.selected = index;
+        set(index);
+    }
+
+    @Override
+    public List<T> getOptions() {
+        return options;
     }
 }

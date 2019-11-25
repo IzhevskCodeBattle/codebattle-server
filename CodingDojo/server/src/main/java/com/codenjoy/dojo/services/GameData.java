@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,22 +23,33 @@ package com.codenjoy.dojo.services;
  */
 
 
+import com.codenjoy.dojo.services.hero.HeroData;
 import org.json.JSONObject;
 
-/**
- * Created by indigo on 2016-10-30.
- */
-class GameData {
+import java.util.List;
+import java.util.Map;
+
+public class GameData {
+
     private final int boardSize;
     private final GuiPlotColorDecoder decoder;
-    private final JSONObject scores;
-    private final JSONObject heroesData;
+    private final Map<String, Object> scores;
+    private final List<String> group;
+    private final Map<String, HeroData> coordinates;
+    private Map<String, String> readableNames;
 
-    public GameData(int boardSize, GuiPlotColorDecoder decoder, JSONObject scores, JSONObject heroesData) {
+
+    public GameData(int boardSize, GuiPlotColorDecoder decoder,
+                    Map<String, Object> scores, List<String> group,
+                    Map<String, HeroData> coordinates,
+                    Map<String, String> readableNames)
+    {
         this.boardSize = boardSize;
         this.decoder = decoder;
         this.scores = scores;
-        this.heroesData = heroesData;
+        this.group = group;
+        this.coordinates = coordinates;
+        this.readableNames = readableNames;
     }
 
     public GuiPlotColorDecoder getDecoder() {
@@ -50,10 +61,14 @@ class GameData {
     }
 
     public JSONObject getScores() {
-        return scores;
+        return new JSONObject(scores);
     }
 
     public JSONObject getHeroesData() {
-        return heroesData;
+        JSONObject result = new JSONObject();
+        result.put("coordinates", coordinates);
+        result.put("group", group);
+        result.put("readableNames", readableNames);
+        return result;
     }
 }

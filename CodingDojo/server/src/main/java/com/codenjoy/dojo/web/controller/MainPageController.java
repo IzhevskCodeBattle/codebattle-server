@@ -4,7 +4,7 @@ package com.codenjoy.dojo.web.controller;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,53 +23,73 @@ package com.codenjoy.dojo.web.controller;
  */
 
 
-import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.ConfigProperties;
+import com.codenjoy.dojo.services.GameService;
+import com.codenjoy.dojo.services.Player;
+import com.codenjoy.dojo.services.PlayerService;
 import com.codenjoy.dojo.services.dao.Registration;
-import org.eclipse.jetty.util.StringUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import com.codenjoy.dojo.services.nullobj.NullPlayer;
+import com.codenjoy.dojo.services.security.RegistrationService;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+
+import static com.codenjoy.dojo.web.controller.Validator.CANT_BE_NULL;
+import static com.codenjoy.dojo.web.controller.Validator.CAN_BE_NULL;
 
 @Controller
+@RequiredArgsConstructor
 public class MainPageController {
 
-    @Autowired private PlayerService playerService;
-    @Autowired private Registration registration;
-    @Autowired private GameService gameService;
-    @Autowired private Statistics statistics;
-
-    @Value("${page.main}")
-    private String mainPage;
-
-    public MainPageController() {
-    }
-
-    //for unit test
-    MainPageController(PlayerService playerService) {
-        this.playerService = playerService;
-    }
+    private final PlayerService playerService;
+    private final Registration registration;
+    private final GameService gameService;
+    private final Validator validator;
+    private final ConfigProperties properties;
+    private final RoomsAliaser rooms;
+    private final RegistrationService registrationService;
 
     @RequestMapping(value = "/help", method = RequestMethod.GET)
     public String help(Model model) {
-        model.addAttribute("gameNames", gameService.getGameNames());
+        model.addAttribute("gameNames", gameService.getOnlyGameNames());
         return "help";
     }
 
+    @RequestMapping(value = "/help", params = "gameName", method = RequestMethod.GET)
+    public String helpForGame(@RequestParam("gameName") String gameName) {
+        validator.checkGameName(gameName, CANT_BE_NULL);
+
+        String language = properties.getHelpLanguage();
+        String suffix = (StringUtils.isEmpty(language)) ? "" : ("-" + language);
+        return "redirect:resources/help/" + gameName + suffix + ".html";
+    }
+
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    public String getMainPage(HttpServletRequest request, Model model) {
-        if (StringUtils.isEmpty(mainPage)) {
-            return getMainPage(request, null, model);
-        } else {
+    public String getMainPage(HttpServletRequest request, Model model, Authentication authentication) {
+        String mainPage = properties.getMainPage();
+        if (StringUtils.isNotEmpty(mainPage)) {
             model.addAttribute("url", mainPage);
             return "redirect";
+        }
+
+        if (gameService.getGameNames().size() > 1) {
+            return getMainPage(request, null, model);
+        }
+
+        Registration.User principal = (Registration.User) authentication.getPrincipal();
+        // TODO если юзер не авторизирован, то надо вызвать борду со всеми пользователями
+        if (true) {
+            return "redirect:" + registrationService.getBoardUrl(principal.getCode(), principal.getId(), null);
+        } else {
+            return "redirect:board";
         }
     }
 
@@ -78,15 +98,27 @@ public class MainPageController {
                               @RequestParam("code") String code,
                               Model model)
     {
+        validator.checkCode(code, CAN_BE_NULL);
+
         String userIp = request.getRemoteAddr();
         model.addAttribute("ip", userIp);
 
-        Player player = playerService.get(registration.getEmail(code));
-        request.setAttribute("registered", player != NullPlayer.INSTANCE);
+        Player player = playerService.get(registration.getIdByCode(code));
+        boolean registered = player != NullPlayer.INSTANCE;
+        request.setAttribute("registered", registered);
         request.setAttribute("code", code);
-        model.addAttribute("gameNames", gameService.getGameNames());
-        model.addAttribute("statistics", statistics.getPlayers(Statistics.WAIT_TICKS_LESS, 3));
+        model.addAttribute("gameName",
+                registered ? player.getGameName() : StringUtils.EMPTY);
+        model.addAttribute("gameNames", rooms.all());
         return "main";
+    }
+
+    @RequestMapping(value = "/denied")
+    public ModelAndView displayAccessDeniedPage(){
+        return new ModelAndView(){{
+            addObject("message", "Invalid Username or Password");
+            setViewName("errorPage");
+        }};
     }
 
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.web.rest;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,74 +25,142 @@ package com.codenjoy.dojo.web.rest;
 
 import com.codenjoy.dojo.services.*;
 import com.codenjoy.dojo.services.dao.Registration;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.codenjoy.dojo.web.controller.Validator;
+import com.codenjoy.dojo.web.rest.pojo.PlayerDetailInfo;
+import com.codenjoy.dojo.web.rest.pojo.PlayerInfo;
+import lombok.RequiredArgsConstructor;
+import org.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
+import static java.util.stream.Collectors.toList;
 
 @Controller
 @RequestMapping(value = "/rest")
+@RequiredArgsConstructor
 public class RestRegistrationController {
 
-    @Autowired private Registration registration;
-    @Autowired private PlayerService playerService;
+    private final Registration registration;
+    private final PlayerService playerService;
+    private final PlayerGames playerGames;
+    private final PlayerGamesView playerGamesView;
+    private final SaveService saveService;
+    private final Validator validator;
 
-    @RequestMapping(value = "/player/{playerName}/check/{code}", method = RequestMethod.GET)
-    @ResponseBody
-    public boolean checkUserLogin(@PathVariable("playerName") String playerName, @PathVariable("code") String code) {
-        String actualName = registration.getEmail(code);
-        return actualName != null && actualName.equals(playerName);
+//    @RequestMapping(value = "/player/{player}/check/{code}", method = RequestMethod.GET)
+//    @ResponseBody
+    public boolean checkUserLogin(@PathVariable("player") String emailOrId,
+                                  @PathVariable("code") String code)
+    {
+        validator.checkPlayerName(emailOrId, Validator.CANT_BE_NULL);
+        validator.checkCode(code, Validator.CANT_BE_NULL);
+
+        return registration.checkUser(emailOrId, code) != null;
     }
 
-    static class PlayerInfo {
-        private final String gameType;
-        private final String callbackUrl;
-        private final String name;
-        private final int score;
-        private final String code;
+    // TODO test me
+//    @RequestMapping(value = "/player/{player}/remove/{code}", method = RequestMethod.GET)
+//    @ResponseBody
+    public synchronized boolean removeUser(@PathVariable("player") String emailOrId,
+                              @PathVariable("code") String code)
+    {
+        String id = validator.checkPlayerCode(emailOrId, code);
 
-        PlayerInfo(Player player) {
-            gameType = player.getGameType().name();
-            callbackUrl = player.getCallbackUrl();
-            name = player.getName();
-            score = player.getScore();
-            code = player.getCode();
-        }
+        // оставляем только актуальные на сейчас очки, мало ли захочет залогиниться назад
+        // TODO как-то тут не очень оставлять последние очки, иначе пользователь потеряет их, что тоже не ок
+        saveService.removeSave(id);
+        saveService.save(id);
 
-        public String getGameType() {
-            return gameType;
-        }
+        // и удаляем игрока с игрового сервера
+        playerService.remove(id);
+        registration.remove(id);
 
-        public String getCallbackUrl() {
-            return callbackUrl;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public int getScore() {
-            return score;
-        }
-
-        public String getCode() {
-            return code;
-        }
+        return true;
     }
 
-    @RequestMapping(value = "/game/{gameName}/players", method = RequestMethod.GET)
-    @ResponseBody
-    public List<PlayerInfo> getPlayerForGame(@PathVariable("gameName") String gameName) {
-        List<Player> players = playerService.getAll(gameName);
-        List<PlayerInfo> result = new LinkedList<>();
+    // TODO test me
+//    @RequestMapping(value = "/game/{gameName}/players", method = RequestMethod.GET)
+//    @ResponseBody
+    public List<PlayerInfo> getGamePlayers(@PathVariable("gameName") String gameName) {
+        validator.checkGameName(gameName, Validator.CANT_BE_NULL);
+
+        return playerService.getAll(gameName).stream()
+                .map(PlayerInfo::new)
+                .collect(toList());
+    }
+
+    // TODO test me
+//    @RequestMapping(value = "/player/all/info/{adminPassword}", method = RequestMethod.GET)
+//    @ResponseBody
+    public List<PlayerDetailInfo> getPlayersForMigrate(@PathVariable("adminPassword") String adminPassword) {
+        validator.checkIsAdmin(adminPassword);
+
+        List<Player> players = playerService.getAll();
+        List<Registration.User> users = registration.getUsers();
+        Map<String, List<String>> groups = playerGamesView.getGroupsMap();
+
+        List<PlayerDetailInfo> result = new LinkedList<>();
         for (Player player : players) {
-            result.add(new PlayerInfo(player));
+            Registration.User user = users.stream()
+                    .filter(it -> it.getEmail().equals(player.getName()))
+                    .findFirst()
+                    .orElse(null);
+            Game game = playerGames.get(player.getName()).getGame();
+
+            List<String> group = groups.get(player.getName());
+            result.add(new PlayerDetailInfo(player, user, game, group));
         }
+
         return result;
+    }
+
+    // TODO test me
+//    @RequestMapping(value = "/player/create/{adminPassword}", method = RequestMethod.POST)
+//    @ResponseBody
+    public synchronized String createPlayer(@RequestBody PlayerDetailInfo player,
+                               @PathVariable("adminPassword") String adminPassword)
+    {
+        validator.checkIsAdmin(adminPassword);
+
+        Registration.User user = player.getRegistration();
+        registration.replace(user);
+
+        boolean fromSave = player.getScore() == null;
+        if (fromSave) {
+            // делаем попытку грузить по сейву
+            if (!saveService.load(player.getName())) {
+                // неудача - обнуляем все
+                player.setSave("{}");
+                player.setScore("0");
+                fromSave = false;
+            }
+        }
+
+        if (!fromSave) {
+            // грузим как положено
+            PlayerSave save = player.buildPlayerSave();
+            playerService.register(save);
+
+            playerGames.setLevel(player.getName(),
+                    new JSONObject(player.getSave()));
+        }
+
+        return user.getCode();
+    }
+
+    // TODO test me
+//    @RequestMapping(value = "/player/{player}/exists", method = RequestMethod.GET)
+//    @ResponseBody
+    public boolean isPlayerExists(@PathVariable("player") String emailOrId) {
+        validator.checkPlayerName(emailOrId, Validator.CANT_BE_NULL);
+
+        String id = registration.checkUser(emailOrId);
+        return (id != null) && playerService.contains(id);
     }
 }

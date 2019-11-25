@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.dao;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,17 +26,12 @@ package com.codenjoy.dojo.services.dao;
 import com.codenjoy.dojo.services.GameSaver;
 import com.codenjoy.dojo.services.Player;
 import com.codenjoy.dojo.services.PlayerSave;
-import com.codenjoy.dojo.services.Protocol;
-import com.codenjoy.dojo.services.chat.ChatMessage;
 import com.codenjoy.dojo.services.jdbc.*;
 import org.springframework.stereotype.Component;
 
-import java.sql.*;
 import java.sql.Date;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
-@Component
 public class PlayerGameSaver implements GameSaver {
 
     private CrudConnectionThreadPool pool;
@@ -49,12 +44,7 @@ public class PlayerGameSaver implements GameSaver {
                         "callbackUrl varchar(255)," +
                         "gameName varchar(255)," +
                         "score int," +
-                        "save varchar(255));",
-                "CREATE TABLE IF NOT EXISTS chats (" +
-                        "time varchar(255), " +
-                        "name varchar(255), " +
-//                            "gameType varchar(255), " + // TODO сделать чтобы чат был в каждой комнате отдельный
-                        "message varchar(255));");
+                        "save varchar(255));");
     }
 
     void removeDatabase() {
@@ -62,11 +52,11 @@ public class PlayerGameSaver implements GameSaver {
     }
 
     @Override
-    public void saveGame(final Player player, final String save) {
+    public void saveGame(final Player player, final String save, long time) {
         pool.update("INSERT INTO saves " +
                         "(time, name, callbackUrl, gameName, score, save) " +
                         "VALUES (?,?,?,?,?,?);",
-                new Object[]{JDBCTimeUtils.toString(new Date(System.currentTimeMillis())),
+                new Object[]{JDBCTimeUtils.toString(new Date(time)),
                         player.getName(),
                         player.getCallbackUrl(),
                         player.getGameName(),
@@ -79,19 +69,15 @@ public class PlayerGameSaver implements GameSaver {
     public PlayerSave loadGame(final String name) {
         return pool.select("SELECT * FROM saves WHERE name = ? ORDER BY time DESC LIMIT 1;",
                 new Object[]{name},
-                new ObjectMapper<PlayerSave>() {
-                    @Override
-                    public PlayerSave mapFor(ResultSet resultSet) throws SQLException {
-                        if (resultSet.next()) {
-                            String callbackUrl = resultSet.getString("callbackUrl");
-                            int score = resultSet.getInt("score");
-                            String gameName = resultSet.getString("gameName");
-                            String save = resultSet.getString("save");
-                            String protocol = Protocol.WS.name();
-                            return new PlayerSave(name, callbackUrl, gameName, score, protocol, save);
-                        } else {
-                            return PlayerSave.NULL;
-                        }
+                rs -> {
+                    if (rs.next()) {
+                        String callbackUrl = rs.getString("callbackUrl");
+                        int score = rs.getInt("score");
+                        String gameName = rs.getString("gameName");
+                        String save = rs.getString("save");
+                        return new PlayerSave(name, callbackUrl, gameName, score, save);
+                    } else {
+                        return PlayerSave.NULL;
                     }
                 }
         );
@@ -100,16 +86,13 @@ public class PlayerGameSaver implements GameSaver {
     @Override
     public List<String> getSavedList() {
         return pool.select("SELECT DISTINCT name FROM saves;", // TODO убедиться, что загружены самые последние
-                new ObjectMapper<List<String>>() {
-                    @Override
-                    public List<String> mapFor(ResultSet resultSet) throws SQLException {
-                        List<String> result = new LinkedList<String>();
-                        while (resultSet.next()) {
-                            String name = resultSet.getString("name");
-                            result.add(name);
-                        }
-                        return result;
+                rs -> {
+                    List<String> result = new LinkedList<>();
+                    while (rs.next()) {
+                        String name = rs.getString("name");
+                        result.add(name);
                     }
+                    return result;
                 }
         );
     }
@@ -118,59 +101,5 @@ public class PlayerGameSaver implements GameSaver {
     public void delete(final String name) {
         pool.update("DELETE FROM saves WHERE name = ?;",
                 new Object[]{name});
-    }
-
-    @Override
-    public void saveChat(final List<ChatMessage> messages) {
-        final long last = getTimeLastChatMessage();
-
-        pool.batchUpdate("INSERT INTO chats " +
-                        "(time, name, message) " +
-                        "VALUES (?,?,?);",
-                messages,
-                new ForStmt<ChatMessage>() {
-                    @Override
-                    public boolean run(PreparedStatement stmt, ChatMessage message) throws SQLException {
-                        if (message.getTime().getTime() <= last) {
-                            return false;
-                        }
-                        stmt.setString(1, JDBCTimeUtils.toString(message.getTime()));
-                        stmt.setString(2, message.getPlayerName());
-                        stmt.setString(3, message.getMessage());
-                        return true;
-                    }
-                });
-    }
-
-    private Long getTimeLastChatMessage() {
-        return pool.select("SELECT * FROM chats ORDER BY time DESC LIMIT 1 OFFSET 0;",
-                new ObjectMapper<Long>() {
-                    @Override
-                    public Long mapFor(ResultSet resultSet) throws SQLException {
-                        if (resultSet.next()) {
-                            return JDBCTimeUtils.getTimeLong(resultSet);
-                        }
-                        return 0L;
-                    }
-                });
-    }
-
-    @Override
-    public List<ChatMessage> loadChat() {
-        return pool.select("SELECT * FROM chats ORDER BY time ASC;",
-                new ObjectMapper<List<ChatMessage>>() {
-                    @Override
-                    public List<ChatMessage> mapFor(ResultSet resultSet) throws SQLException {
-                        List<ChatMessage> result = new LinkedList<ChatMessage>();
-                        while (resultSet.next()) {
-                            String name = resultSet.getString("name");
-                            long timeLong = JDBCTimeUtils.getTimeLong(resultSet);
-                            String message = resultSet.getString("message");
-                            result.add(new ChatMessage(new Date(timeLong), name, message));
-                        }
-                        return result;
-                    }
-                }
-        );
     }
 }

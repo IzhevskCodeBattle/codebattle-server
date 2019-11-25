@@ -4,7 +4,7 @@ package com.codenjoy.dojo.chess.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,10 +24,11 @@ package com.codenjoy.dojo.chess.model;
 
 
 import com.codenjoy.dojo.chess.model.figures.Figure;
+import com.codenjoy.dojo.services.multiplayer.GameField;
 
 import java.util.List;
 
-public interface Field {
+public interface Field extends GameField<Player> {
 
     List<Figure> getFigures(boolean white);
 }

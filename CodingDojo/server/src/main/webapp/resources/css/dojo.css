@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -19,11 +19,29 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+
+body, input, textarea {
+    color: black !important;
+}
+
+.table-striped>tbody>tr:nth-of-type(odd) {
+    background-color: #dededead !important;
+}
+
+.table>tbody>tr>td {
+    border-top: 0px !important;
+}
+
+#settings {
+    display: none;
+}
+
 .score-info {
     color:yellow;
     text-shadow: 6px 6px 10px black, 4px 4px 4px red;
     font-size:90px;
     display:none;
+    line-height:0.8;
 }
 
 .width-calculator{
@@ -59,7 +77,31 @@ label.error {
     margin:10px;
 }
 
-#adminSettings input {
+.admin-table input[type="text"] {
+    width:150px;
+    height:24px;
+}
+
+.admin-table .input-score {
+    width:50px !important;
+}
+
+.admin-table .input-callback {
+    width:90px !important;
+}
+
+.admin-table .player-save {
+    width: 300px!important;
+    font-size: 12px;
+}
+
+.admin-table input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+}
+
+.admin-table select {
     width:150px;
     height:24px;
 }
@@ -79,13 +121,19 @@ label.error {
     height: 20px;
 }
 
-#chat-container {
-    left: 850px;
-    width: 450px;
+.board {
+    width: 400px;
+    padding-right: 75px;
+    padding-top: 25px;
+    position: absolute;
+    right: 0px;
 }
 
-#leaderboard {
-    width: 450px;
+.glasses {
+    width: calc(100% - 530px);
+    float: left;
+    padding-left: 20px;
+    position: absolute;
 }
 
 #want-donate {
@@ -102,6 +150,9 @@ label.error {
 
 #donate {
     text-align: center;
+    position: absolute;
+    left: 300px;
+    top: 20px;
 }
 
 #donate-container {
@@ -118,13 +169,44 @@ label.error {
 }
 
 #advertisement {
-    text-align:center;
-    width:250px;
-    margin-left: 104px;
-    margin-bottom: 13px;
-    margin-top: -26px;
+    width:500px;
+}
+
+#advertisement img {
+    width: 200px;
 }
 
 .player-canvas {
     float: left;
+}
+
+canvas {
+    border: 1px solid;
+    width:100%!important;
+}
+
+/* rule page */
+.hfeed {
+    max-width: 800px;
+    margin: 4em auto;
+}
+
+.hfeed p {
+    margin-bottom: 1.625em;
+}
+
+.hfeed pre {
+    background: none repeat scroll 0% 0% rgb(244, 244, 244);
+    font: 13px/1.5 "Courier 10 Pitch",Courier,monospace;
+    margin-bottom: 1.625em;
+    overflow: auto;
+    padding: 0.75em 1.625em;
+}
+
+.logout-link {
+    display: inline;
+    position: relative;
+    float: right;
+    margin-right: 150px; /* form-me.png width */
+    z-index: 100;
 }

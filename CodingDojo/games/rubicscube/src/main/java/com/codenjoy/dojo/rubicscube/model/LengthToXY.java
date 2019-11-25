@@ -4,7 +4,7 @@ package com.codenjoy.dojo.rubicscube.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,9 +26,8 @@ package com.codenjoy.dojo.rubicscube.model;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.PointImpl;
 
-/**
- * User: oleksandr.baglai
- */
+import static com.codenjoy.dojo.services.PointImpl.pt;
+
 public class LengthToXY {
     public LengthToXY(int size) {
         this.size = size;
@@ -40,7 +39,7 @@ public class LengthToXY {
         if (length == -1) {
             return null;
         }
-        return PointImpl.pt(length % size + 1, length / size + 1);
+        return pt(length % size + 1, length / size + 1);
     }
 
     public int getLength(int x, int y) {

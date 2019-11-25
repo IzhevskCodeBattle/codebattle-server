@@ -4,7 +4,7 @@ package com.codenjoy.dojo.collapse.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,20 +25,17 @@ package com.codenjoy.dojo.collapse.model;
 
 import com.codenjoy.dojo.collapse.services.Events;
 import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.utils.TestUtils;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.stubbing.OngoingStubbing;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
-/**
- * User: sanja
- * Date: 17.12.13
- * Time: 4:47
- */
 public class CollapseTest {
 
     private Collapse game;
@@ -56,7 +53,7 @@ public class CollapseTest {
         listener = mock(EventListener.class);
         player = new Player(listener);
         game.newGame(player);
-        joystick = player.getJoystick();
+        joystick = player.getHero();
     }
 
     private void assertE(String expected) {

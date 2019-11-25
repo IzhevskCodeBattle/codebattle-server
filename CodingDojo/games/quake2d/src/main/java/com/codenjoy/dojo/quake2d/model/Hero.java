@@ -4,7 +4,7 @@ package com.codenjoy.dojo.quake2d.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,24 +22,19 @@ package com.codenjoy.dojo.quake2d.model;
  * #L%
  */
 
-import com.codenjoy.dojo.client.*;
-import com.codenjoy.dojo.client.Direction;
-import com.codenjoy.dojo.quake2d.client.ai.BotSolver;
-import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.quake2d.client.ai.AISolver;
+import com.codenjoy.dojo.services.Direction;
+import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.State;
+import com.codenjoy.dojo.services.multiplayer.PlayerHero;
 
-/**
- * Это реализация героя. Обрати внимание, что он имплементит {@see Joystick}, а значит может быть управляем фреймворком
- * Так же он имплементит {@see Tickable}, что значит - есть возможность его оповещать о каждом тике игры.
- */
-public class Hero extends PointImpl implements Joystick, Tickable, State<Elements, Player> {
+public class Hero extends PlayerHero<Field> implements State<Elements, Player> {
 
     public static final int ABILITY_LIFE_TIME = 10;
     public static final int START_HEALTH = 100;
     public static final int DEFFENCE_MULTIPLICATOR = 2;
     public static final int FREAQEUNCY_SHUT = 7;
 
-
-    private Field field;
     private boolean alive;
     private Direction direction;
     private Direction previousDirection;
@@ -47,8 +42,6 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
     private Ability ability;
     private int health;
     private int counterBeetwenShut = 0;
-
-
     private int abilityCounter;
 
     public Hero(Point xy) {
@@ -72,14 +65,14 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
     public void down() {
         if (!alive) return;
 
-        direction = Direction.DOWN;
+        direction = Direction.UP; // TODO continue flip up/down
     }
 
     @Override
     public void up() {
         if (!alive) return;
 
-        direction = Direction.UP;
+        direction = Direction.DOWN; // TODO continue flip up/down
     }
 
     @Override
@@ -103,23 +96,14 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
     @Override
     public void act(int... p) {
         if (!alive) return;
-        if (p.length != 0 && p[0] >= BotSolver.SHIFT_COMMAND){
-            direction = Direction.values()[p[0] - BotSolver.SHIFT_COMMAND];
+        if (p.length != 0 && p[0] >= AISolver.SHIFT_COMMAND){
+            direction = Direction.getValues().get(p[0] - AISolver.SHIFT_COMMAND);
             tick();
         }
         if (counterBeetwenShut == 0){
             field.fireBullet(x, y, previousDirection, field, this);
             counterBeetwenShut = FREAQEUNCY_SHUT;
         }
-    }
-
-    @Override
-    public void message(String command) {
-        // do nothing, this should never happen
-    }
-
-    public Direction getDirection() {
-        return direction;
     }
 
     @Override
@@ -141,7 +125,9 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
         }
         previousDirection = direction;
         direction = null;
-        counterBeetwenShut = Math.max(0,--counterBeetwenShut);
+        if (counterBeetwenShut > 0) {
+            counterBeetwenShut--;
+        }
         if (abilityCounter != 0 && --abilityCounter == 0){
             ability = null;
         }
@@ -200,9 +186,7 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
     }
 
     public void setDamage(int pDamage) {
-
         health -= ((ability != null && ability.getAbilityType() == Ability.Type.DEFENCE) ? pDamage/DEFFENCE_MULTIPLICATOR : pDamage);
-
-        Math.max(0, health);
+        health = Math.max(0, health);
     }
 }

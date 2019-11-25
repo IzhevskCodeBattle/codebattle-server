@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,24 +23,20 @@ package com.codenjoy.dojo.bomberman.services;
  */
 
 
-import com.codenjoy.dojo.bomberman.model.Bomberman;
 import com.codenjoy.dojo.services.*;
-import org.fest.reflect.core.Reflection;
+import com.codenjoy.dojo.utils.TestUtils;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static junit.framework.Assert.*;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 
-/**
- * User: oleksandr.baglai
- * Date: 3/11/13
- * Time: 5:23 PM
- */
 public class GameRunnerTest {
 
-    private PrinterFactory printerFactory = new PrinterFactoryImpl();;
+    private PrinterFactory printerFactory = new PrinterFactoryImpl();
 
     @Ignore
     @Test
@@ -48,23 +44,23 @@ public class GameRunnerTest {
         int size = 11;
 
         EventListener listener = mock(EventListener.class);
-        GameType bombermanGame = new GameRunner();
+        GameType gameType = new GameRunner();
 
-        bombermanGame.getSettings().getParameter("Board size").type(Integer.class).update(size);
+        gameType.getSettings().getParameter("Board size").type(Integer.class).update(size);
         int countDestroyWalls = 5;
-        bombermanGame.getSettings().getParameter("Destroy wall count").type(Integer.class).update(5);
+        gameType.getSettings().getParameter("Destroy wall count").type(Integer.class).update(5);
         int meatChoppersCount = 15;
-        bombermanGame.getSettings().getParameter("Meat choppers count").type(Integer.class).update(meatChoppersCount);
+        gameType.getSettings().getParameter("Meat choppers count").type(Integer.class).update(meatChoppersCount);
 
-        com.codenjoy.dojo.services.Game game = bombermanGame.newGame(listener, printerFactory, null);
-        game.tick();
+        Game game = TestUtils.buildGame(gameType, listener, printerFactory);
+        game.getField().tick();
 
-        PlayerScores scores = bombermanGame.getPlayerScores(10);
+        PlayerScores scores = gameType.getPlayerScores(10);
         assertEquals(10, scores.getScore());
         scores.event(Events.KILL_MEAT_CHOPPER);
         assertEquals(110, scores.getScore());
 
-        assertEquals(size, bombermanGame.getBoardSize().getValue().intValue());
+        assertEquals(size, gameType.getBoardSize().getValue().intValue());
 
         Joystick joystick = game.getJoystick();
 
@@ -73,33 +69,18 @@ public class GameRunnerTest {
         String actual = (String)game.getBoardAsString();
         assertCharCount(actual, "☼", countWall);
         assertCharCount(actual, "#", countDestroyWalls);
-        assertCharCount(actual, "☺", 1);
+        assertCharCount(actual, "☺", 1); // TODO почему тут скачет тест?
         assertCharCount(actual, "&", meatChoppersCount);  // TODO тут ошибка опять появилась
         assertCharCount(actual, " ", size * size - countWall - countDestroyWalls - meatChoppersCount - 1);
 
-        assertEquals(0, game.getMaxScore());
-        assertEquals(0, game.getCurrentScore());
         assertFalse(game.isGameOver());
 
         joystick.act();
         for (int index = 0; index < 100; index ++) {
-            game.tick();
+            game.getField().tick();
         }
 
         assertTrue(game.isGameOver());
-    }
-
-    @Test
-    public void shouldOneBoardForAllGames() {
-        EventListener listener = mock(EventListener.class);
-        GameType bombermanGame = new GameRunner();
-        com.codenjoy.dojo.services.Game game1 = bombermanGame.newGame(listener, printerFactory, null);
-        com.codenjoy.dojo.services.Game game2 = bombermanGame.newGame(listener, printerFactory, null);
-        assertSame(getBoard(game1), getBoard(game2));
-    }
-
-    private Bomberman getBoard(com.codenjoy.dojo.services.Game game) {
-        return Reflection.field("game").ofType(Bomberman.class).in(game).get();
     }
 
     private void assertCharCount(String actual, String ch, int count) {

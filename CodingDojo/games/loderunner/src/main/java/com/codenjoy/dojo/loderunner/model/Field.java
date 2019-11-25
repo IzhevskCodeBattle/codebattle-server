@@ -4,7 +4,7 @@ package com.codenjoy.dojo.loderunner.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,15 +24,11 @@ package com.codenjoy.dojo.loderunner.model;
 
 
 import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.multiplayer.GameField;
 
 import java.util.List;
 
-/**
- * User: sanja
- * Date: 17.12.13
- * Time: 14:45
- */
-public interface Field {
+public interface Field extends GameField<Player> {
     boolean isBarrier(int x, int y);
 
     boolean tryToDrill(Hero hero, int x, int y);
@@ -45,7 +41,7 @@ public interface Field {
 
     boolean isPipe(int x, int y);
 
-    boolean isFree(int x, int y);
+    boolean isFree(Point pt);
 
     boolean isFullBrick(int x, int y);
 
@@ -61,5 +57,5 @@ public interface Field {
 
     boolean isBorder(int x, int y);
 
-    List<Hero> getHeroes(); // TODO не слишком ли я рассекретил?
+    List<Hero> getHeroes();
 }

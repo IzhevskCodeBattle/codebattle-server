@@ -4,7 +4,7 @@ package com.codenjoy.dojo.rubicscube.model.command;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -30,11 +30,6 @@ import com.codenjoy.dojo.rubicscube.model.Line;
 
 import java.util.Map;
 
-/**
- * User: sanja
- * Date: 08.10.13
- * Time: 5:23
- */
 public class U implements Command {
 
     @Override

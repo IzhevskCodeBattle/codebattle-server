@@ -4,7 +4,7 @@ package com.codenjoy.dojo.fifteen.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -38,21 +38,11 @@ public class Board extends AbstractBoard<Elements> {
         return Elements.valueOf(ch);
     }
 
-    //!!!!!!!!!!!
     public boolean isBarrierAt(int x, int y) {
         return isAt(x, y, Elements.WALL);
     }
 
-    //!!!!!!!!!
     public Point getMe() {
         return get(Elements.HERO).get(0);
     }
-//
-//    public boolean isGameOver() {
-//        return false;//!get(Elements.DEAD_HERO).isEmpty();
-//    }
-//
-//    public boolean isBombAt(int x, int y) {
-//        return false;//isAt(x, y, Elements.BOMB);
-//    }
 }

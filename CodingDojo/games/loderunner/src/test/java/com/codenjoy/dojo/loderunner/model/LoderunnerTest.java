@@ -4,7 +4,7 @@ package com.codenjoy.dojo.loderunner.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,21 +26,19 @@ package com.codenjoy.dojo.loderunner.model;
 import com.codenjoy.dojo.loderunner.services.Events;
 import com.codenjoy.dojo.services.*;
 import com.codenjoy.dojo.services.joystick.DirectionActJoystick;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static org.mockito.Matchers.anyInt;
+import static com.codenjoy.dojo.services.PointImpl.pt;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
-/**
- * User: sanja
- * Date: 17.12.13
- * Time: 4:47
- */
 public class LoderunnerTest {
 
     private Loderunner game;
@@ -69,7 +67,7 @@ public class LoderunnerTest {
         LevelImpl level = new LevelImpl(board);
         level.setAI(ai);
 
-        Hero hero = null;
+        Hero hero;
         if (level.getHeroes().isEmpty()) {
             throw new IllegalStateException("Нет героя!");
         } else {
@@ -90,7 +88,7 @@ public class LoderunnerTest {
                 printer.getPrinter(game.reader(), player).print());
     }
 
-    private class EnemyJoystick extends DirectionActJoystick implements Joystick {
+    private class EnemyJoystick implements Joystick, DirectionActJoystick {
         @Override
         public void down() {
             ai(Direction.DOWN);
@@ -1481,6 +1479,8 @@ public class LoderunnerTest {
                 "☼☼☼☼☼☼☼");
     }
 
+    // TODO я могу просверлить дырку под лестницей, а потом спуститься туда
+
     // я не могу просверлить дырку под другим камнем
     @Test
     public void shouldICantDrillUnderBrick() {
@@ -1733,7 +1733,7 @@ public class LoderunnerTest {
 
         for (int x = 0; x < game.size(); x ++) {
             for (int y = 0; y < game.size(); y ++) {
-                assertFalse(game.isFree(x, y));
+                assertFalse(game.isFree(pt(x, y)));
             }
 
         }
@@ -1971,7 +1971,7 @@ public class LoderunnerTest {
     }
 
     private void ai(Direction value) {
-        when(ai.getDirection(any(Field.class), any(Hero.class), any(Point.class))).thenReturn(value, null);
+        when(ai.getDirection(any(Field.class), any(), any(Point.class))).thenReturn(value, null);
     }
 
     // чертик двигается так же как и обычный игрок - мжет ходить влево и вправо
@@ -2116,6 +2116,12 @@ public class LoderunnerTest {
         hero.right();
         hero.act();
         game.tick();
+
+        assertE("☼☼☼☼☼" +
+                "☼   ☼" +
+                "☼R «☼" +
+                "☼#*#☼" +
+                "☼☼☼☼☼");
 
         enemy.left();
         game.tick();
@@ -3018,6 +3024,7 @@ public class LoderunnerTest {
     }
 
     // я не могу просверлить дырку непосредственно под монстром
+    // TODO сделать так, чтобы мог
     @Test
     public void shouldICantDrillUnderEnemy() {
         givenFl("☼☼☼☼☼" +

@@ -2,7 +2,7 @@
   #%L
   Codenjoy - it's a dojo-like platform from developers to developers.
   %%
-  Copyright (C) 2016 Codenjoy
+  Copyright (C) 2018 Codenjoy
   %%
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as
@@ -25,8 +25,9 @@
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
 
 <div id="advertisement" style="display:none;">
-    <h4>Our friends</h4>
-    <a href="http://www.jetbrains.com" target="blank">
-        <img src="${ctx}/resources/advertisement/logo_intellij_idea.png"/>
-    </a>
+    <h3>
+        <a href="http://codenjoy.com" target="blank">
+            <img src=""/>
+        </a>
+    </h3>
 </div>

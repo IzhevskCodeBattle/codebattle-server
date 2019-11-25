@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,14 +27,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
-/**
- * Created by indigo on 2016-11-23.
- */
 public class LazyJoystickTest {
     private Game game;
-    private PlayerSpy playerSpy;
     private LazyJoystick lazy;
     private Joystick original;
 
@@ -43,8 +40,7 @@ public class LazyJoystickTest {
         original = mock(Joystick.class);
         game = mock(Game.class);
         when(game.getJoystick()).thenReturn(original);
-        playerSpy = new PlayerSpy();
-        lazy = new LazyJoystick(game, playerSpy);
+        lazy = new LazyJoystick(game);
     }
 
     @Test
@@ -128,12 +124,15 @@ public class LazyJoystickTest {
     }
 
     @Test
-    public void testSendOnlyLastDirectionAfterTick() {
+    public void testSendAllCommandsInOrgerAfterTick() {
         // when
         lazy.up();
+        lazy.act(2);
         lazy.down();
         lazy.left();
+        lazy.act();
         lazy.right();
+        lazy.message("data");
 
         verifyNoMoreInteractions(original);
 
@@ -141,7 +140,14 @@ public class LazyJoystickTest {
         lazy.tick();
 
         // then
-        verify(original).right();
+        InOrder inOrder = inOrder(original);
+        inOrder.verify(original).up();
+        inOrder.verify(original).act(2);
+        inOrder.verify(original).down();
+        inOrder.verify(original).left();
+        inOrder.verify(original).act();
+        inOrder.verify(original).right();
+        inOrder.verify(original).message("data");
 
         verifyNoMoreInteractions(original);
     }
@@ -248,5 +254,51 @@ public class LazyJoystickTest {
 
         // then
         verifyNoMoreInteractions(original);
+    }
+
+    @Test
+    public void testCleanMessageAfterProcessing() {
+        // given
+        lazy.message("message");
+        lazy.tick();
+        verify(original).message("message");
+        verifyNoMoreInteractions(original);
+
+        // when
+        lazy.tick();
+
+        // then
+        verifyNoMoreInteractions(original);
+    }
+
+    @Test
+    public void testEmptyMessageSkipsProcessing() {
+        // when
+        lazy.message("");
+        lazy.tick();
+
+        // then
+        verifyNoMoreInteractions(original);
+    }
+
+    @Test
+    public void testCollectedAllCommands() {
+        // when
+        lazy.message("Hello");
+        lazy.act(1, 2, 3);
+        lazy.up();
+        lazy.down();
+        lazy.left();
+        lazy.right();
+        lazy.act();
+
+        lazy.tick();
+
+        // then
+        assertEquals("[MESSAGE('Hello'), ACT[1, 2, 3], UP, DOWN, LEFT, RIGHT, ACT[]]",
+                lazy.popLastCommands());
+
+        assertEquals("[]", lazy.popLastCommands());
+
     }
 }

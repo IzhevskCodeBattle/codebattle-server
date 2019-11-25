@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -34,7 +34,7 @@ public class Construction extends PointImpl implements Tickable, State<Elements,
 
     public Construction(int x, int y) {
         super(x, y);
-        ch = Elements.CONSTRUCTION;
+        reset();
     }
 
     public Construction(Point xy) {
@@ -94,11 +94,15 @@ public class Construction extends PointImpl implements Tickable, State<Elements,
     public void tick() {
         if (timer == REGENERATE_TIME) {
             timer = 0;
-            ch = Elements.CONSTRUCTION;
+            reset();
         }
         if (destroyed()) {
             timer++;
         }
+    }
+
+    public void reset() {
+        ch = Elements.CONSTRUCTION;
     }
 
     public boolean destroyed() {

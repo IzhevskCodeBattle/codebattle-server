@@ -4,7 +4,7 @@ package com.codenjoy.dojo.football.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,36 +22,30 @@ package com.codenjoy.dojo.football.model;
  * #L%
  */
 
-import com.codenjoy.dojo.football.model.Level;
-import com.codenjoy.dojo.football.model.LevelImpl;
-import com.codenjoy.dojo.football.model.Football;
-import com.codenjoy.dojo.football.model.Single;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
-
+import com.codenjoy.dojo.services.Game;
+import com.codenjoy.dojo.services.multiplayer.Single;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import org.junit.Before;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-/**
- * User: sanja
- * Date: 19.12.13
- * Time: 5:22
- */
 public class SingleTest {
 
     private EventListener listener1;
     private EventListener listener2;
     private EventListener listener3;
-    private Single game1;
-    private Single game2;
-    private Single game3;
+    private Game game1;
+    private Game game2;
+    private Game game3;
     private Dice dice;
+    private Football field;
 
     // появляется другие игроки, игра становится мультипользовательской
     @Before
@@ -65,17 +59,20 @@ public class SingleTest {
                 "☼☼┬┬☼☼");
 
         dice = mock(Dice.class);
-        Football Sample = new Football(level, dice);
+        field = new Football(level, dice);
         PrinterFactory factory = new PrinterFactoryImpl();
 
         listener1 = mock(EventListener.class);
-        game1 = new Single(Sample, listener1, factory);
+        game1 = new Single(new Player(listener1), factory);
+        game1.on(field);
 
         listener2 = mock(EventListener.class);
-        game2 = new Single(Sample, listener2, factory);
+        game2 = new Single(new Player(listener2), factory);
+        game2.on(field);
 
         listener3 = mock(EventListener.class);
-        game3 = new Single(Sample, listener3, factory);
+        game3 = new Single(new Player(listener3), factory);
+        game3.on(field);
 
         dice(1, 1);
         game1.newGame();
@@ -130,11 +127,11 @@ public class SingleTest {
                 "☼☼==☼☼\n");
         
         game3.getJoystick().up();
-        game3.tick();
+        field.tick();
         game3.getJoystick().up();
-        game3.tick();
+        field.tick();
         asrtFl3(
-        		"☼☼⌂⌂☼☼\n" +
+                "☼☼⌂⌂☼☼\n" +
                 "☼ ♣  ☼\n" +
                 "☼  ☻ ☼\n" +
                 "☼    ☼\n" +
@@ -142,7 +139,7 @@ public class SingleTest {
                 "☼☼==☼☼\n");
         game3.getJoystick().act(Actions.HIT_DOWN.getValue());
         game3.getJoystick().down();
-        game3.tick();
+        field.tick();
         
         asrtFl3(
                 "☼☼⌂⌂☼☼\n" +
@@ -162,7 +159,7 @@ public class SingleTest {
         game2.getJoystick().down();
         game3.getJoystick().right();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼☼⌂⌂☼☼\n" +
                 "☼    ☼\n" +
@@ -175,9 +172,9 @@ public class SingleTest {
     // игроков можно удалять из игры
     @Test
     public void shouldRemove() {
-        game3.destroy();
+        game3.close();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼☼⌂⌂☼☼\n" +
                 "☼ ♣  ☼\n" +
@@ -190,84 +187,84 @@ public class SingleTest {
     // игрок может пробросить мяч через другого
     @Test
     public void shouldPassBallThroughPlayer() {
-    	
-    	asrtFl1("☼☼⌂⌂☼☼\n" +
+        
+        asrtFl1("☼☼⌂⌂☼☼\n" +
                 "☼ ♣  ☼\n" +
                 "☼  ∙ ☼\n" +
                 "☼    ☼\n" +
                 "☼☺ ♦ ☼\n" +
                 "☼☼==☼☼\n");
-    	
-    	game2.getJoystick().down();
-    	game3.getJoystick().up();
-    	game1.tick();
-    	game2.getJoystick().down();
-    	game3.getJoystick().up();
-    	game1.tick();
-    	game2.getJoystick().right();
-    	game1.tick();
-    	
-    	asrtFl1("☼☼⌂⌂☼☼\n" +
+        
+        game2.getJoystick().down();
+        game3.getJoystick().up();
+        field.tick();
+        game2.getJoystick().down();
+        game3.getJoystick().up();
+        field.tick();
+        game2.getJoystick().right();
+        field.tick();
+        
+        asrtFl1("☼☼⌂⌂☼☼\n" +
                 "☼    ☼\n" +
                 "☼  ♥ ☼\n" +
                 "☼  ♣ ☼\n" +
                 "☼☺   ☼\n" +
                 "☼☼==☼☼\n");
-    	
-    	game3.getJoystick().act(Actions.HIT_DOWN.getValue());
-    	game1.tick();
-    	
-    	asrtFl1("☼☼⌂⌂☼☼\n" +
+        
+        game3.getJoystick().act(Actions.HIT_DOWN.getValue());
+        field.tick();
+        
+        asrtFl1("☼☼⌂⌂☼☼\n" +
                 "☼    ☼\n" +
                 "☼  ♦ ☼\n" +
                 "☼  ♠ ☼\n" +
                 "☼☺   ☼\n" +
                 "☼☼==☼☼\n");
-    	
-    	game1.tick();
-    	
-    	asrtFl1("☼☼⌂⌂☼☼\n" +
+        
+        field.tick();
+        
+        asrtFl1("☼☼⌂⌂☼☼\n" +
                 "☼    ☼\n" +
                 "☼  ♦ ☼\n" +
                 "☼  ♣ ☼\n" +
                 "☼☺ * ☼\n" +
                 "☼☼==☼☼\n");
-    	
+        
     }
 
     // другой игрок может остановить мяч
     @Test
     public void shouldStopBall() {
-    	game2.getJoystick().down();
-    	game3.getJoystick().up();
-    	game1.tick();
-    	game2.getJoystick().down();
-    	game3.getJoystick().up();
-    	game1.tick();
-    	game2.getJoystick().right();
-    	game1.tick();
-    	
-    	asrtFl1("☼☼⌂⌂☼☼\n" +
+        game2.getJoystick().down();
+        game3.getJoystick().up();
+        field.tick();
+        game2.getJoystick().down();
+        game3.getJoystick().up();
+        field.tick();
+        game2.getJoystick().right();
+        field.tick();
+        
+        asrtFl1("☼☼⌂⌂☼☼\n" +
                 "☼    ☼\n" +
                 "☼  ♥ ☼\n" +
                 "☼  ♣ ☼\n" +
                 "☼☺   ☼\n" +
                 "☼☼==☼☼\n");
-    	
-    	game3.getJoystick().act(Actions.HIT_DOWN.getValue());
-    	game1.tick();
-    	
-    	asrtFl1("☼☼⌂⌂☼☼\n" +
+        
+        game3.getJoystick().act(Actions.HIT_DOWN.getValue());
+        field.tick();
+        
+        asrtFl1("☼☼⌂⌂☼☼\n" +
                 "☼    ☼\n" +
                 "☼  ♦ ☼\n" +
                 "☼  ♠ ☼\n" +
                 "☼☺   ☼\n" +
                 "☼☼==☼☼\n");
-    	
-    	game2.getJoystick().act(Actions.STOP_BALL.getValue());
-    	game1.tick();
-    	
-    	asrtFl1("☼☼⌂⌂☼☼\n" +
+        
+        game2.getJoystick().act(Actions.STOP_BALL.getValue());
+        field.tick();
+        
+        asrtFl1("☼☼⌂⌂☼☼\n" +
                 "☼    ☼\n" +
                 "☼  ♦ ☼\n" +
                 "☼  ♠ ☼\n" +
@@ -281,7 +278,7 @@ public class SingleTest {
         game1.getJoystick().right();
         game3.getJoystick().left();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼☼⌂⌂☼☼\n" +
                 "☼ ♣  ☼\n" +
@@ -294,35 +291,27 @@ public class SingleTest {
     // счет начисляется
     @Test
     public void scoreMultiplayerTest() {
-    	
-    	game3.getJoystick().up();
-    	game1.tick();
-    	game3.getJoystick().up();
-    	game1.tick();
-    	
-    	game3.getJoystick().act(Actions.HIT_UP.getValue());
-    	game1.tick();
-    	game1.tick();
-    	
-    	asrtFl1("☼☼⌂x☼☼\n" +
+
+        game3.getJoystick().up();
+        field.tick();
+        game3.getJoystick().up();
+        field.tick();
+
+        game3.getJoystick().act(Actions.HIT_UP.getValue());
+        field.tick();
+        field.tick();
+
+        asrtFl1("☼☼⌂x☼☼\n" +
                 "☼ ♣  ☼\n" +
                 "☼  ♦ ☼\n" +
                 "☼    ☼\n" +
                 "☼☺   ☼\n" +
                 "☼☼==☼☼\n");
-    	
-    	assertEquals(0, game1.getPlayer().getScore());
-    	assertEquals(0, game2.getPlayer().getScore());
-    	assertEquals(0, game3.getPlayer().getScore());
-    	
-    	game1.tick();
-    	
-    	assertEquals(1, game1.getPlayer().getScore());
-    	assertEquals(0, game2.getPlayer().getScore());
-    	assertEquals(1, game3.getPlayer().getScore());
-    	
-    	assertEquals(true, game1.isGameOver());
-    	assertEquals(true, game2.isGameOver());
-    	assertEquals(true, game3.isGameOver());
+
+        field.tick();
+        
+        assertEquals(true, game1.isGameOver());
+        assertEquals(true, game2.isGameOver());
+        assertEquals(true, game3.isGameOver());
     }
 }

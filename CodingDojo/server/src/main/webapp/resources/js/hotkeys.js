@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -19,23 +19,40 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+pages = pages || {};
+
 var adminKey = false;
 
-function initHotkeys(gameName, contextPath) {
-    var gameNameParam = ((gameName == '')?'':'gameName=' + gameName);
+function initHotkeys() {
+    var gameName = getSettings('gameName') || game.gameName;
+    var contextPath = getSettings('contextPath') || game.contextPath;
+
+    var gameNameParam = ((!gameName)?'':'gameName=' + gameName);
     $('body').keydown(function(ev) {
+        if (!game.enableHotkeys) {
+            return;
+        }
+
         if (ev.ctrlKey && ev.altKey && ev.keyCode == 65) { // Ctrl-Alt-A + ...
             adminKey = true;
-        } else if (adminKey && ev.keyCode == 68) { // ... + D
-            window.open(contextPath + 'admin31415' + (gameNameParam == ''?'':'?select&') + gameNameParam);
-        } else if (adminKey && ev.keyCode == 82) { // ... + R
-            window.open(contextPath + 'register' + (gameNameParam == ''?'':'?') + gameNameParam);
-        } else if (adminKey && ev.keyCode == 77) { // ... + M
+        } else if (adminKey && ev.keyCode == 68) { // ... + D (aDmin)
+            window.open(contextPath + '/admin' + (gameNameParam == ''?'':'?select&') + gameNameParam);
+        } else if (adminKey && ev.keyCode == 82) { // ... + R (Register)
+            window.open(contextPath + '/register' + (gameNameParam == ''?'':'?') + gameNameParam);
+        } else if (adminKey && ev.keyCode == 77) { // ... + M (Main)
             window.open(contextPath);
-        } else if (adminKey && ev.keyCode == 74) { // ... + J
+        } else if (adminKey && ev.keyCode == 74) { // ... + J (Joystick)
             game.enableJoystick = !game.enableJoystick;
-        } else if (adminKey && ev.keyCode == 66) { // ... + B
-            window.open(contextPath + 'board/game/' + gameName);
+        } else if (adminKey && ev.keyCode == 66) { // ... + B (Board)
+            window.open(contextPath + '/board/game/' + gameName);
+        } else if (adminKey && ev.keyCode == 72) { // ... + H (Help)
+            window.open(contextPath + '/help');
+        } else if (adminKey && ev.keyCode == 85) { // ... + U (rUles)
+            if (gameName == '') {
+                window.open(contextPath + '/help');
+            } else {
+                window.open(contextPath + '/resources/help/' + gameName + '.html');
+            }
         } else {
             adminKey = false;
         }

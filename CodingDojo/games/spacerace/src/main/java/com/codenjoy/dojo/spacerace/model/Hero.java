@@ -4,7 +4,7 @@ package com.codenjoy.dojo.spacerace.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,14 +23,10 @@ package com.codenjoy.dojo.spacerace.model;
  */
 
 import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.multiplayer.PlayerHero;
 
-/**
- * Это реализация героя. Обрати внимание, что он имплементит {@see Joystick}, а значит может быть управляем фреймворком
- * Так же он имплементит {@see Tickable}, что значит - есть возможность его оповещать о каждом тике игры.
- */
-public class Hero extends PointImpl implements Joystick, Tickable, State<Elements, Player> {
+public class Hero extends PlayerHero<Field> implements State<Elements, Player> {
 
-    private Field field;
     private boolean alive;
     private Direction direction;
     private boolean fire;
@@ -43,10 +39,6 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
         fire = false;
         alive = true;
         this.charger = charger;
-    }
-
-    public void init(Field field) {
-        this.field = field;
     }
 
     @Override
@@ -86,11 +78,6 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
         if (!alive) return;
 
         fire = true;
-    }
-
-    @Override
-    public void message(String command) {
-        // do nothing, this should never happen
     }
 
     public Direction getDirection() {
@@ -154,7 +141,7 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
     public void renew(Point pt, BulletCharger charger) {
         this.charger = charger;
         alive = true;
-        move(pt.getX(), pt.getY());
+        move(pt);
     }
 
     public void recharge() {

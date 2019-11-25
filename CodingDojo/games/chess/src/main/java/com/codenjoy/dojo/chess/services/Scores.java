@@ -4,7 +4,7 @@ package com.codenjoy.dojo.chess.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -45,7 +45,7 @@ public class Scores implements PlayerScores {
     }
 
     @Override
-    public int getScore() {
+    public Integer getScore() {
         return score;
     }
 
@@ -54,5 +54,10 @@ public class Scores implements PlayerScores {
         if (event.equals(Events.WIN)) {
             score += winScore.getValue();
         }
+    }
+
+    @Override
+    public void update(Object score) {
+        this.score = Integer.valueOf(score.toString());
     }
 }

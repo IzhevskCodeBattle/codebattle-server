@@ -2,7 +2,7 @@
   #%L
   Codenjoy - it's a dojo-like platform from developers to developers.
   %%
-  Copyright (C) 2016 Codenjoy
+  Copyright (C) 2018 Codenjoy
   %%
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as
@@ -22,13 +22,13 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" %>
 
-<div id="leaderboard" style="display:none;">
+<div id="leaderboard" class="board" style="display:none;" zoom-on-wheel>
     <table id="table-logs" class="table table-striped leaderboard-table">
         <thead>
             <th width="5%">
                 <c:choose>
                     <c:when test="${code != null}">
-                        <a href="${ctx}/board?code=${code}">#</a>
+                        <a href="${ctx}/board/game/${gameName}?code=${code}">#</a>
                     </c:when>
                     <c:otherwise>
                         <a href="${ctx}/board/game/${gameName}">#</a>
@@ -37,17 +37,14 @@
             </th>
             <th width="55%">Player</th>
             <th width="25%" class="center">Score</th>
-            <!-- th width="25%" class="center">Max</th -->
-            <!-- th width="15%" class="center">Level</th -->
         </thead>
         <tbody id="table-logs-body">
             <!--
                 <td>1</td>
                 <td><a href="${ctx}/board/player/email?code=code">name</a></td>
                 <td class="center">score</td>
-                <td class="center">maxLength</td>
-                <td class="center">level</td>
             -->
         </tbody>
     </table>
+    <%@include file="info.jsp"%>
 </div>

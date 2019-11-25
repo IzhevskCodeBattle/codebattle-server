@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,11 +24,10 @@ function initDonate(contextPath) {
     var want = $('#want-donate');
     var payment = $('#payment');
 
-    donate.css({position: 'absolute', left: 300});
     donate.show();
 
     want.click( function() {
-        $.ajax({ url:contextPath + "donate",
+        $.ajax({ url:contextPath + "/donate",
             success:function (data) {
                 donate.append('<div id="donate-container"></div>');
                 $("#payment").remove();

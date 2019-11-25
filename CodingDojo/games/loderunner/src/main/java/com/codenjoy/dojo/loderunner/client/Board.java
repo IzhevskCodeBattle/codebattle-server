@@ -4,7 +4,7 @@ package com.codenjoy.dojo.loderunner.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -43,6 +43,11 @@ public class Board extends AbstractBoard<Elements> {
     public Collection<Point> getBarriers() {
         Collection<Point> all = getWalls();
         return removeDuplicates(all);
+    }
+
+    @Override
+    protected int inversionY(int y) {
+        return size - 1 - y;
     }
 
     public Collection<Point> getWalls() {
@@ -92,14 +97,21 @@ public class Board extends AbstractBoard<Elements> {
                 isAt(x, y, Elements.UNDESTROYABLE_WALL);
     }
 
+    public boolean aGold(int x, int y) {
+        return isAt(x, y, Elements.GOLD);
+    }
+
     public boolean aLadder(int x, int y) {
         return isAt(x, y, Elements.LADDER) ||
-                isAt(x, y, Elements.HERO_LADDER);
+                isAt(x, y, Elements.HERO_LADDER) ||
+                isAt(x, y, Elements.ENEMY_LADDER);
     }
 
     public boolean aPipe(int x, int y) {
         return isAt(x, y, Elements.PIPE) ||
                 isAt(x, y, Elements.HERO_PIPE_LEFT) ||
-                isAt(x, y, Elements.HERO_PIPE_RIGHT);
+                isAt(x, y, Elements.HERO_PIPE_RIGHT) ||
+                isAt(x, y, Elements.OTHER_HERO_PIPE_LEFT) ||
+                isAt(x, y, Elements.OTHER_HERO_PIPE_RIGHT);
     }
 }

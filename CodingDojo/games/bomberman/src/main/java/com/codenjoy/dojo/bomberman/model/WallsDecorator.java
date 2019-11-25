@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -28,11 +28,6 @@ import com.codenjoy.dojo.services.Tickable;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * User: oleksandr.baglai
- * Date: 3/23/13
- * Time: 12:44 AM
- */
 public class WallsDecorator implements Walls, Tickable {
     protected Walls walls;
 

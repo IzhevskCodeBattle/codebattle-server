@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,12 +23,14 @@ package com.codenjoy.dojo.services;
  */
 
 
+import com.codenjoy.dojo.client.Closeable;
 import com.codenjoy.dojo.services.hero.HeroData;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.LevelProgress;
+import org.json.JSONObject;
 
-/**
- * Каждый инстанс игры для каждого игрока реализует этот интерфейс
- */
-public interface Game extends Tickable {
+public interface Game extends Closeable {
 
     /**
      * @return Джойстик для управления ботом игрока
@@ -36,25 +38,34 @@ public interface Game extends Tickable {
     Joystick getJoystick();
 
     /**
-     * @return Максимально количество полезных действий, которое удалось совершить игроком между двух смертей
-     */
-    int getMaxScore();
-
-    /**
-     * @return Текущее количество полезных действий, которое удалось совершить игроком между двух смертей
-     */
-    int getCurrentScore();
-
-    /**
      * @return true - если герой убит
      */
     boolean isGameOver();
+
+    /**
+     * @return true - если герой прошел уровень. TODO ##2 работает пока только с multiplayerType.isTraining()
+     */
+    boolean isWin();
+
+    /**
+     * @return true - если герой должен покинуть эту комнату (проиграл матч)
+     *          Работает только с multiplayerType.isDisposable()
+     */
+    boolean shouldLeave();
 
     /**
      * Если герой убит, то в слудеющий такт фреймворк дернет за этот метод, чтобы создать новую игру для игрока.
      * То же происходит же при регистрации нового игрока.
      */
     void newGame();
+
+    /**
+     * Если игра имеет состояние и может быть сохранена,
+     * то она может и загрузиться из этого состояния с помощью этого метода.
+     * Этот метод вызывается сразу после созлания игры методом {@see #newGame()}
+     * @param save Загружаемый save
+     */
+    void loadSave(JSONObject save);
 
     /**
      * Board =
@@ -72,7 +83,7 @@ public interface Game extends Tickable {
      * Если вдруг пользователь передумает играть и уйдет, от при выходе из игры фреймворк дернет этот метод.
      * Мало ли, вдруг ты хранишь всех игроков у себя (актуально для игры типа много игроков на одном поле).
      */
-    void destroy();
+    void close();
 
     /**
      * Иногда ведущий игры сбрасывает очки участников. Тогда фреймворк дернет этот метод.
@@ -86,6 +97,26 @@ public interface Game extends Tickable {
 
     /**
      * @return Если игра сохраняется, то у нее должно быть состояние, иначе null
+     *
      */
-    String getSave();
+    JSONObject getSave();
+
+    /**
+     * @return Возвращает игрока играющего в эту игру
+     */
+    GamePlayer getPlayer();
+
+    /**
+     * @return Возвращает борду игры
+     */
+    GameField getField();
+
+    /**
+     * @param field указывает, что плеер хочет играть в эту игру
+     */
+    void on(GameField field);
+
+    void setProgress(LevelProgress progress);
+
+    LevelProgress getProgress();
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,6 +23,13 @@ package com.codenjoy.dojo.services;
  */
 
 
+import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
+
 /**
  * Когда пользователь зарегистрировался в игре создается новая игра в движке и джойстик игрока где-то там сохраняется во фреймворке.
  * Часто джойстик неразрывно связан с героем игрока, который бегает по полю. Так вот если этот герой помрет, и на его место появится новый
@@ -32,86 +39,69 @@ package com.codenjoy.dojo.services;
  */
 public class LazyJoystick implements Joystick, Tickable {
 
-    enum Direction {
-        DOWN, LEFT, RIGHT, UP;
-
-    }
     private final Game game;
 
-    private PlayerSpy player;
-    private Direction direction;
+    private List<Consumer<Joystick>> commands = new CopyOnWriteArrayList<>();
+    private List<String> list = new CopyOnWriteArrayList<>();
 
-    private String message;
-    private int[] parameters;
-    private boolean firstAct;
-
-    public LazyJoystick(Game game, PlayerSpy player) {
+    public LazyJoystick(Game game) {
         this.game = game;
-        this.player = player;
     }
 
     @Override
     public void down() {
-        direction = Direction.DOWN;
-        firstAct = (parameters != null);
+        commands.add(Joystick::down);
+        list.add("DOWN");
     }
 
     @Override
     public void up() {
-        direction = Direction.UP;
-        firstAct = (parameters != null);
+        commands.add(Joystick::up);
+        list.add("UP");
     }
 
     @Override
     public void left() {
-        direction = Direction.LEFT;
-        firstAct = (parameters != null);
+        commands.add(Joystick::left);
+        list.add("LEFT");
     }
 
     @Override
     public void right() {
-        direction = Direction.RIGHT;
-        firstAct = (parameters != null);
+        commands.add(Joystick::right);
+        list.add("RIGHT");
     }
 
     @Override
-    public void act(int... p) {
-        parameters = p;
-        firstAct = (direction == null);
+    public void act(int... parameters) {
+        if (parameters == null) {
+            return;
+        }
+        commands.add(joystick -> joystick.act(parameters));
+        list.add(String.format("ACT%s", Arrays.toString(parameters)));
     }
 
     @Override
-    public void message(String command) {
-        message = command;
+    public void message(String message) {
+        if (StringUtils.isEmpty(message)) {
+            return;
+        }
+        commands.add(joystick -> joystick.message(message));
+        list.add(String.format("MESSAGE('%s')", message));
     }
 
     @Override
-    public void tick() {
-        if (direction == null && parameters == null && message == null) return; // TODO test me
+    public synchronized void tick() {
+        Joystick joystick = game.getJoystick();
 
-        if (message != null) {
-            game.getJoystick().message(message);
-        }
+        commands.forEach(command -> command.accept(joystick));
 
-        if (parameters != null && firstAct) {
-            game.getJoystick().act(parameters);
-        }
+        commands.clear();
+    }
 
-        if (direction != null) {
-            switch (direction) {
-                case DOWN: game.getJoystick().down(); break;
-                case LEFT: game.getJoystick().left(); break;
-                case RIGHT: game.getJoystick().right(); break;
-                case UP: game.getJoystick().up(); break;
-            }
-        }
-
-        if (parameters != null && !firstAct) {
-            game.getJoystick().act(parameters);
-        }
-
-        parameters = null;
-        direction = null;
-        player.act();
+    public synchronized String popLastCommands() {
+        String result = list.toString();
+        list.clear();
+        return result;
     }
 }

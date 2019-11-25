@@ -4,7 +4,7 @@ package com.codenjoy.dojo.pong.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,10 +22,14 @@ package com.codenjoy.dojo.pong.model;
  * #L%
  */
 
-public interface Field {
+import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.multiplayer.GameField;
 
-    boolean isBarrier(int x, int y);
+public interface Field extends GameField<Player> {
 
-    Barrier getBarrier(int x, int y);
+    boolean isBarrier(Point pt);
 
+    Barrier getBarrier(Point pt);
+
+    Point getNewHeroPosition();
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,6 +25,9 @@ package com.codenjoy.dojo.battlecity.model;
 
 import com.codenjoy.dojo.battlecity.model.levels.DefaultBorders;
 import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.printer.Printer;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -34,7 +37,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -45,7 +48,7 @@ public class BattlecityTest {
 
     private Battlecity game;
     private Joystick hero;
-    private List<Player> players = new LinkedList<Player>();
+    private List<Player> players = new LinkedList<>();
 
     private PrinterFactory printerFactory = new PrinterFactoryImpl();
 
@@ -56,7 +59,7 @@ public class BattlecityTest {
     }
 
     private void givenGame(Tank tank, Construction... constructions) {
-        game = new Battlecity(size, Arrays.asList(constructions));
+        game = new Battlecity(size, mock(Dice.class), Arrays.asList(constructions));
         initPlayer(game, tank);
         this.hero = tank;
     }
@@ -65,37 +68,41 @@ public class BattlecityTest {
         List<Border> borders = new DefaultBorders(size).get();
         borders.addAll(Arrays.asList(walls));
 
-        game = new Battlecity(size, Arrays.asList(new Construction[0]), borders);
+        game = new Battlecity(size, mock(Dice.class), Arrays.asList(new Construction[0]), borders);
         initPlayer(game, tank);
         this.hero = tank;
     }
 
     private void givenGameWithAI(Tank tank, Tank... aiTanks) {
-        game = new Battlecity(size, Arrays.asList(new Construction[0]), aiTanks);
+        game = new Battlecity(size, mock(Dice.class), Arrays.asList(new Construction[0]), aiTanks);
         initPlayer(game, tank);
         this.hero = tank;
     }
 
     private Player initPlayer(Battlecity game, Tank tank) {
         Player player = mock(Player.class);
-        when(player.getTank()).thenReturn(tank);
+        when(player.getHero()).thenReturn(tank);
         players.add(player);
-        tank.setField(game);
+        tank.init(game);
         game.newGame(player);
         return player;
     }
 
     private void givenGameWithTanks(Tank... tanks) {
-        game = new Battlecity(size, Arrays.asList(new Construction[]{}));
+        game = new Battlecity(size, mock(Dice.class), Arrays.asList(new Construction[]{}));
         for (Tank tank : tanks) {
             initPlayer(game, tank);
         }
-        this.hero = game.getJoystick();
+        this.hero = tanks[0];
+    }
+
+    public static Tank tank(int x, int y, Direction direction, int ticksPerBullets) {
+        Dice dice = getDice(x, y);
+        return new Tank(x, y, direction, dice, ticksPerBullets);
     }
 
     public Tank tank(int x, int y, Direction direction) {
-        Dice dice = getDice(x, y);
-        return new Tank(x, y, direction, dice, ticksPerBullets);
+        return tank(x, y, direction, ticksPerBullets);
     }
 
     private static Dice getDice(int x, int y) {
@@ -136,7 +143,7 @@ public class BattlecityTest {
         assertEquals(field, getPrinter().print());
     }
 
-    private Printer getPrinter() {
+    private Printer<String> getPrinter() {
         return printerFactory.getPrinter(
                 game.reader(), players.get(0));
     }
@@ -265,6 +272,7 @@ public class BattlecityTest {
     public void shouldBulletHasSameDirectionAsTank() {
         givenGameWithTankAt(1, 1);
         hero.act();
+        game.tick();
 
         Tank realTank = (Tank) hero;
         assertEquals(realTank.getBullets().iterator().next().getDirection(), realTank.getDirection());
@@ -1904,11 +1912,6 @@ public class BattlecityTest {
                 "☼☼☼☼☼☼☼☼☼\n");
     }
 
-    public static Player player(int x, int y, EventListener listener) {
-        Dice dice = getDice(x, y);
-        return new Player(listener, dice);
-    }
-
     @Ignore
     @Test
     public void shouldRemoveAIWhenKillIt() {
@@ -1927,41 +1930,50 @@ public class BattlecityTest {
 
         game.tick();
 
+        assertD("☼☼☼☼☼☼☼\n" +
+                "☼˄    ☼\n" +
+                "☼     ☼\n" +
+                "☼•    ☼\n" +
+                "☼     ☼\n" +
+                "☼ ►  ˄☼\n" +
+                "☼☼☼☼☼☼☼\n");
+
         hero.act();
+        hero.up();
         game.tick();
 
         assertD("☼☼☼☼☼☼☼\n" +
                 "☼Ѡ    ☼\n" +
                 "☼     ☼\n" +
                 "☼     ☼\n" +
-                "☼     ☼\n" +
-                "☼ ► •˄☼\n" +
+                "☼ ▲   ☼\n" +
+                "☼   •˄☼\n" +
                 "☼☼☼☼☼☼☼\n");
 
         game.tick();
-
 
         assertW("☼☼☼☼☼☼☼\n" +
                 "☼     ☼\n" +
                 "☼     ☼\n" +
                 "☼     ☼\n" +
-                "☼     ☼\n" +
-                "☼ ►  Ѡ☼\n" +
+                "☼ ▲   ☼\n" +
+                "☼    Ѡ☼\n" +
                 "☼☼☼☼☼☼☼\n");
 
+        game.setDice(getDice(3, 3));
         game.tick();
 
         assertW("☼☼☼☼☼☼☼\n" + // TODO разобраться почему тут скачет ассерт
                 "☼     ☼\n" +
                 "☼     ☼\n" +
                 "☼     ☼\n" +
+                "☼ ▲   ☼\n" +
                 "☼     ☼\n" +
-                "☼ ►   ☼\n" +
                 "☼☼☼☼☼☼☼\n");
     }
 
     private void assertW(String expected) {
-        Printer printer = getPrinter();
+        Printer<String> printer = getPrinter();
         assertEquals(expected, printer.print().replaceAll("[«¿»?•]", " "));
     }
 
@@ -2018,18 +2030,6 @@ public class BattlecityTest {
                 "☼     ☼\n" +
                 "☼▲    ☼\n" +
                 "☼☼☼☼☼☼☼\n");
-    }
-
-
-    public static Player player(int x1, int y1, int x2, int y2, EventListener listener) {
-        Dice dice = getDice(x1, y1, x2, y2);
-        return new Player(listener, dice);
-    }
-
-    private static Dice getDice(int x1, int y1, int x2, int y2) {
-        Dice dice = mock(Dice.class);
-        when(dice.next(anyInt())).thenReturn(x1, y1, x2, y2);
-        return dice;
     }
 
     @Test
@@ -2285,12 +2285,12 @@ public class BattlecityTest {
 
         String field =
                 "☼☼☼☼☼☼☼\n" +
-                        "☼     ☼\n" +
-                        "☼     ☼\n" +
-                        "☼╩    ☼\n" +
-                        "☼     ☼\n" +
-                        "☼▲    ☼\n" +
-                        "☼☼☼☼☼☼☼\n";
+                "☼     ☼\n" +
+                "☼     ☼\n" +
+                "☼╩    ☼\n" +
+                "☼     ☼\n" +
+                "☼▲    ☼\n" +
+                "☼☼☼☼☼☼☼\n";
         assertD(field);
 
         for (int i = 1; i < ticksPerBullets; i++) {
@@ -2589,6 +2589,276 @@ public class BattlecityTest {
                 "☼       ☼\n" +
                 "☼       ☼\n" +
                 "☼☼☼☼☼☼☼☼☼\n");
+
+    }
+
+    // если стенка недорушенная, снаряд летит, и ресетнули игру, то все конструкции восстанавливаются
+    @Test
+    public void shouldRemoveBulletsAndResetConstructions_whenReset() {
+        size = 11;
+        ticksPerBullets = 3;
+        givenGame(tank(1, 1, Direction.UP), new Construction(1, 9), new Construction(1, 8));
+
+        hero.act();
+        game.tick();
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼╬        ☼\n" +
+                "☼╬        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        game.tick();
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼╬        ☼\n" +
+                "☼╬        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼╬        ☼\n" +
+                "☼╬        ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        hero.act();
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼╬        ☼\n" +
+                "☼╩        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        hero.act(); // не выйдет
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼╬        ☼\n" +
+                "☼╩        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼╬        ☼\n" +
+                "☼╩        ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        hero.act();
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼╬        ☼\n" +
+                "☼╨        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        game.tick();
+
+        game.tick();
+
+        hero.act();
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼╬        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        game.tick();
+
+        game.tick();
+
+        hero.act();
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼╩        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        // допустим за игру он прибил 5 танков
+        Player player = players.iterator().next();
+        player.setKilled(5);
+
+        // when
+        game.clearScore();
+
+        // смогу стрельнуть, пушка ресетнется
+        hero.act();
+        game.tick();
+
+        // then
+        // но после рисета это поле чистится
+        assertEquals(0, player.score());
+
+        // и стенки тоже ресетнулись
+        // и снаряд полетел
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼╬        ☼\n" +
+                "☼╬        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        game.tick();
+
+        game.tick();
+
+        hero.act();
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼╬        ☼\n" +
+                "☼╩        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+    }
+
+
+    // первый выстрел иногда получается сделать дважды
+    @Test
+    public void shouldCantFireTwice() {
+        size = 11;
+        ticksPerBullets = 4;
+        givenGameWithTankAt(1, 1);
+
+        game.clearScore();
+
+        game.tick(); // внутри там тикает так же gun, но первого выстрела еще небыло
+        game.tick();
+
+        hero.act();
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        hero.act();
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        hero.act();
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
+        hero.act();
+        game.tick();
+
+        assertD("☼☼☼☼☼☼☼☼☼☼☼\n" +
+                "☼•        ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼         ☼\n" +
+                "☼▲        ☼\n" +
+                "☼☼☼☼☼☼☼☼☼☼☼\n");
+
 
     }
 

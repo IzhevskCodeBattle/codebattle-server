@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,8 +25,8 @@ package com.codenjoy.dojo.services;
 
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
 
 public class PlayerTest {
@@ -38,7 +38,7 @@ public class PlayerTest {
 
         Information info = mock(Information.class);
         String game1 = "game";
-        Player player = new Player("vasia", "http://valia:8888/", mockGameType(game1), scores, info, null);
+        Player player = new Player("vasia", "http://valia:8888/", mockGameType(game1), scores, info);
 
         assertEquals("vasia", player.toString());
 
@@ -46,7 +46,6 @@ public class PlayerTest {
         assertEquals("vasia", player.getName());
         assertEquals(null, player.getPassword());
         assertNull(player.getCode());
-        assertEquals(0, player.getCurrentLevel());
         assertEquals(123, player.getScore());
         assertEquals("game", player.getGameName());
 

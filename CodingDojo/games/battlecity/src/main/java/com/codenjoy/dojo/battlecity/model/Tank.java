@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,27 +23,32 @@ package com.codenjoy.dojo.battlecity.model;
  */
 
 
-import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.Dice;
+import com.codenjoy.dojo.services.Direction;
+import com.codenjoy.dojo.services.State;
+import com.codenjoy.dojo.services.multiplayer.PlayerHero;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class Tank extends MovingObject implements Joystick, Tickable, State<Elements, Player> {
+public class Tank extends PlayerHero<Field> implements State<Elements, Player> {
 
-    private Dice dice;
+    protected Dice dice;
     private List<Bullet> bullets;
-    protected Field field;
     private boolean alive;
     private Gun gun;
 
+    protected Direction direction;
+    protected int speed;
+    protected boolean moving;
+    private boolean fire;
+
     public Tank(int x, int y, Direction direction, Dice dice, int ticksPerBullets) {
-        super(x, y, direction);
-        gun = new Gun(ticksPerBullets);
-        bullets = new LinkedList<Bullet>();
-        speed = 1;
-        moving = false;
-        alive = true;
+        super(x, y);
+        this.direction = direction;
         this.dice = dice;
+        gun = new Gun(ticksPerBullets);
+        reset();
     }
 
     void turn(Direction direction) {
@@ -52,73 +57,83 @@ public class Tank extends MovingObject implements Joystick, Tickable, State<Elem
 
     @Override
     public void up() {
-        direction = Direction.UP;
-        moving = true;
+        if (alive) {
+            direction = Direction.UP;
+            moving = true;
+        }
     }
 
     @Override
     public void down() {
-        direction = Direction.DOWN;
-        moving = true;
+        if (alive) {
+            direction = Direction.DOWN;
+            moving = true;
+        }
     }
 
     @Override
     public void right() {
-        direction = Direction.RIGHT;
-        moving = true;
+        if (alive) {
+            direction = Direction.RIGHT;
+            moving = true;
+        }
     }
 
     @Override
     public void left() {
-        direction = Direction.LEFT;
-        moving = true;
+        if (alive) {
+            direction = Direction.LEFT;
+            moving = true;
+        }
     }
 
-    @Override
+    public Direction getDirection() {
+        return direction;
+    }
+
+    // TODO подумать как устранить дублирование с MovingObject
+    public void move() {
+        for (int i = 0; i < speed; i++) {
+            if (!moving) {
+                return;
+            }
+
+            int newX = direction.changeX(x);
+            int newY = direction.changeY(y);
+            moving(newX, newY);
+        }
+    }
+
     public void moving(int newX, int newY) {
         if (field.isBarrier(newX, newY)) {
             // do nothing
         } else {
-            x = newX;
-            y = newY;
+            move(newX, newY);
         }
         moving = false;
     }
 
     @Override
     public void act(int... p) {
-        if (gun.tryToFire()) {
-            Bullet bullet = new Bullet(field, direction, copy(), this, new OnDestroy() {
-                @Override
-                public void destroy(Object bullet) {
-                    Tank.this.bullets.remove(bullet);
-                }
-            });
-            if (!bullets.contains(bullet)) {
-                bullets.add(bullet);
-            }
+        if (alive) {
+            fire = true;
         }
-    }
-
-    @Override
-    public void message(String command) {
-        // do nothing
     }
 
     public Iterable<Bullet> getBullets() {
         return new LinkedList<Bullet>(bullets);
     }
 
-    public void setField(Field field) {
-        this.field = field;
+    public void init(Field field) {
+        super.init(field);
+
         int xx = x;
         int yy = y;
         while (field.isBarrier(xx, yy)) {
             xx = dice.next(field.size());
             yy = dice.next(field.size());
         }
-        x = xx;
-        y = yy;
+        move(xx, yy);
         alive = true;
     }
 
@@ -142,7 +157,7 @@ public class Tank extends MovingObject implements Joystick, Tickable, State<Elem
     @Override
     public Elements state(Player player, Object... alsoAtPoint) {
         if (isAlive()) {
-            if (player.getTank() == this) {
+            if (player.getHero() == this) {
                 switch (direction) {
                     case LEFT:  return Elements.TANK_LEFT;
                     case RIGHT: return Elements.TANK_RIGHT;
@@ -161,6 +176,29 @@ public class Tank extends MovingObject implements Joystick, Tickable, State<Elem
             }
         } else {
             return Elements.BANG;
+        }
+    }
+
+    public void reset() {
+        speed = 1;
+        moving = false;
+        fire = false;
+        alive = true;
+        gun.reset();
+        bullets = new LinkedList<>();
+    }
+
+    public void fire() {
+        if (!fire) return;
+        fire = false;
+
+        if (!gun.tryToFire()) return;
+
+        Bullet bullet = new Bullet(field, direction, copy(), this,
+                b -> Tank.this.bullets.remove(b));
+
+        if (!bullets.contains(bullet)) {
+            bullets.add(bullet);
         }
     }
 }

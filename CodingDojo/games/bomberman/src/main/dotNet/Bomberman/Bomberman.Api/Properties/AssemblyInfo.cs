@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -19,19 +19,19 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-﻿using System.Reflection;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Bomberman.Api")]
-[assembly: AssemblyDescription("Created by Evgen Rezoglazov (evgen.rezoglazov@globallogic.com). Updated by Fedorenko Stanislav.")]
+[assembly: AssemblyTitle("Bomberman C# Client Api")]
+[assembly: AssemblyDescription("Created by Evgen Rezoglazov (evgen.rezoglazov@globallogic.com). Updated by Fedorenko Stanislav. Updated by Oleksandr Baglai.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Bomberman.Api")]
-[assembly: AssemblyCopyright("Copyright ©  2013")]
+[assembly: AssemblyCompany("Codenjoy")]
+[assembly: AssemblyProduct("Codenjoy Bomberman C# Client Api")]
+[assembly: AssemblyCopyright("Copyright © 2016 Codenjoy")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -55,3 +55,5 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+
+[assembly: InternalsVisibleTo("DemoTests")]

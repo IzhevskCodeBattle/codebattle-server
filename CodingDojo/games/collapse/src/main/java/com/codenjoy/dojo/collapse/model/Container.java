@@ -4,7 +4,7 @@ package com.codenjoy.dojo.collapse.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -55,9 +55,7 @@ public class Container<T, V> implements Iterable<V> {
         Iterator<T> iterator = data.keySet().iterator();
         if (!iterator.hasNext()) return null;
         T key = iterator.next();
-        V result = data.get(key);
-        data.remove(key);
-        return result;
+        return data.remove(key);
     }
 
     @Override

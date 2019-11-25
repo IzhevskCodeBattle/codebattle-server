@@ -4,7 +4,7 @@ package com.codenjoy.dojo.a2048.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,13 +25,18 @@ package com.codenjoy.dojo.a2048.client;
 
 import com.codenjoy.dojo.a2048.model.Elements;
 import com.codenjoy.dojo.client.AbstractBoard;
-import com.codenjoy.dojo.client.Direction;
+import com.codenjoy.dojo.services.Direction;
 
 public class Board extends AbstractBoard<Elements> {
 
     @Override
     public Elements valueOf(char ch) {
         return Elements.valueOf(ch);
+    }
+
+    @Override
+    protected int inversionY(int y) { // TODO разобраться с этим чудом
+        return size - 1 - y;
     }
 
     public int getSumCountFor(Direction direction) {

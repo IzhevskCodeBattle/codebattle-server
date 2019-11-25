@@ -4,7 +4,7 @@ package com.codenjoy.dojo.sample.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,15 +23,19 @@ package com.codenjoy.dojo.sample.model;
  */
 
 
-import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.Direction;
+import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.State;
+import com.codenjoy.dojo.services.multiplayer.PlayerHero;
 
 /**
  * Это реализация героя. Обрати внимание, что он имплементит {@see Joystick}, а значит может быть управляем фреймворком
  * Так же он имплементит {@see Tickable}, что значит - есть возможность его оповещать о каждом тике игры.
+ * Ну и конечно же он имплементит {@see State}, а значит может быть отрисован на поле.
+ * Часть этих интерфейсов объявлены в {@see PlayerHero}, а часть явно тут.
  */
-public class Hero extends PointImpl implements Joystick, Tickable, State<Elements, Player> {
+public class Hero extends PlayerHero<Field> implements State<Elements, Player> {
 
-    private Field field;
     private boolean alive;
     private Direction direction;
 
@@ -41,6 +45,7 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
         alive = true;
     }
 
+    @Override
     public void init(Field field) {
         this.field = field;
     }
@@ -77,16 +82,7 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
     public void act(int... p) {
         if (!alive) return;
 
-        field.setBomb(x, y);
-    }
-
-    @Override
-    public void message(String command) {
-        // do nothing, this should never happen
-    }
-
-    public Direction getDirection() {
-        return direction;
+        field.setBomb(this);
     }
 
     @Override
@@ -94,16 +90,15 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
         if (!alive) return;
 
         if (direction != null) {
-            int newX = direction.changeX(x);
-            int newY = direction.changeY(y);
+            Point to = direction.change(this.copy());
 
-            if (field.isBomb(newX, newY)) {
+            if (field.isBomb(to)) {
                 alive = false;
-                field.removeBomb(newX, newY);
+                field.removeBomb(to);
             }
 
-            if (!field.isBarrier(newX, newY)) {
-                move(newX, newY);
+            if (!field.isBarrier(to)) {
+                move(to);
             }
         }
         direction = null;

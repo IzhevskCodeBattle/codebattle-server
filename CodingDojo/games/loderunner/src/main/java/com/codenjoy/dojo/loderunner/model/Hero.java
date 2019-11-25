@@ -4,7 +4,7 @@ package com.codenjoy.dojo.loderunner.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,17 +24,12 @@ package com.codenjoy.dojo.loderunner.model;
 
 
 import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.multiplayer.PlayerHero;
 
-/**
- * User: sanja
- * Date: 17.12.13
- * Time: 5:10
- */
-public class Hero extends PointImpl implements Joystick, Tickable, Fieldable, State<Elements, Player> {
+public class Hero extends PlayerHero<Field> implements State<Elements, Player> {
 
     private Direction direction;
     private boolean moving;
-    private Field field;
     private boolean drill;
     private boolean drilled;
     private boolean alive;
@@ -48,11 +43,6 @@ public class Hero extends PointImpl implements Joystick, Tickable, Fieldable, St
         drill = false;
         alive = true;
         jump = false;
-    }
-
-    @Override
-    public void init(Field field) {
-        this.field = field;
     }
 
     @Override
@@ -98,12 +88,13 @@ public class Hero extends PointImpl implements Joystick, Tickable, Fieldable, St
     @Override
     public void act(int... p) {
         if (!alive) return;
-        drill = true;
-    }
 
-    @Override
-    public void message(String command) {
-        // do nothing, this should never happen
+        if (p.length == 1 && p[0] == 0) { // TODO test me
+            alive = false;
+            return;
+        }
+
+        drill = true;
     }
 
     public Direction getDirection() {

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.sudoku.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,10 +25,10 @@ package com.codenjoy.dojo.sudoku.model;
 
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.LengthToXY;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.utils.TestUtils;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -105,7 +105,7 @@ public class LevelBuilderTest {
         LengthToXY xy = new LengthToXY(SIZE);
         for (int x = 0; x < SIZE; x++) {
             for (int y = 0; y < SIZE; y++) {
-                arr[x][y] = Integer.valueOf("" + board.charAt(xy.getLength(x, y)));
+                arr[x][y] = Integer.parseInt("" + board.charAt(xy.getLength(x, y)));
             }
         }
 

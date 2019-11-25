@@ -4,7 +4,7 @@ package com.codenjoy.dojo.web.controller;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,67 +24,24 @@ package com.codenjoy.dojo.web.controller;
 
 
 import com.codenjoy.dojo.services.PlayerInfo;
+import com.codenjoy.dojo.services.SemifinalSettings;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
+@Getter
+@Setter
 public class AdminSettings {
 
     private List<PlayerInfo> players;
-
-    private List<String> parameters;
-
+    private List<Object> games;
+    private List<Object> parameters;
     private String gameName;
-
     private String generateNameMask;
     private String generateCount;
-
     private String timerPeriod;
+    private String progress;
+    private SemifinalSettings semifinal;
 
-    public void setGameName(String gameName) {
-        this.gameName = gameName;
-    }
-
-    public List<PlayerInfo> getPlayers() {
-        return players;
-    }
-
-    public void setPlayers(List<PlayerInfo> players) {
-        this.players = players;
-    }
-
-    public void setParameters(List<String> parameters) {
-        this.parameters = parameters;
-    }
-
-    public List<String> getParameters() {
-        return parameters;
-    }
-
-    public String getGameName() {
-        return gameName;
-    }
-
-    public String getGenerateNameMask() {
-        return generateNameMask;
-    }
-
-    public void setGenerateNameMask(String generateNameMask) {
-        this.generateNameMask = generateNameMask;
-    }
-
-    public String getGenerateCount() {
-        return generateCount;
-    }
-
-    public void setGenerateCount(String generateCount) {
-        this.generateCount = generateCount;
-    }
-
-    public String getTimerPeriod() {
-        return timerPeriod;
-    }
-
-    public void setTimerPeriod(String timerPeriod) {
-        this.timerPeriod = timerPeriod;
-    }
 }

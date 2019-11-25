@@ -4,7 +4,7 @@ package com.codenjoy.dojo.minesweeper.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,8 +25,8 @@ package com.codenjoy.dojo.minesweeper.model;
 
 import com.codenjoy.dojo.minesweeper.services.Events;
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -88,17 +88,17 @@ public class MinesweeperTest {
     }
 
     private void moveLeft() {
-        game.getJoystick().left();
+        game.sapper().left();
         game.tick();
     }
 
     private void moveDown() {
-        game.getJoystick().down();
+        game.sapper().down();
         game.tick();
     }
 
     private void moveRight() {
-        game.getJoystick().right();
+        game.sapper().right();
         game.tick();
     }
 
@@ -265,7 +265,7 @@ public class MinesweeperTest {
     public void shouldSaveCommandAndActAfterTick() {
         shouldBoardWith(new Sapper(2, 2), new Mine(3, 2));
 
-        game.getJoystick().right();
+        game.sapper().right();
 
         assertBoard(
                 "☼☼☼☼☼\n" +
@@ -761,7 +761,7 @@ public class MinesweeperTest {
     }
 
     private void moveUp() {
-        game.getJoystick().up();
+        game.sapper().up();
         game.tick();
     }
 
@@ -770,22 +770,22 @@ public class MinesweeperTest {
     }
 
     private void unbombUp() {
-        game.getJoystick().act();
+        game.sapper().act();
         moveUp();
     }
 
     private void unbombRight() {
-        game.getJoystick().act();
+        game.sapper().act();
         moveRight();
     }
 
     private void unbombDown() {
-        game.getJoystick().act();
+        game.sapper().act();
         moveDown();
     }
 
     private void unbombLeft() {
-        game.getJoystick().act();
+        game.sapper().act();
         moveLeft();
     }
 
@@ -797,40 +797,35 @@ public class MinesweeperTest {
     private void shouldBoardWith(Sapper sapper, Mine... mines) {
         listener = mock(EventListener.class);
         game = new MockBoard(sapper, mines);
-        game.newGame();
     }
 
     private class MockBoard extends Minesweeper {
-        private Sapper sapper;
+        private Player player;
 
         public MockBoard(Sapper sapper, Mine...mines) {
-            super(v(size), v(0), v(detectorCharge), new MinesGenerator() {
+            super(v(size), v(0), v(detectorCharge),
+                    (count, board) -> new ArrayList<>());
+
+            player = new Player(listener) {
                 @Override
-                public List<Mine> get(int count, Field board) {
-                    return new ArrayList<Mine>();
+                public void newHero(Field field) {
+                    hero = sapper;
+                    hero.init(field);
                 }
-            }, listener, printerFactory);
+            };
 
-            this.sapper = sapper;
-            sapper.setBoard(this);
-
-            MinesweeperTest.this.mines = new LinkedList<Mine>();
+            MinesweeperTest.this.mines = new LinkedList<>();
             MinesweeperTest.this.mines.addAll(Arrays.asList(mines));
             for (Mine mine : mines) {
-                mine.setBoard(this);
+                mine.init(this);
             }
 
-            newGame();
+            newGame(player);
         }
 
         @Override
         public List<Mine> getMines() {
             return MinesweeperTest.this.mines;
-        }
-
-        @Override
-        protected Sapper initializeSapper() {
-            return sapper;
         }
 
         @Override

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.quake2d.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,82 +25,28 @@ package com.codenjoy.dojo.quake2d.model;
 import com.codenjoy.dojo.quake2d.services.Events;
 import com.codenjoy.dojo.services.EventListener;
 import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
 
-/**
- * Класс игрока. Тут кроме героя может подсчитываться очки. Тут же ивенты передабтся лиснеру фреймворка.
- */
-public class Player {
+public class Player extends GamePlayer<Hero, Field> {
 
-    private EventListener listener;
-    private int maxScore;
-    private int score;
-    private boolean isBot = false;
     Hero hero;
 
-    /**
-     * @param listener Это шпийон от фреймоврка. Ты должен все ивенты которые касаются конкретного пользователя сормить ему.
-     */
     public Player(EventListener listener) {
-        this.listener = listener;
-        clearScore();
-    }
-
-    private void increaseScore() {
-        score = score + 1;
-        maxScore = Math.max(maxScore, score);
-    }
-
-    public int getMaxScore() {
-        return maxScore;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    /**
-     * Борда может файрить ивенты юзера с помощью этого метода
-     * @param event тип ивента
-     */
-    public void event(Events event) {
-        switch (event) {
-            case INJURE: gameOver(); break;
-            case KILL: increaseScore(); break;
-        }
-
-        if (listener != null) {
-            listener.event(event);
-        }
-    }
-
-    private void gameOver() {
-        score = 0;
-    }
-
-    public void clearScore() {
-        score = 0;
-        maxScore = 0;
+        super(listener);
     }
 
     public Hero getHero() {
         return hero;
     }
 
-    /**
-     * Когда создается новая игра для пользователя, кто-то должен создать героя
-     * @param field борда
-     */
     public void newHero(Field field) {
         Point pt = field.getFreeRandom();
         hero = new Hero(pt);
         hero.init(field);
     }
 
-    public boolean isBot() {
-        return isBot;
-    }
-
-    public void setBot(boolean pBot) {
-        isBot = pBot;
+    @Override
+    public boolean isAlive() {
+        return hero != null && hero.isAlive();
     }
 }

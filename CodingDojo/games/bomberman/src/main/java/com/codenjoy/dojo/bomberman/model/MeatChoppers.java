@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,16 +25,13 @@ package com.codenjoy.dojo.bomberman.model;
 
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.Direction;
-import com.codenjoy.dojo.services.PointImpl;
+import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.settings.Parameter;
 
 import java.util.List;
 
-/**
- * User: oleksandr.baglai
- * Date: 3/8/13
- * Time: 8:17 PM
- */
+import static com.codenjoy.dojo.services.PointImpl.pt;
+
 public class MeatChoppers extends WallsDecorator implements Walls {
 
     private static final boolean WITH_MEATCHOPPERS = true;
@@ -64,7 +61,7 @@ public class MeatChoppers extends WallsDecorator implements Walls {
             int y = dice.next(board.size());
 
             // TODO это капец как долго выполняется, убрать нафиг митчомеров из Walls и сам Walls рассформировать!
-            if (!board.isBarrier(x, y, WITH_MEATCHOPPERS) && !board.getBombermans().contains(PointImpl.pt(x, y))) {
+            if (!board.isBarrier(x, y, WITH_MEATCHOPPERS) && !board.getBombermans().contains(pt(x, y))) {
                 walls.add(new MeatChopper(x, y));
                 count++;
             }
@@ -99,7 +96,7 @@ public class MeatChoppers extends WallsDecorator implements Walls {
         }
     }
 
-    private Direction tryToMove(PointImpl pt) {
+    private Direction tryToMove(Point pt) {
         int count = 0;
         int x = pt.getX();
         int y = pt.getY();

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.startandjump.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,7 +23,7 @@ package com.codenjoy.dojo.startandjump.client;
  */
 
 
-import com.codenjoy.dojo.client.Direction;
+import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.client.Solver;
 import com.codenjoy.dojo.client.WebSocketRunner;
 import com.codenjoy.dojo.services.Dice;
@@ -37,8 +37,6 @@ import com.codenjoy.dojo.services.RandomDice;
  */
 public class YourSolver implements Solver<Board> {
 
-    private static final String USER_NAME = "user@gmail.com";
-
     private Dice dice;
     private Board board;
 
@@ -49,23 +47,16 @@ public class YourSolver implements Solver<Board> {
     @Override
     public String get(Board board) {
         this.board = board;
-//        if (board.isGameOver()) return "";
 
         return Direction.UP.toString();
     }
 
     public static void main(String[] args) {
-        start(USER_NAME, WebSocketRunner.Host.REMOTE);
-    }
-
-    public static void start(String name, WebSocketRunner.Host server) {
-        try {
-            WebSocketRunner.run(server, name,
-                    new YourSolver(new RandomDice()),
-                    new Board());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        WebSocketRunner.runClient(
+                // paste here board page url from browser after registration
+                "http://codenjoy.com:80/codenjoy-contest/board/player/3edq63tw0bq4w4iem7nb?code=1234567890123456789",
+                new YourSolver(new RandomDice()),
+                new Board());
     }
 
 }

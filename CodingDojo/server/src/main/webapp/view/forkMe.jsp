@@ -2,7 +2,7 @@
   #%L
   Codenjoy - it's a dojo-like platform from developers to developers.
   %%
-  Copyright (C) 2016 Codenjoy
+  Copyright (C) 2018 Codenjoy
   %%
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as
@@ -25,4 +25,4 @@
 
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
 
-<a id="fork-me" target="_blank" href="https://github.com/codenjoyme"><img style="position: absolute; top: 0; right: 0; border: 0;z-index: 100;" src="${ctx}/resources/img/fork-me.png"></a>
+<a id="fork-me" target="_blank" href="https://github.com/codenjoyme/codenjoy"><img style="position: absolute; top: 0; right: 0; border: 0;z-index: 100;" src="${ctx}/resources/img/fork-me.png"></a>

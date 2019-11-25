@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.model.artifacts;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,11 +25,6 @@ package com.codenjoy.dojo.snake.model.artifacts;
 
 import com.codenjoy.dojo.snake.model.Walls;
 
-/**
- * User: oleksandr.baglai
- * Date: 10/10/12
- * Time: 9:00 AM
- */
 public class BasicWalls extends Walls implements Iterable<Wall> {
     public BasicWalls(int boardSize) {
         super();

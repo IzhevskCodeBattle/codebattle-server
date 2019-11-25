@@ -4,7 +4,7 @@ package com.codenjoy.dojo.spacerace.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,26 +24,21 @@ package com.codenjoy.dojo.spacerace.model;
 
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.spacerace.services.Events;
 import com.codenjoy.dojo.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.mockito.Matchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * User: sanja
- * Date: 17.12.13
- * Time: 4:47
- */
 public class SpaceraceTest {
 
     private Spacerace game;
@@ -1001,32 +996,6 @@ public class SpaceraceTest {
                 "☼    ☼" +
                 "☼  + ☼" +
                 "☼    ☼");
-    }
-
-    @Test
-    public void shouldCountScores() {
-        // given
-        givenFl("☼   ☼" +
-                "☼   ☼" +
-                "☼ ☺ ☼" +
-                "☼   ☼" +
-                "☼   ☼");
-
-        assertEquals(0, player.getScore());
-        player.event(Events.DESTROY_BOMB);
-
-        assertEquals(1, player.getScore());
-        player.event(Events.DESTROY_STONE);
-        player.event(Events.DESTROY_STONE);
-
-        assertEquals(3, player.getScore());
-        player.event(Events.DESTROY_ENEMY);
-
-        assertEquals(4, player.getScore());
-        player.event(Events.LOOSE);
-
-        assertEquals(0, player.getScore());
-        assertEquals(4, player.getMaxScore());
     }
 
     @Test

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.settings;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -55,7 +55,27 @@ public class NullSettings implements Settings {
     }
 
     @Override
+    public void removeParameter(String name) {
+        // do nothing
+    }
+
+    @Override
     public Parameter<?> getParameter(String name) {
         return null;
+    }
+
+    @Override
+    public boolean changed() {
+        return false;
+    }
+
+    @Override
+    public List<String> whatChanged() {
+        return new LinkedList<>();
+    }
+
+    @Override
+    public void changesReacted() {
+        // do nothing
     }
 }

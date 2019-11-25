@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,11 +27,6 @@ import com.codenjoy.dojo.services.settings.Parameter;
 
 import java.util.List;
 
-/**
- * User: oleksandr.baglai
- * Date: 10/10/12
- * Time: 8:29 PM
- */
 public class OriginalWalls extends WallsImpl implements Iterable<Wall> {
     private int currentSize;
     private Parameter<Integer> size;

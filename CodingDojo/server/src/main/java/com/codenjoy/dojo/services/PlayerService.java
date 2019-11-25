@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,11 +27,12 @@ import java.util.List;
 
 public interface PlayerService extends Tickable {
 
-    Player register(String name, String callbackUrl, String gameName);
+    Player register(String name, String ip, String gameName);
     Player register(PlayerSave save);
     List<Player> getAll();
     List<Player> getAll(String gameName);
     void remove(String name);
+    void update(Player player);
     boolean contains(String name);
     Player get(String name);
     void updateAll(List<PlayerInfo> players);
@@ -40,6 +41,8 @@ public interface PlayerService extends Tickable {
     GameType getAnyGameWithPlayers();
 
     void cleanAllScores();
+    void reloadAllRooms();
+    void loadSaveForAll(String gameName, String save);
 
     Joystick getJoystick(String name); // TODO Как-то тут этот метод не вяжется, но ладно пока пусть остается
 

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -32,19 +32,23 @@ public class Gun implements Tickable {
 
     public Gun(int ticksPerBullets) {
         this.ticksPerBullets = ticksPerBullets;
+        reset();
+    }
+
+    public void reset() {
         ticks = 0;
         canFire = true;
     }
 
     @Override
     public void tick() {
-        ticks++;
+        if (!canFire) {
+            ticks++;
+        }
         if (ticksPerBullets <= 0) {
             canFire = true;
-        }
-        if (ticks == ticksPerBullets) {
-            canFire = true;
-            ticks = 0;
+        } else if (ticks == ticksPerBullets) {
+            reset();
         }
     }
 

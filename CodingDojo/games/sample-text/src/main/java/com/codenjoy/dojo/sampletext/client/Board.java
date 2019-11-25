@@ -4,7 +4,7 @@ package com.codenjoy.dojo.sampletext.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,9 +25,6 @@ package com.codenjoy.dojo.sampletext.client;
 
 import com.codenjoy.dojo.client.AbstractTextBoard;
 
-/**
- * Created by indigo on 2016-11-23.
- */
 public class Board extends AbstractTextBoard {
 
     public String getData() {

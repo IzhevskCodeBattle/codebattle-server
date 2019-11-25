@@ -4,7 +4,7 @@ package com.codenjoy.dojo.quake2d.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,7 +23,7 @@ package com.codenjoy.dojo.quake2d.model;
  */
 
 
-import com.codenjoy.dojo.client.Direction;
+import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.services.PointImpl;
 import com.codenjoy.dojo.services.State;
 import com.codenjoy.dojo.services.Tickable;
@@ -71,8 +71,6 @@ public class Bullet extends PointImpl implements Tickable, State<Elements, Playe
 
             if (!field.isBarrier(newX, newY)) {
                 move(newX, newY);
-                x = newX;
-                y = newY;
             }
         }
 //        direction = null;

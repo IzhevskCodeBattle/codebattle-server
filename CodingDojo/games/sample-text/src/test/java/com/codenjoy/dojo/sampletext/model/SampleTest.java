@@ -4,7 +4,7 @@ package com.codenjoy.dojo.sampletext.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,16 +29,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.Matchers.anyInt;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-/**
- * User: sanja
- * Date: 17.12.13
- * Time: 4:47
- */
 public class SampleTest {
 
     private SampleText game;
@@ -105,7 +100,7 @@ public class SampleTest {
         hero.message("wrong-answer");
         game.tick();
 
-        thenHistory("[{answer=wrong-answer, question=question1, valid=false}]");
+        thenHistory("[{'answer':'wrong-answer','question':'question1','valid':false}]");
     }
 
     @Test
@@ -121,8 +116,8 @@ public class SampleTest {
         hero.message("wrong-answer2");
         game.tick();
 
-        thenHistory("[{answer=wrong-answer1, question=question1, valid=false}, " +
-                "{answer=wrong-answer2, question=question1, valid=false}]");
+        thenHistory("[{'answer':'wrong-answer1','question':'question1','valid':false}, " +
+                "{'answer':'wrong-answer2','question':'question1','valid':false}]");
     }
 
     @Test
@@ -138,8 +133,8 @@ public class SampleTest {
         hero.message("answer1");
         game.tick();
 
-        thenHistory("[{answer=wrong-answer, question=question1, valid=false}, " +
-                "{answer=answer1, question=question1, valid=true}]");
+        thenHistory("[{'answer':'wrong-answer','question':'question1','valid':false}, " +
+                "{'answer':'answer1','question':'question1','valid':true}]");
     }
 
     @Test
@@ -157,8 +152,8 @@ public class SampleTest {
 
         game.tick();
 
-        thenHistory("[{answer=wrong-answer, question=question1, valid=false}, " +
-                "{answer=answer1, question=question1, valid=true}]");
+        thenHistory("[{'answer':'wrong-answer','question':'question1','valid':false}, " +
+                "{'answer':'answer1','question':'question1','valid':true}]");
     }
 
     @Test
@@ -177,9 +172,9 @@ public class SampleTest {
         hero.message("answer2");
         game.tick();
 
-        thenHistory("[{answer=wrong-answer, question=question1, valid=false}, " +
-                "{answer=answer1, question=question1, valid=true}, " +
-                "{answer=answer2, question=question2, valid=true}]");
+        thenHistory("[{'answer':'wrong-answer','question':'question1','valid':false}, " +
+                "{'answer':'answer1','question':'question1','valid':true}, " +
+                "{'answer':'answer2','question':'question2','valid':true}]");
     }
 
     @Test
@@ -202,9 +197,9 @@ public class SampleTest {
 
         game.tick();
 
-        thenHistory("[{answer=wrong-answer, question=question1, valid=false}, " +
-                "{answer=answer1, question=question1, valid=true}, " +
-                "{answer=answer2, question=question2, valid=true}]");
+        thenHistory("[{'answer':'wrong-answer','question':'question1','valid':false}, " +
+                "{'answer':'answer1','question':'question1','valid':true}, " +
+                "{'answer':'answer2','question':'question2','valid':true}]");
     }
 
     @Test
@@ -226,8 +221,8 @@ public class SampleTest {
         hero.message("answer4");
         game.tick();
 
-        thenHistory("[{answer=answer1, question=question1, valid=true}, " +
-                "{answer=answer2, question=question2, valid=true}, " +
-                "{answer=answer3, question=question3, valid=true}]");
+        thenHistory("[{'answer':'answer1','question':'question1','valid':true}, " +
+                "{'answer':'answer2','question':'question2','valid':true}, " +
+                "{'answer':'answer3','question':'question3','valid':true}]");
     }
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,38 +24,33 @@ package com.codenjoy.dojo.bomberman.model;
 
 
 import com.codenjoy.dojo.bomberman.services.Events;
-import com.codenjoy.dojo.services.BoardReader;
+import com.codenjoy.dojo.services.printer.BoardReader;
 import com.codenjoy.dojo.services.Point;
-import com.codenjoy.dojo.services.PointImpl;
-import com.codenjoy.dojo.services.Tickable;
 import com.codenjoy.dojo.services.settings.Parameter;
 
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * User: oleksandr.baglai
- * Date: 3/7/13
- * Time: 9:11 AM
- */
-public class Bomberman implements Tickable, Field {
+import static com.codenjoy.dojo.services.PointImpl.pt;
 
-    private List<Player> players = new LinkedList<Player>();
+public class Bomberman implements Field {
+
+    private List<Player> players = new LinkedList<>();
 
     private Walls walls;
     private Parameter<Integer> size;
     private List<Bomb> bombs;
     private List<Blast> blasts;
     private GameSettings settings;
-    private List<PointImpl> destroyedWalls;
+    private List<Point> destroyedWalls;
     private List<Bomb> destroyedBombs;
 
     public Bomberman(GameSettings settings) {
         this.settings = settings;
-        bombs = new LinkedList<Bomb>();
-        blasts = new LinkedList<Blast>();
-        destroyedWalls = new LinkedList<PointImpl>();
-        destroyedBombs = new LinkedList<Bomb>();
+        bombs = new LinkedList<>();
+        blasts = new LinkedList<>();
+        destroyedWalls = new LinkedList<>();
+        destroyedBombs = new LinkedList<>();
         size = settings.getBoardSize();
         walls = settings.getWalls(this);  // TODO как-то красивее сделать
     }
@@ -81,13 +76,13 @@ public class Bomberman implements Tickable, Field {
 
     private void tactAllBombermans() {
         for (Player player : players) {
-            player.getBomberman().apply();
+            player.getHero().apply();
         }
     }
 
     private void removeBlasts() {
         blasts.clear();
-        for (PointImpl pt : destroyedWalls) {
+        for (Point pt : destroyedWalls) {
             walls.destroy(pt.getX(), pt.getY());
         }
         destroyedWalls.clear();
@@ -95,7 +90,7 @@ public class Bomberman implements Tickable, Field {
 
     private void wallDestroyed(Wall wall, Blast blast) {
         for (Player player : players) {
-            if (blast.itsMine(player.getBomberman())) {
+            if (blast.itsMine(player.getHero())) {
                 if (wall instanceof MeatChopper) {
                     player.event(Events.KILL_MEAT_CHOPPER);
                 } else if (wall instanceof DestroyWall) {
@@ -108,7 +103,7 @@ public class Bomberman implements Tickable, Field {
     private void meatChopperEatBombermans() {
         for (MeatChopper chopper : walls.subList(MeatChopper.class)) {
             for (Player player : players) {
-                Hero bomberman = player.getBomberman();
+                Hero bomberman = player.getHero();
                 if (bomberman.isAlive() && chopper.itsMe(bomberman)) {
                     player.event(Events.KILL_BOMBERMAN);
                 }
@@ -137,8 +132,8 @@ public class Bomberman implements Tickable, Field {
     }
 
     @Override
-    public List<Bomb> getBombs(HeroImpl bomberman) {
-        List<Bomb> result = new LinkedList<Bomb>();
+    public List<Bomb> getBombs(Hero bomberman) {
+        List<Bomb> result = new LinkedList<>();
         for (Bomb bomb : bombs) {
             if (bomb.itsMine(bomberman)) {
                 result.add(bomb);
@@ -165,7 +160,7 @@ public class Bomberman implements Tickable, Field {
     }
 
     private List<Blast> makeBlast(Bomb bomb) {
-        List barriers = (List) walls.subList(Wall.class);
+        List barriers = walls.subList(Wall.class);
         barriers.addAll(getBombermans());
 
         return new BoomEngineOriginal(bomb.getOwner()).boom(barriers, size.getValue(), bomb, bomb.getPower());   // TODO move bomb inside BoomEngine
@@ -182,11 +177,11 @@ public class Bomberman implements Tickable, Field {
         }
         for (Blast blast: blasts) {
             for (Player dead : players) {
-                if (dead.getBomberman().itsMe(blast)) {
+                if (dead.getHero().itsMe(blast)) {
                     dead.event(Events.KILL_BOMBERMAN);
 
                     for (Player bombOwner : players) {
-                        if (dead != bombOwner && blast.itsMine(bombOwner.getBomberman())) {
+                        if (dead != bombOwner && blast.itsMine(bombOwner.getHero())) {
                             bombOwner.event(Events.KILL_OTHER_BOMBERMAN);
                         }
                     }
@@ -212,7 +207,7 @@ public class Bomberman implements Tickable, Field {
     @Override
     public boolean isBarrier(int x, int y, boolean isWithMeatChopper) {
         for (Hero bomberman : getBombermans()) {
-            if (bomberman.itsMe(new PointImpl(x, y))) {
+            if (bomberman.itsMe(pt(x, y))) {
                 return true;
             }
         }
@@ -236,7 +231,7 @@ public class Bomberman implements Tickable, Field {
     public List<Hero> getBombermans() {
         List<Hero> result = new LinkedList<Hero>();
         for (Player player : players) {
-            result.add(player.getBomberman());
+            result.add(player.getHero());
         }
         return result;
     }
@@ -264,14 +259,12 @@ public class Bomberman implements Tickable, Field {
 
             @Override
             public Iterable<? extends Point> elements() {
-                List<Point> result = new LinkedList<Point>();
-                result.addAll(Bomberman.this.getBombermans());
-                for (Wall wall : Bomberman.this.getWalls()) {
-                    result.add(wall);
-                }
-                result.addAll(Bomberman.this.getBombs());
-                result.addAll(Bomberman.this.getBlasts());
-                return result;
+                return new LinkedList<Point>() {{
+                    addAll(Bomberman.this.getBombermans());
+                    Bomberman.this.getWalls().forEach(this::add);
+                    addAll(Bomberman.this.getBombs());
+                    addAll(Bomberman.this.getBlasts());
+                }};
             }
         };
     }

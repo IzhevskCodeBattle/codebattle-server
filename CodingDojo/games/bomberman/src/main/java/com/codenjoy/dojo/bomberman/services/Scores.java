@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,11 +27,6 @@ import com.codenjoy.dojo.services.PlayerScores;
 import com.codenjoy.dojo.services.settings.Parameter;
 import com.codenjoy.dojo.services.settings.Settings;
 
-/**
- * User: oleksandr.baglai
- * Date: 3/9/13
- * Time: 7:20 PM
- */
 public class Scores implements PlayerScores {
 
     private final Parameter<Integer> killWallScore;
@@ -55,7 +50,7 @@ public class Scores implements PlayerScores {
     }
 
     @Override
-    public int getScore() {
+    public Integer getScore() {
         return score;
     }
 
@@ -71,5 +66,10 @@ public class Scores implements PlayerScores {
             score += killWallScore.getValue();
         }
         score = Math.max(0, score);
+    }
+
+    @Override
+    public void update(Object score) {
+        this.score = Integer.valueOf(score.toString());
     }
 }

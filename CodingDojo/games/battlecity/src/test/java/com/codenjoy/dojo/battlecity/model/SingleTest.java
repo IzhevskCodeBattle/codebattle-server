@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,8 +24,10 @@ package com.codenjoy.dojo.battlecity.model;
 
 
 import com.codenjoy.dojo.services.Dice;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.Game;
+import com.codenjoy.dojo.services.multiplayer.Single;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
@@ -33,28 +35,30 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class SingleTest {
 
     private int size = 5;
-    private Battlecity game;
+    private Battlecity field;
     private Dice dice1;
     private Dice dice2;
-    private Single tanks1;
-    private Single tanks2;
+    private Game tanks1;
+    private Game tanks2;
     private Player player1;
     private Player player2;
     private PrinterFactory printerFactory = new PrinterFactoryImpl();
 
     public void givenGame() {
-        game = new Battlecity(size, Arrays.asList(new Construction[0]));
-        tanks1 = new Single(game, null, printerFactory, dice1);
-        tanks2 = new Single(game, null, printerFactory, dice2);
-        player1 = tanks1.getPlayer();
-        player2 = tanks2.getPlayer();
+        field = new Battlecity(size, mock(Dice.class), Arrays.asList(new Construction[0]));
+        player1 = new Player(null, dice1);
+        player2 = new Player(null, dice2);
+        tanks1 = new Single(player1, printerFactory);
+        tanks1.on(field);
+        tanks2 = new Single(player2, printerFactory);
+        tanks2.on(field);
     }
 
     @Test
@@ -100,8 +104,8 @@ public class SingleTest {
                 "☼☼☼☼☼\n", player1
         );
 
-        tanks1.getPlayer().getTank().act();
-        tick();
+        tanks1.getPlayer().getHero().act();
+        field.tick();
 
         assertD("☼☼☼☼☼\n" +
                 "☼   ☼\n" +
@@ -113,7 +117,7 @@ public class SingleTest {
         assertTrue(tanks2.isGameOver());
         tanks2.newGame();
 
-        tick();
+        field.tick();
 
         assertD("☼☼☼☼☼\n" +
                 "☼   ☼\n" +
@@ -141,8 +145,8 @@ public class SingleTest {
                 "☼☼☼☼☼\n", player1
         );
 
-        tanks1.getPlayer().getTank().act();
-        tick();
+        tanks1.getPlayer().getHero().act();
+        field.tick();
 
         assertD("☼☼☼☼☼\n" +
                 "☼   ☼\n" +
@@ -154,7 +158,7 @@ public class SingleTest {
         assertTrue(tanks2.isGameOver());
         tanks2.newGame();
 
-        tick();
+        field.tick();
 
         assertD("☼☼☼☼☼\n" +
                 "☼   ☼\n" +
@@ -163,10 +167,6 @@ public class SingleTest {
                 "☼☼☼☼☼\n", player1
         );
 
-    }
-
-    private void tick() {
-        tanks1.tick();  // тикать надо только один раз - и все применится для основной доски
     }
 
     private Dice givenDice(int... values) {
@@ -180,7 +180,7 @@ public class SingleTest {
 
     private void assertD(String field, Player player) {
         assertEquals(field, printerFactory.getPrinter(
-                game.reader(), player).print());
+                this.field.reader(), player).print());
     }
 
 }

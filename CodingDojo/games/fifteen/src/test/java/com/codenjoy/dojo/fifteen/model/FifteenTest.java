@@ -4,7 +4,7 @@ package com.codenjoy.dojo.fifteen.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,20 +22,20 @@ package com.codenjoy.dojo.fifteen.model;
  * #L%
  */
 
-import com.codenjoy.dojo.services.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
 import com.codenjoy.dojo.utils.TestUtils;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class FifteenTest {
@@ -60,7 +60,6 @@ public class FifteenTest {
 
     private void givenFl(String board) {
         LevelImpl level = new LevelImpl(board);
-
         game = new Fifteen(level, dice);
         listener = mock(EventListener.class);
         player = new Player(listener);

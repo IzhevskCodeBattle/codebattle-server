@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.algs;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,11 +23,13 @@ package com.codenjoy.dojo.services.algs;
  */
 
 
-import com.codenjoy.dojo.client.Direction;
+import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.PointImpl;
 
 import java.util.*;
+
+import static com.codenjoy.dojo.services.PointImpl.pt;
 
 public class DeikstraFindWay {
 
@@ -85,6 +87,9 @@ public class DeikstraFindWay {
         Point current = from;
         do {
             if (current == null) {
+                if (toProcess.isEmpty()) { // TODO test me
+                    break;
+                }
                 current = toProcess.remove();
             }
             List<Direction> before = path.get(current);
@@ -113,12 +118,12 @@ public class DeikstraFindWay {
     }
 
     private void setupPossibleWays() {
-        possibleWays = new TreeMap<Point, List<Direction>>();
+        possibleWays = new TreeMap<>();
 
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
-                Point from = new PointImpl(x, y);
-                List<Direction> directions = new LinkedList<Direction>();
+                Point from = pt(x, y);
+                List<Direction> directions = new LinkedList<>();
                 for (Direction direction : DIRECTIONS) {
                     if (possible.possible(from, direction)) {
                         directions.add(direction);

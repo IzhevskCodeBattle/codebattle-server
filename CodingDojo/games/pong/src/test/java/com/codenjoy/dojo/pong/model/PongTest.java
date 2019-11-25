@@ -4,7 +4,7 @@ package com.codenjoy.dojo.pong.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,30 +22,27 @@ package com.codenjoy.dojo.pong.model;
  * #L%
  */
 
+import com.codenjoy.dojo.pong.services.Events;
 import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
 
-/**
- * User: sanja
- * Date: 17.12.13
- * Time: 4:47
- */
 public class PongTest {
 
     private Pong game;
-//    private Hero hero;
     private Dice dice;
     private EventListener listener;
     private Player player;
     private PrinterFactory printer = new PrinterFactoryImpl();
+    private Hero hero;
 
     @Before
     public void setup() {
@@ -61,22 +58,23 @@ public class PongTest {
 
     private void givenFl(String board) {
         LevelImpl level = new LevelImpl(board);
-//        Hero hero = level.getHero().get(0);
-
         game = new Pong(level, dice);
-//        listener = mock(EventListener.class);
-//        player = new Player(listener);
-//        game.newGame(player);
-//        player.hero = hero;
-//        hero.init(game);
-//        this.hero = game.getHeroes().get(0);
+
+        if (!level.getHero().isEmpty()) {
+            Hero hero = level.getHero().get(0);
+            listener = mock(EventListener.class);
+            player = new Player(listener);
+            game.newGame(player);
+            player.hero = hero;
+            hero.init(game);
+            this.hero = game.getHeroes().get(0);
+        }
     }
 
     private void assertE(String expected) {
         assertEquals(TestUtils.injectN(expected),
                 printer.getPrinter(game.reader(), player).print());
     }
-
 
     @Test
     public void shouldFieldAtStart() {
@@ -115,7 +113,7 @@ public class PongTest {
                 "|        |" +
                 "|        |" +
                 "----------");
-        game.setBallDirection(new BallDirection(Direction.DOWN));
+        game.setBallDirection(new BallDirection(QDirection.DOWN));
         game.tick();
 
         assertE("----------" +
@@ -142,7 +140,7 @@ public class PongTest {
                 "|        |" +
                 "|        |" +
                 "----------");
-        game.setBallDirection(new BallDirection(Direction.LEFT));
+        game.setBallDirection(new BallDirection(QDirection.LEFT));
         game.tick();
 
         assertE("----------" +
@@ -169,7 +167,7 @@ public class PongTest {
                 "|        |" +
                 "|        |" +
                 "----------");
-        game.setBallDirection(new BallDirection(Direction.RIGHT));
+        game.setBallDirection(new BallDirection(QDirection.RIGHT));
         game.tick();
 
         assertE("----------" +
@@ -196,7 +194,7 @@ public class PongTest {
                 "|        |" +
                 "|        |" +
                 "----------");
-        game.setBallDirection(new BallDirection(Direction.UP));
+        game.setBallDirection(new BallDirection(QDirection.UP));
         game.tick();
 
         assertE("----------" +
@@ -224,8 +222,7 @@ public class PongTest {
                 "----------" +
                 "          ");
 
-        game.setBallDirection(new BallDirection(Direction.UP));
-
+        game.setBallDirection(new BallDirection(QDirection.UP));
         game.tick();
 
         assertE("          " +
@@ -254,8 +251,7 @@ public class PongTest {
                 "          " +
                 "          ");
 
-        game.setBallDirection(new BallDirection(Direction.DOWN));
-
+        game.setBallDirection(new BallDirection(QDirection.DOWN));
         game.tick();
 
         assertE("          " +
@@ -282,8 +278,8 @@ public class PongTest {
                 "|        |" +
                 "----------" +
                 "          ");
-        game.setBallDirection(new BallDirection(Direction.LEFT));
 
+        game.setBallDirection(new BallDirection(QDirection.LEFT));
         game.tick();
 
         assertE("          " +
@@ -310,7 +306,7 @@ public class PongTest {
                 "|        |" +
                 "----------" +
                 "          ");
-        game.setBallDirection(new BallDirection(Direction.RIGHT));
+        game.setBallDirection(new BallDirection(QDirection.RIGHT));
         game.tick();
 
         assertE("          " +
@@ -337,7 +333,7 @@ public class PongTest {
                 "|        |" +
                 "----------" +
                 "          ");
-        game.setBallDirection(new BallDirection(Direction.RIGHT, Direction.UP));
+        game.setBallDirection(new BallDirection(QDirection.RIGHT_UP));
 
         game.tick();
 
@@ -365,7 +361,7 @@ public class PongTest {
                 "|        |" +
                 "----------" +
                 "          ");
-        game.setBallDirection(new BallDirection(Direction.LEFT, Direction.UP));
+        game.setBallDirection(new BallDirection(QDirection.LEFT_UP));
 
         game.tick();
 
@@ -393,7 +389,7 @@ public class PongTest {
                 "|        |" +
                 "----------" +
                 "          ");
-        game.setBallDirection(new BallDirection(Direction.LEFT, Direction.DOWN));
+        game.setBallDirection(new BallDirection(QDirection.LEFT_DOWN));
 
         game.tick();
 
@@ -421,8 +417,8 @@ public class PongTest {
                 "|        |" +
                 "----------" +
                 "          ");
-        game.setBallDirection(new BallDirection(Direction.RIGHT, Direction.DOWN));
 
+        game.setBallDirection(new BallDirection(QDirection.RIGHT_DOWN));
         game.tick();
 
         assertE("          " +
@@ -436,6 +432,270 @@ public class PongTest {
                 "----------" +
                 "          ");
     }
+
+    @Test
+    public void shouldHeroCanMoveTheirPanel() {
+        givenFl("          " +
+                "----------" +
+                "|        |" +
+                "|        |" +
+                "|   o    |" +
+                "|       H|" +
+                "|        |" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        assertE("          " +
+                "----------" +
+                "|        |" +
+                "|        |" +
+                "|   o   H|" +
+                "|       H|" +
+                "|       H|" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        game.setBallDirection(new BallDirection(QDirection.RIGHT_DOWN));
+        hero.down();
+        game.tick();
+
+        assertE("          " +
+                "----------" +
+                "|        |" +
+                "|        |" +
+                "|        |" +
+                "|    o  H|" +
+                "|       H|" +
+                "|       H|" +
+                "----------" +
+                "          ");
+
+        hero.up();
+        game.tick();
+
+        assertE("          " +
+                "----------" +
+                "|        |" +
+                "|        |" +
+                "|       H|" +
+                "|       H|" +
+                "|     o H|" +
+                "|        |" +
+                "----------" +
+                "          ");
+    }
+
+    @Test
+    public void shouldHeroLooseBall() {
+        givenFl("          " +
+                "----------" +
+                "|        |" +
+                "|     o  |" +
+                "|        |" +
+                "|       H|" +
+                "|        |" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        assertE("          " +
+                "----------" +
+                "|        |" +
+                "|     o  |" +
+                "|       H|" +
+                "|       H|" +
+                "|       H|" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        game.setBallDirection(new BallDirection(QDirection.RIGHT_UP));
+        hero.down();
+        game.tick();
+
+        assertE("          " +
+                "----------" +
+                "|      o |" +
+                "|        |" +
+                "|        |" +
+                "|       H|" +
+                "|       H|" +
+                "|       H|" +
+                "----------" +
+                "          ");
+
+        game.tick();
+
+        assertE("          " +
+                "----------" +
+                "|        |" +
+                "|       o|" +
+                "|        |" +
+                "|       H|" +
+                "|       H|" +
+                "|       H|" +
+                "----------" +
+                "          ");
+
+        verifyNoMoreInteractions(listener);
+
+        game.tick();
+
+        verify(listener).event(Events.LOOSE);
+
+        assertE("          " +
+                "----------" +
+                "|        |" +
+                "|        |" +
+                "|    o   |" +
+                "|       H|" +
+                "|       H|" +
+                "|       H|" +
+                "----------" +
+                "          ");
+    }
+
+    @Test
+    public void shouldHeroHitCornerBall() {
+        givenFl("          " +
+                "----------" +
+                "|        |" +
+                "|     o  |" +
+                "|        |" +
+                "|       H|" +
+                "|        |" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        assertE("          " +
+                "----------" +
+                "|        |" +
+                "|     o  |" +
+                "|       H|" +
+                "|       H|" +
+                "|       H|" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        game.setBallDirection(new BallDirection(QDirection.RIGHT_UP));
+        hero.up();
+        game.tick();
+
+        assertE("          " +
+                "----------" +
+                "|      o |" +
+                "|       H|" +
+                "|       H|" +
+                "|       H|" +
+                "|        |" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        hero.up();
+        game.tick();
+
+        assertE("          " +
+                "----------" +
+                "|       H|" +
+                "|     o H|" +
+                "|       H|" +
+                "|        |" +
+                "|        |" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        verifyNoMoreInteractions(listener);
+
+        game.tick();
+
+        assertE("          " +
+                "----------" +
+                "|       H|" +
+                "|       H|" +
+                "|    o  H|" +
+                "|        |" +
+                "|        |" +
+                "|        |" +
+                "----------" +
+                "          ");
+    }
+
+    @Test
+    public void shouldHeroHitOtherBall() {
+        givenFl("          " +
+                "----------" +
+                "|        |" +
+                "|        |" +
+                "|     o  |" +
+                "|       H|" +
+                "|        |" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        assertE("          " +
+                "----------" +
+                "|        |" +
+                "|        |" +
+                "|     o H|" +
+                "|       H|" +
+                "|       H|" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        game.setBallDirection(new BallDirection(QDirection.RIGHT_UP));
+        hero.up();
+        game.tick();
+
+        assertE("          " +
+                "----------" +
+                "|        |" +
+                "|      oH|" +
+                "|       H|" +
+                "|       H|" +
+                "|        |" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        hero.up();
+        game.tick();
+
+        assertE("          " +
+                "----------" +
+                "|     o H|" +
+                "|       H|" +
+                "|       H|" +
+                "|        |" +
+                "|        |" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        game.tick();
+
+        assertE("          " +
+                "----------" +
+                "|       H|" +
+                "|    o  H|" +
+                "|       H|" +
+                "|        |" +
+                "|        |" +
+                "|        |" +
+                "----------" +
+                "          ");
+
+        verifyNoMoreInteractions(listener);
+    }
+
+    // TODO закончить тесты
 
 }
 

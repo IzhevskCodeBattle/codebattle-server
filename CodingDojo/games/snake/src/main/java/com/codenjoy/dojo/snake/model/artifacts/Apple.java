@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.model.artifacts;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,11 +29,11 @@ import com.codenjoy.dojo.snake.model.Hero;
 
 public class Apple extends EateablePoint implements Element, State<Elements, Object> {
 
-	public Apple(int x, int y) {
-		super(x, y);
-	}
+    public Apple(int x, int y) {
+        super(x, y);
+    }
 
-	@Override
+    @Override
      public void affect(Hero snake) {
         snake.grow();
         super.affect(snake);

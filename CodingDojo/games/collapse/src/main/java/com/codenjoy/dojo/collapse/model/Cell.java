@@ -4,7 +4,7 @@ package com.codenjoy.dojo.collapse.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -41,7 +41,7 @@ public class Cell extends PointImpl implements State<Elements, Player> {
 
     @Override
     public String toString() {
-        return String.format("pt%s=%s%s", super.toString(), number);
+        return String.format("pt%s=%s", super.toString(), number);
     }
 
     @Override

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,16 +23,17 @@ package com.codenjoy.dojo.services;
  */
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+@Component
+@Slf4j
 public class TimerService implements Runnable {
-    private static Logger logger = LoggerFactory.getLogger(TimerService.class);
 
     private ScheduledThreadPoolExecutor executor;
     private ScheduledFuture<?> future;
@@ -41,9 +42,11 @@ public class TimerService implements Runnable {
     private PlayerService playerService;
 
     private volatile boolean paused;
-    private long period;
+    private volatile long period;
 
-    public void init() {
+    public void start() {
+        period = 1000;
+        paused = true;
         executor = new ScheduledThreadPoolExecutor(1);
         schedule();
     }
@@ -62,7 +65,7 @@ public class TimerService implements Runnable {
             playerService.tick();
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error("Error while processing next step", e);
+            log.error("Error while processing next step", e);
         }
     }
 
@@ -76,10 +79,6 @@ public class TimerService implements Runnable {
 
     public boolean isPaused() {
         return this.paused;
-    }
-
-    public void setPeriod(long period) {
-        this.period = period;
     }
 
     public void changePeriod(long period) {

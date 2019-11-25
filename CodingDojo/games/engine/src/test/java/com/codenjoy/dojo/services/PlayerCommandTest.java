@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class PlayerCommandTest {
@@ -47,6 +48,7 @@ public class PlayerCommandTest {
 
     private void execute(String command) {
         new PlayerCommand(joystick, command).execute();
+        assertEquals(true, PlayerCommand.isValid(command));
     }
 
     @Test
@@ -92,6 +94,14 @@ public class PlayerCommandTest {
 
         InOrder inOrder = inOrder(joystick);
         inOrder.verify(joystick).right();
+        inOrder.verify(joystick).act();
+    }
+
+    @Test
+    public void shouldActWithoutParameters() {
+        execute("act()");
+
+        InOrder inOrder = inOrder(joystick);
         inOrder.verify(joystick).act();
     }
 
@@ -146,4 +156,48 @@ public class PlayerCommandTest {
         inOrder.verify(joystick).message("hello world");
     }
 
+    @Test
+    public void shouldMessageWithNRInParametersCommand() {
+        execute("message('hel\nlo w\nor\rld')");
+
+        InOrder inOrder = inOrder(joystick);
+        inOrder.verify(joystick).message("hel\nlo w\nor\rld");
+    }
+
+    @Test
+    public void shouldNotTrimMessageCommand() {
+        execute("message('hello,    world')");
+
+        InOrder inOrder = inOrder(joystick);
+        inOrder.verify(joystick).message("hello,    world");
+    }
+
+    @Test
+    public void shouldLeaveCharsCommand() {
+        assertMessageIsValid("ASDFGHJKL:\"ZXCVBNM<>?1234567890-=`~!@#$%^&*()_+ ");
+        assertMessageIsValid("qwertyuiopasdfghjklzxcvbnm,./;'[]QWERTYUIOP{}");
+    }
+
+    private void assertMessageIsValid(String expected) {
+        execute("message('" + expected + "')");
+
+        InOrder inOrder = inOrder(joystick);
+        inOrder.verify(joystick).message(expected);
+    }
+
+    @Test
+    public void shouldParseWholeMessageCommand() {
+        execute("message('('hello')('world')')");
+
+        InOrder inOrder = inOrder(joystick);
+        inOrder.verify(joystick).message("('hello')('world')");
+    }
+
+    @Test
+    public void shouldParseWholeMessageCommand2() {
+        execute("message('(\"hello\")(\"world\")')");
+
+        InOrder inOrder = inOrder(joystick);
+        inOrder.verify(joystick).message("(\"hello\")(\"world\")");
+    }
 }

@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,7 +29,7 @@ function initLayout(gameName, pageName, contextPath, transformations, scriptSour
     }
 
     var loadLayout = function(onLoad) {
-        var resource = "resources/" + gameName + "/";
+        var resource = "/resources/" + gameName + "/";
         $.ajax({ url:contextPath + resource + pageName,
             success:function (data) {
                 var found = ['<link href="', '<img src="', '<script src="'];
@@ -51,11 +51,11 @@ function initLayout(gameName, pageName, contextPath, transformations, scriptSour
         if (!!transformations) {
             transformations();
         } else {
-            $("#main_board").empty();
-            $("#glasses").prependTo($("#main_board"));
+            $("#glasses").insertBefore($("#main_board"));
+            $("#main_board").remove();
 
-            $("#main_leaderboard").empty();
-            $("#leaderboard").prependTo($("#main_leaderboard"));
+            $("#leaderboard").insertBefore($("#main_leaderboard"));
+            $("#main_leaderboard").remove();
         }
 
         // because http://stackoverflow.com/questions/5085228/does-jquery-append-behave-asynchronously
@@ -65,7 +65,7 @@ function initLayout(gameName, pageName, contextPath, transformations, scriptSour
             }
             $.each(scriptSources, function(index, script) {
                 $("head").append('<script type="text/javascript" src="' +
-                        game.contextPath + 'resources/' + gameName + '/' + script +
+                        game.contextPath + '/resources/' + gameName + '/' + script +
                         '"></script>');
             });
             if (!!onPageLoad) {

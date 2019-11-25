@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,14 +25,12 @@ package com.codenjoy.dojo.battlecity.model;
 
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.Direction;
-import com.codenjoy.dojo.services.RandomDice;
 
 public class AITank extends Tank {
 
-    private final static Dice dice = new RandomDice();
     private int act;
 
-    public AITank(int x, int y, Direction direction) {
+    public AITank(int x, int y, Dice dice, Direction direction) {
         super(x, y, direction, dice, 1);
     }
 
@@ -50,7 +48,7 @@ public class AITank extends Tank {
             y = direction.changeY(getY());
 
             if (field.isBarrier(x, y)) {
-                direction = Direction.random();
+                direction = Direction.random(dice);
             }
         } while (field.isBarrier(x, y) && c++ < 10);
 

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,6 +23,8 @@ package com.codenjoy.dojo.services;
  */
 
 
+import static com.codenjoy.dojo.services.PointImpl.pt;
+
 public class LengthToXY { // TODO есть точно такой же в com.codenjoy.dojo.client; только вертикально зеркальный
     private int size;
 
@@ -34,7 +36,7 @@ public class LengthToXY { // TODO есть точно такой же в com.cod
         if (length == -1) {
             return null;
         }
-        return new PointImpl(length % size, size - 1 - length / size);
+        return pt(length % size, size - 1 - length / size);
     }
 
     public int getLength(int x, int y) {
@@ -72,7 +74,7 @@ public class LengthToXY { // TODO есть точно такой же в com.cod
         }
 
         public boolean isOutOf(int x, int y) {
-            return new PointImpl(x, y).isOutOf(getSize());
+            return pt(x, y).isOutOf(getSize());
         }
 
         public String getMap() {

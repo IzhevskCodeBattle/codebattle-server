@@ -4,7 +4,7 @@ package com.codenjoy.dojo.loderunner.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,61 +27,31 @@ import com.codenjoy.dojo.loderunner.services.Events;
 import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.services.EventListener;
 import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
 
-public class Player {
+public class Player extends GamePlayer<Hero, Field> {
 
-    private EventListener listener;
-    private int maxScore;
-    private int score;
     Hero hero;
 
     public Player(EventListener listener) {
-        this.listener = listener;
-        clearScore();
+        super(listener);
     }
 
-    private void increaseScore() {
-        score = score + 1;
-        maxScore = Math.max(maxScore, score);
-    }
-
-    public int getMaxScore() {
-        return maxScore;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    public void event(Events event) {
-        switch (event) {
-            case KILL_HERO: gameOver(); break;
-            case KILL_ENEMY: increaseScore(); break;
-            case GET_GOLD: break;
-        }
-
-        if (listener != null) {
-            listener.event(event);
-        }
-    }
-
-    private void gameOver() {
-        score = 0;
-    }
-
-    public void clearScore() {
-        score = 0;
-        maxScore = 0;
-    }
-
+    @Override
     public Hero getHero() {
         return hero;
     }
 
+    @Override
     public void newHero(Field field) {
         Point pt = field.getFreeRandom();
         hero = new Hero(pt, Direction.RIGHT);
         hero.init(field);
+    }
+
+    @Override
+    public boolean isAlive() {
+        return hero != null && hero.isAlive();
     }
 
 }

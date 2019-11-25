@@ -4,7 +4,7 @@ package com.codenjoy.dojo.fifteen.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,48 +22,36 @@ package com.codenjoy.dojo.fifteen.services;
  * #L%
  */
 
-import com.codenjoy.dojo.client.WebSocketRunner;
-import com.codenjoy.dojo.fifteen.client.ai.FifteenSolver;
+import com.codenjoy.dojo.client.ClientBoard;
+import com.codenjoy.dojo.client.Solver;
+import com.codenjoy.dojo.fifteen.client.Board;
+import com.codenjoy.dojo.fifteen.client.ai.AISolver;
 import com.codenjoy.dojo.fifteen.model.*;
 import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.hero.GameMode;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.MultiplayerType;
 import com.codenjoy.dojo.services.settings.Parameter;
 
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
 
-/**
- * Генератор игор - реализация {@see GameType}
- * Обрати внимание на {@see GameRunner#SINGLE} - там реализовано переключение в режимы "все на одном поле"/"каждый на своем поле"
- */
 public class GameRunner extends AbstractGameType implements GameType {
 
-    public final static boolean SINGLE = GameMode.NOT_SINGLE_MODE;
     private Level level;
-    private Fifteen game;
 
     public GameRunner() {
         new Scores(0, settings);
     }
 
-    private Fifteen newGame() {
-        level = new LevelImpl(new Randomizer().getRamdomMap(new RandomDice()));
-        return new Fifteen(level, new RandomDice());
+    @Override
+    public PlayerScores getPlayerScores(Object score) {
+        return new Scores((Integer) score, settings);
     }
 
     @Override
-    public PlayerScores getPlayerScores(int score) {
-        return new Scores(score, settings);
-    }
-
-    @Override
-    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
-        if (!SINGLE || game == null) {
-            game = newGame();
-        }
-
-        Game game = new Single(this.game, listener, factory);
-        game.newGame();
-        return game;
+    public GameField createGame(int levelNumber) {
+        level = new LevelImpl(new Randomizer().getRamdomMap(getDice()));
+        return new Fifteen(level, getDice());
     }
 
     @Override
@@ -82,13 +70,22 @@ public class GameRunner extends AbstractGameType implements GameType {
     }
 
     @Override
-    public boolean isSingleBoard() {
-        return SINGLE;
+    public Class<? extends Solver> getAI() {
+        return AISolver.class;
     }
 
     @Override
-    public boolean newAI(String aiName) {
-        FifteenSolver.start(aiName, WebSocketRunner.Host.REMOTE_LOCAL);
-        return true;
+    public Class<? extends ClientBoard> getBoard() {
+        return Board.class;
+    }
+
+    @Override
+    public MultiplayerType getMultiplayerType() {
+        return MultiplayerType.SINGLE;
+    }
+
+    @Override
+    public GamePlayer createPlayer(EventListener listener, String playerName) {
+        return new Player(listener);
     }
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,6 +23,9 @@ package com.codenjoy.dojo.services;
  */
 
 
+import com.codenjoy.dojo.services.multiplayer.LevelProgress;
+import lombok.SneakyThrows;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -47,6 +50,7 @@ public class InformationCollectorTest {
     @Before
     public void setup() {
         playerScores = mock(PlayerScores.class);
+        when(playerScores.getScore()).thenReturn(0);
         collector = new InformationCollector(playerScores);
     }
 
@@ -63,12 +67,18 @@ public class InformationCollectorTest {
     }
 
     private void levelChanged(int levelNumber) {
-        collector.levelChanged(levelNumber, null);
+        collector.levelChanged(new LevelProgress(levelNumber + 1, levelNumber, levelNumber - 1));
     }
 
     @Test
     public void shouldFIFOQueue() {
-        when(playerScores.getScore()).thenReturn(0).thenReturn(1).thenReturn(0).thenReturn(2).thenReturn(0).thenReturn(3);
+        when(playerScores.getScore())
+                .thenReturn(0)
+                .thenReturn(1)
+                .thenReturn(0)
+                .thenReturn(2)
+                .thenReturn(0)
+                .thenReturn(3);
 
         snakeEatApple();
         snakeEatStone();
@@ -80,8 +90,37 @@ public class InformationCollectorTest {
     }
 
     @Test
+    public void shouldFIFOQueue_ifJsonObject() {
+        when(playerScores.getScore())
+                .thenReturn(json(0))
+                .thenReturn(json(1))
+                .thenReturn(json(0))
+                .thenReturn(json(2))
+                .thenReturn(json(0))
+                .thenReturn(json(3));
+
+        snakeEatApple();
+        snakeEatStone();
+        snakeIsDead();
+        levelChanged(4 - 1);
+
+        assertEquals("+1, +2, +3, Level 4", collector.getMessage());
+        assertNull(collector.getMessage());
+    }
+
+    private JSONObject json(int score) {
+        return new JSONObject(String.format("{'score':%s}", score));
+    }
+
+    @Test
     public void shouldFIFOQueueButWhenPresentInformationAboutLevelChangedThenReturnItLast() {
-        when(playerScores.getScore()).thenReturn(0).thenReturn(1).thenReturn(0).thenReturn(2).thenReturn(0).thenReturn(3);
+        when(playerScores.getScore())
+                .thenReturn(0)
+                .thenReturn(1)
+                .thenReturn(0)
+                .thenReturn(2)
+                .thenReturn(0)
+                .thenReturn(3);
 
         snakeEatApple();
         levelChanged(4 - 1);
@@ -141,6 +180,17 @@ public class InformationCollectorTest {
         snakeIsDead();
 
         assertEquals("-10, -3", collector.getMessage());
+        assertNull(collector.getMessage());
+    }
+
+    @Test
+    public void shouldPrintCustomMessage() {
+        collector.event(new CustomMessage("3"));
+        collector.event(new CustomMessage("2"));
+        collector.event(new CustomMessage("1"));
+        collector.event(new CustomMessage("Fight!!!"));
+
+        assertEquals("3, 2, 1, Fight!!!", collector.getMessage());
         assertNull(collector.getMessage());
     }
 

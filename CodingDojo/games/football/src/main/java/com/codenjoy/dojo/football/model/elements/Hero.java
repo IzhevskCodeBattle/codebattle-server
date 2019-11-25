@@ -4,7 +4,7 @@ package com.codenjoy.dojo.football.model.elements;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,28 +26,27 @@ import com.codenjoy.dojo.football.model.Actions;
 import com.codenjoy.dojo.football.model.Elements;
 import com.codenjoy.dojo.football.model.Field;
 import com.codenjoy.dojo.football.model.Player;
-import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.Direction;
+import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.State;
+import com.codenjoy.dojo.services.multiplayer.PlayerHero;
+import org.apache.commons.lang3.StringUtils;
 
-/**
- * Это реализация героя. Обрати внимание, что он имплементит {@see Joystick}, а значит может быть управляем фреймворком
- * Так же он имплементит {@see Tickable}, что значит - есть возможность его оповещать о каждом тике игры.
- */
-public class Hero extends PointImpl implements Joystick, Tickable, State<Elements, Player> {
+public class Hero extends PlayerHero<Field> implements State<Elements, Player> {
 
-    private Field field;
     private Ball ball;
     private Direction direction;
-	private String team;
+    private String team;
 
     public Hero(Point xy) {
-    	super(xy);
+        super(xy);
         direction = null;
     }
 
-	public void init(Field field) {
-        this.field = field;
+    public void init(Field field) {
+        super.init(field);
         this.ball = field.getBall(x, y);
-	}
+    }
 
     @Override
     public void down() {
@@ -71,66 +70,52 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
 
     @Override
     public void act(int... p) {
-    	int action = 0;
-    	int param1 = 0;
-    	//int param2 = 0;
-    	if(p.length > 0) {
-    		action = p[0];
-    	}
-    	if(p.length > 1) {
-    		param1 = p[1];
-    	}
-    	/*if(p.length > 1) {
-    		param2 = p[2];
-    	}*/
-    	//for(int action : p) {
-    		
-    		if(action == Actions.HIT_RIGHT.getValue()) {
-    			if (ball != null) {
-    				//ball.setImpulse(COUNTER);
-    				if(param1 == 0) param1 = 1;
-    				ball.right(param1);
-    			}
-    		} else if(action == Actions.HIT_UP.getValue()) {
-    			if (ball != null) {
-    				//ball.setImpulse(COUNTER);
-    				if(param1 == 0) param1 = 1;
-    				ball.up(param1);
-    			}
-    		} else if(action == Actions.HIT_LEFT.getValue()) {
-    			if (ball != null) {
-    				//ball.setImpulse(COUNTER);
-    				if(param1 == 0) param1 = 1;
-    				ball.left(param1);
-    			}
-    		} else if(action == Actions.HIT_DOWN.getValue()) {
-    			if (ball != null) {
-    				//ball.setImpulse(COUNTER);
-    				if(param1 == 0) param1 = 1;
-    				ball.down(param1);
-    			}
-    		} else if(action == Actions.STOP_BALL.getValue()) {
-    			if (ball != null) {
-    				ball.stop();
-    			}
-    		}
-    		
-    	//}
-        
-    }
-
-	@Override
-	public void message(String command) {
-		// do nothing, this should never happen
-	}
-
-    public Direction getDirection() {
-        return direction;
+        int action = 0;
+        int param1 = 0;
+        //int param2 = 0;
+        if(p.length > 0) {
+            action = p[0];
+        }
+        if(p.length > 1) {
+            param1 = p[1];
+        }
+        /*if(p.length > 1) {
+            param2 = p[2];
+        }*/
+        //for(int action : p) {
+            
+            if(action == Actions.HIT_RIGHT.getValue()) {
+                if (ball != null) {
+                    //ball.setImpulse(COUNTER);
+                    if(param1 == 0) param1 = 1;
+                    ball.right(param1);
+                }
+            } else if(action == Actions.HIT_UP.getValue()) {
+                if (ball != null) {
+                    //ball.setImpulse(COUNTER);
+                    if(param1 == 0) param1 = 1;
+                    ball.up(param1);
+                }
+            } else if(action == Actions.HIT_LEFT.getValue()) {
+                if (ball != null) {
+                    //ball.setImpulse(COUNTER);
+                    if(param1 == 0) param1 = 1;
+                    ball.left(param1);
+                }
+            } else if(action == Actions.HIT_DOWN.getValue()) {
+                if (ball != null) {
+                    if(param1 == 0) param1 = 1;
+                    ball.down(param1);
+                }
+            } else if(action == Actions.STOP_BALL.getValue()) {
+                if (ball != null) {
+                    ball.stop();
+                }
+            }
     }
 
     @Override
     public void tick() {
-
         if (direction != null) {
             int newX = direction.changeX(x);
             int newY = direction.changeY(y);
@@ -145,46 +130,46 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
 
     public boolean isWithBall() {
         if (ball == null) {
-        	return false;
+            return false;
         } else {
-        	return true;
+            return true;
         }
     }
 
     @Override
     public Elements state(Player player, Object... alsoAtPoint) {
-    	Hero playersHero = player.getHero();
-		if (playersHero == this){
-	    	if (isWithBall()) {
-	            return Elements.HERO_W_BALL;
-	        } else {
-	        	return Elements.HERO;
-	        }
-    	} else if (playersHero.getTeam() == team){
-			if (!isWithBall()) {
-	            return Elements.TEAM_MEMBER;
-	        } else {
-	        	return Elements.TEAM_MEMBER_W_BALL;
-	        }
-    	} else {//if (playersHero.getTeam() != team){
-			if (!isWithBall()) {
-	            return Elements.ENEMY;
-	        } else {
-	        	return Elements.ENEMY_W_BALL;
-	        }
-    	}
+        Hero playersHero = player.getHero();
+        if (playersHero == this){
+            if (isWithBall()) {
+                return Elements.HERO_W_BALL;
+            } else {
+                return Elements.HERO;
+            }
+        } else if (StringUtils.equals(playersHero.getTeam(), team)){
+            if (!isWithBall()) {
+                return Elements.TEAM_MEMBER;
+            } else {
+                return Elements.TEAM_MEMBER_W_BALL;
+            }
+        } else {//if (playersHero.getTeam() != team){
+            if (!isWithBall()) {
+                return Elements.ENEMY;
+            } else {
+                return Elements.ENEMY_W_BALL;
+            }
+        }
     }
 
-	public void setBall(Ball ball) {
-		this.ball = ball;
-	}
+    public void setBall(Ball ball) {
+        this.ball = ball;
+    }
 
-	public String getTeam() {
-		return team;
-	}
+    public String getTeam() {
+        return team;
+    }
 
-	public void setTeam(String team) {
-		this.team = team;
-	}
+    public void setTeam(String team) {
+        this.team = team;
+    }
 
 }

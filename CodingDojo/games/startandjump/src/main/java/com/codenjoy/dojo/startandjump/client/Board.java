@@ -4,7 +4,7 @@ package com.codenjoy.dojo.startandjump.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -38,7 +38,7 @@ public class Board extends AbstractBoard<Elements> {
         return Elements.valueOf(ch);
     }
 
-    // TODO
+    // TODO закончить
 //    public boolean isBarrierAt(int x, int y) {
 //        return isAt(x, y, Elements.WALL);
 //    }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.web.controller;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,9 +23,13 @@ package com.codenjoy.dojo.web.controller;
  */
 
 
-import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.Joystick;
+import com.codenjoy.dojo.services.Player;
+import com.codenjoy.dojo.services.PlayerCommand;
+import com.codenjoy.dojo.services.PlayerService;
 import com.codenjoy.dojo.services.dao.Registration;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.codenjoy.dojo.services.nullobj.NullPlayer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -33,17 +37,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/joystick")
+@RequiredArgsConstructor
 public class JoystickController {
 
-    @Autowired private Registration registration;
-    @Autowired private PlayerService playerService;
+    private final Registration registration;
+    private final PlayerService playerService;
+    private final Validator validator;
 
     @RequestMapping(method = RequestMethod.GET)
     public String joystick(@RequestParam("playerName") String playerName,
                            @RequestParam("code") String code,
                            @RequestParam("command") String command)
     {
-        Player registeredPlayer = playerService.get(registration.getEmail(code));
+        validator.checkCommand(command);
+        String playerId = validator.checkPlayerCode(playerName, code);
+
+        Player registeredPlayer = playerService.get(playerId);
         if (registeredPlayer == NullPlayer.INSTANCE || !registeredPlayer.getName().equals(playerName)) {
             return "fail";
         }

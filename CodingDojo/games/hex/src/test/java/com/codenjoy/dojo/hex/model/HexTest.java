@@ -4,7 +4,7 @@ package com.codenjoy.dojo.hex.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,13 +25,15 @@ package com.codenjoy.dojo.hex.model;
 
 import com.codenjoy.dojo.hex.services.Event;
 import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
-import static junit.framework.Assert.*;
-import static org.mockito.Matchers.anyInt;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 /**
@@ -83,7 +85,7 @@ public class HexTest {
 
     private void setupPlayer1() {
         listener1 = mock(EventListener.class);
-        player1 = new Player(listener1, game);
+        player1 = new Player(listener1);
         joystick1 = player1.getJoystick();
 
         dice(hero1.getX(), hero1.getY());
@@ -93,7 +95,7 @@ public class HexTest {
 
     private void setupPlayer2() {
         listener2 = mock(EventListener.class);
-        player2 = new Player(listener2, game);
+        player2 = new Player(listener2);
         joystick2 = player2.getJoystick();
 
         dice(hero2.getX(), hero2.getY());

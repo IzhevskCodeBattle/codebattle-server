@@ -4,7 +4,7 @@ package com.codenjoy.dojo.moebius.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,60 +24,59 @@ package com.codenjoy.dojo.moebius.model;
 
 
 import com.codenjoy.dojo.moebius.services.Events;
-import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.joystick.ActJoystick;
+import com.codenjoy.dojo.services.BoardUtils;
+import com.codenjoy.dojo.services.Dice;
+import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.printer.BoardReader;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import static com.codenjoy.dojo.services.PointImpl.pt;
+import static com.codenjoy.dojo.services.BoardUtils.NO_SPACE;
 
-public class Moebius implements Tickable, Field {
+public class Moebius implements Field {
 
     private List<Line> lines;
-
     private final Level level;
     private int size;
     private Dice dice;
-    private final EventListener listener;
-    private boolean alive;
+    private Player player;
 
-    private Point act;
-
-    public Moebius(Level level, Dice dice, EventListener listener) {
+    public Moebius(Level level, Dice dice) {
         this.dice = dice;
-        this.listener = listener;
         this.level = level;
-        newGame(null);
+        this.size = level.getSize();
     }
 
     @Override
     public void tick() {
-        if (act != null) {
+        Point act = player.getHero();
+        if (!act.isOutOf(size)) {
             int index = lines.indexOf(act);
-            if (index == -1) return;
-
-            Line line = lines.get(index);
-            line.rotate();
+            if (index != -1) {
+                Line line = lines.get(index);
+                line.rotate();
+            } else {
+                // do nothing
+                // TODO test me
+            }
         }
 
         removePipes();
 
         Point pt = getFreeRandom();
-        if (pt == null) {
-            listener.event(new Events(Events.Event.GAME_OVER));
-            alive = false;
+        if (pt.equals(NO_SPACE)) {
+            player.event(new Events(Events.Event.GAME_OVER));
+            player.getHero().die();
         } else {
             setLine(pt, Elements.random(dice));
         }
-
-        act = null;
     }
 
     private void removePipes() {
-        Queue<Line> processing = new LinkedList<Line>(lines);
+        Queue<Line> processing = new LinkedList<>(lines);
         do {
             Line line = processing.remove();
 
@@ -94,12 +93,12 @@ public class Moebius implements Tickable, Field {
                     count++;
                 }
             }
-            listener.event(new Events(Events.Event.WIN, count));
+            player.event(new Events(Events.Event.WIN, count));
         } while (!processing.isEmpty());
     }
 
     private List<Line> checkCycle(Line start) {
-        List<Line> result = new LinkedList<Line>();
+        List<Line> result = new LinkedList<>();
 
         Line one = start;
         Line two = getLine(one.to());
@@ -135,25 +134,10 @@ public class Moebius implements Tickable, Field {
         return null;
     }
 
-    public int size() {
-        return size;
-    }
-
     @Override
     public Point getFreeRandom() {
-        Point pt;
-        int c = 0;
-        do {
-            int rndX = dice.next(size);
-            int rndY = size - 1 - dice.next(size); // TODO надо избавиться от этого зеркалирования везде во всех играх
-            pt = pt(rndX, rndY);
-        } while ((pt.isOutOf(1, 1, size) || !isFree(pt)) && c++ < 100);
-
-        if (c >= 100) {
-            return null;
-        }
-
-        return pt;
+        return BoardUtils.getFreeRandom(size, dice,
+                pt -> !pt.isOutOf(1, 1, size) && isFree(pt));
     }
 
     @Override
@@ -173,17 +157,23 @@ public class Moebius implements Tickable, Field {
         return lines.remove(pt);
     }
 
+    @Override
     public void newGame(Player player) {
-        size = level.getSize();
+        this.player = player;
         lines = level.getLines();
-        act = null;
-        alive = true;
+        player.newHero(this);
+    }
+
+    @Override
+    public void remove(Player player) {
+        this.player = null;
     }
 
     public List<Line> getLines() {
         return lines;
     }
 
+    @Override
     public BoardReader reader() {
         return new BoardReader() {
             private int size = Moebius.this.size;
@@ -195,34 +185,11 @@ public class Moebius implements Tickable, Field {
 
             @Override
             public Iterable<? extends Point> elements() {
-                List<Point> result = new LinkedList<Point>();
-                result.addAll(Moebius.this.getLines());
-                return result;
+                return new LinkedList<Point>(){{
+                    addAll(Moebius.this.getLines());
+                }};
             }
         };
     }
 
-    @Override
-    public boolean isGameOver() {
-        return !alive;
-    }
-
-    public Joystick getJoystick() {
-        return new ActJoystick() {
-            @Override
-            public void act(int... p) {
-                if (p == null || p.length != 2) return;
-
-                int x = p[0];
-                int y = size - 1 - p[1]; // TODO а че тут надо зеркалировать?
-
-                act = new PointImpl(x, y);
-                // TODO validate out of box
-            }
-        };
-    }
-
-    public Point getSelected() {
-        return act;
-    }
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.quake2d.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,7 +22,7 @@ package com.codenjoy.dojo.quake2d.model;
  * #L%
  */
 
-import com.codenjoy.dojo.services.CharElements;
+import com.codenjoy.dojo.services.printer.CharElements;
 
 /**
  * Тут указана легенда всех возможных объектов на поле и их состояний.
@@ -30,19 +30,19 @@ import com.codenjoy.dojo.services.CharElements;
  */
 public enum Elements implements CharElements {
 
-    NONE(' '),       // например это пустое место, куда можно перейти герою
-    WALL('☼'),       // а это стенка, через которую я хочу чтобы проходить нельзя было
-    HERO('☺'),       // а это мой герой
+    NONE(' '),             // например это пустое место, куда можно перейти герою
+    WALL('☼'),             // а это стенка, через которую я хочу чтобы проходить нельзя было
+    HERO('☺'),             // а это мой герой
     SUPER_OTHER_HERO('Š'), // это герои других игроков
-    BULLET('*'),       // а это наша пуля
-    OTHER_HERO('☻'), // это герои других игроков
-    DEAD_HERO('X'), // а это временное явление - трупик моего героя, которое пропадет в следующем такте
-    SUPER_DEFENCE('#'), // доп защита
-    HEALTH_PACKAGE('+'), // доп защита
-    SUPER_ATTACK('~'), // доп атака
-    ROBOT('!');         // робот
-//    GOLD('$'),       // это то, за чем будет охота
-//    BOMB('x');       // а это бомба, на которой можно подорваться
+    BULLET('*'),           // а это наша пуля
+    OTHER_HERO('☻'),       // это герои других игроков
+    DEAD_HERO('X'),        // а это временное явление - трупик моего героя, которое пропадет в следующем такте
+    SUPER_DEFENCE('#'),    // доп защита
+    HEALTH_PACKAGE('+'),   // доп защита
+    SUPER_ATTACK('~'),     // доп атака
+    ROBOT('!');            // робот
+//    GOLD('$'),           // это то, за чем будет охота
+//    BOMB('x');           // а это бомба, на которой можно подорваться
 
     final char ch;
 

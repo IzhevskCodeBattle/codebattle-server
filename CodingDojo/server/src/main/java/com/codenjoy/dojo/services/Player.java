@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,31 +23,55 @@ package com.codenjoy.dojo.services;
  */
 
 
+import com.codenjoy.dojo.client.Closeable;
+import com.codenjoy.dojo.services.nullobj.NullPlayer;
+import com.codenjoy.dojo.services.nullobj.NullPlayerGame;
 import com.codenjoy.dojo.transport.screen.ScreenRecipient;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import lombok.experimental.Wither;
+import org.apache.commons.lang3.StringUtils;
 
-public class Player implements ScreenRecipient {
+import static com.codenjoy.dojo.services.GameServiceImpl.removeNumbers;
+
+@Getter
+@Setter
+@Accessors(chain = true)
+@Wither
+@NoArgsConstructor
+@AllArgsConstructor
+public class Player implements ScreenRecipient, Closeable {
+
+    public static final Player ANONYMOUS = new Player("anonymous");
 
     private String name;
+    private String email;
+    private String readableName;
     private String code;
     private String data;
     private String callbackUrl;
-    private Protocol protocol;
     private String gameName;
     private String password;
+    private String passwordConfirmation;
     private PlayerScores scores;
     private Information info;
     private GameType gameType;
+    private InformationCollector eventListener;
+    private Closeable ai;
 
-    public Player() {
+    public Player(String name) {
+        this.name = name;
     }
 
-    public Player(String name, String callbackUrl, GameType gameType, PlayerScores scores, Information info, Protocol protocol) {
+    public Player(String name, String callbackUrl, GameType gameType, PlayerScores scores, Information info) {
         this.name = name;
         this.callbackUrl = callbackUrl;
         this.gameType = gameType;
         this.scores = scores;
         this.info = info;
-        this.protocol = protocol;
     }
 
     public GameType getGameType() {
@@ -62,6 +86,10 @@ public class Player implements ScreenRecipient {
         if (o instanceof Player) {
             Player p = (Player)o;
 
+            if (p.name == null) {
+                return name == null;
+            }
+
             return (p.name.equals(name));
         }
 
@@ -74,86 +102,95 @@ public class Player implements ScreenRecipient {
         return false;
     }
 
-    public void setGameName(String gameName) {
-        this.gameName = gameName;
-    }
-
     @Override
     public int hashCode() {
         return (name + code).hashCode();
     }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getCallbackUrl() {
-        return callbackUrl;
-    }
-
-    public void setCallbackUrl(String callbackUrl) {
-        this.callbackUrl = callbackUrl;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        return name;
+    
+    public String getNotNullReadableName() {
+        return StringUtils.isEmpty(readableName) ? name : readableName;
     }
 
     public int clearScore() {
         return scores.clear();
     }
 
-    public int getScore() {
-        return scores.getScore();
+    public Object getScore() {
+        return (scores != null) ? scores.getScore() : null;
+    }
+
+    // TODO this method is only for admin save player score
+    public void setScore(Object score) {
+        initScores();
+        this.scores.update(score);
+    }
+
+    void initScores() {
+        if (scores == null) {
+            scores = new PlayerScores() {
+                int score;
+
+                @Override
+                public Object getScore() {
+                    return score;
+                }
+
+                @Override
+                public int clear() {
+                    return score = 0;
+                }
+
+                @Override
+                public void update(Object score) {
+                    this.score = Integer.valueOf(score.toString());
+                }
+
+                @Override
+                public void event(Object event) {
+
+                }
+            };
+        }
     }
 
     public String getMessage() {
         return info.getMessage();
     }
 
-    public int getCurrentLevel() {
-        return 0;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public Protocol getProtocol() {
-        return protocol;
-    }
-
-    public void setProtocol(Protocol protocol) {
-        this.protocol = protocol;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
     public String getGameName() {
-        return (gameType != null)?gameType.name():gameName;
+        return (gameType != null) ? gameType.name() : gameName;
     }
 
-    public String getPassword() {
-        return password;
+    // TODO test me
+    public String getGameNameOnly() {
+        return removeNumbers(getGameName());
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public InformationCollector getEventListener() {
+        return eventListener;
     }
 
-    public String getData() {
-        return data;
+    public void setGameType(GameType gameType) {
+        this.gameType = gameType;
     }
 
-    public void setData(String data) {
-        this.data = data;
+    public void setAI(Closeable ai) {
+        this.ai = ai;
     }
 
+    @Override
+    public void close() {
+        if (ai != null) {
+            ai.close();
+        }
+    }
+
+    public boolean hasAI() {
+        return ai != null;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

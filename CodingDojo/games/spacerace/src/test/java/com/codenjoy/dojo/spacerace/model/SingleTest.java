@@ -4,7 +4,7 @@ package com.codenjoy.dojo.spacerace.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,40 +22,37 @@ package com.codenjoy.dojo.spacerace.model;
  * #L%
  */
 
+import com.codenjoy.dojo.services.Game;
+import com.codenjoy.dojo.services.multiplayer.Single;
 import com.codenjoy.dojo.spacerace.services.Events;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
-/**
- * User: sanja
- * Date: 19.12.13
- * Time: 5:22
- */
 public class SingleTest {
 
     private EventListener listener1;
     private EventListener listener2;
     private EventListener listener3;
-    private Single game1;
-    private Single game2;
-    private Single game3;
+    private Game game1;
+    private Game game2;
+    private Game game3;
     private EventListener listener4;
     private EventListener listener5;
     private EventListener listener6;
-    private Single game4;
-    private Single game5;
-    private Single game6;
+    private Game game4;
+    private Game game5;
+    private Game game6;
     private Dice dice;
+    private Spacerace field;
 
     // появляется другие игроки, игра становится мультипользовательской
     @Before
@@ -68,28 +65,34 @@ public class SingleTest {
                 "☼   ☼");
 
         dice = mock(Dice.class);
-        Spacerace spacerace = new Spacerace(level, dice,
+        field = new Spacerace(level, dice,
                 SpaceraceTest.getBulletCharger().getTicksToRecharge(),
                 SpaceraceTest.getBulletCharger().getBulletsCount());
         PrinterFactory factory = new PrinterFactoryImpl();
 
         listener1 = mock(EventListener.class);
-        game1 = new Single(spacerace, listener1, factory);
+        game1 = new Single(new Player(listener1), factory);
+        game1.on(field);
 
         listener2 = mock(EventListener.class);
-        game2 = new Single(spacerace, listener2, factory);
+        game2 = new Single(new Player(listener2), factory);
+        game2.on(field);
 
         listener3 = mock(EventListener.class);
-        game3 = new Single(spacerace, listener3, factory);
+        game3 = new Single(new Player(listener3), factory);
+        game3.on(field);
 
         listener4 = mock(EventListener.class);
-        game4 = new Single(spacerace, listener4, factory);
+        game4 = new Single(new Player(listener4), factory);
+        game4.on(field);
 
         listener5 = mock(EventListener.class);
-        game5 = new Single(spacerace, listener5, factory);
+        game5 = new Single(new Player(listener5), factory);
+        game5.on(field);
 
         listener6 = mock(EventListener.class);
-        game6 = new Single(spacerace, listener6, factory);
+        game6 = new Single(new Player(listener6), factory);
+        game6.on(field);
 
         dice(1, 0);
         game1.newGame();
@@ -151,7 +154,7 @@ public class SingleTest {
         game1.getJoystick().up();
         game3.getJoystick().up();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -163,7 +166,7 @@ public class SingleTest {
         game2.getJoystick().right();
         game3.getJoystick().left();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -175,9 +178,9 @@ public class SingleTest {
     // игроков можно удалять из игры
     @Test
     public void shouldRemove() {
-        game3.destroy();
+        game3.close();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -190,11 +193,11 @@ public class SingleTest {
     // привязать пули к игроку, и каждый получат очки за свое
     @Test
     public void shouldKillOneHeroAnother() {
-        game3.getPlayer().getHero().recharge();
+        ((Hero)game3.getPlayer().getHero()).recharge();
         game1.getJoystick().up();
         game2.getJoystick().up();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -205,7 +208,7 @@ public class SingleTest {
         game1.getJoystick().up();
         game2.getJoystick().up();
         game3.getJoystick().left();
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -215,7 +218,7 @@ public class SingleTest {
 
         dice(-1, -1);
         game3.getJoystick().act();
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -223,7 +226,7 @@ public class SingleTest {
                 "☼ * ☼\n" +
                 "☼ ☻ ☼\n");
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -240,7 +243,7 @@ public class SingleTest {
         dice(1, 0);
         game2.newGame();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -252,11 +255,11 @@ public class SingleTest {
     // если игрок идет на встречу булету, то он все равно должен погибать
     @Test
     public void shouldKillOneHeroAnother_caseGoOnBullet() {
-        game3.getPlayer().getHero().recharge();
+        ((Hero)game3.getPlayer().getHero()).recharge();
         game1.getJoystick().up();
         game2.getJoystick().up();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -267,7 +270,7 @@ public class SingleTest {
         game1.getJoystick().up();
         game2.getJoystick().up();
         game3.getJoystick().left();
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -278,7 +281,7 @@ public class SingleTest {
         dice(-1, -1);
         game3.getJoystick().act();
         game2.getJoystick().down();
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -295,7 +298,7 @@ public class SingleTest {
         dice(1, 0);
         game2.newGame();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -307,12 +310,12 @@ public class SingleTest {
     // если игрок идет на встречу булету, то он все равно должен погибать
     @Test
     public void shouldKillOneHeroAnother_caseGoOnBullet_case2() {
-        game3.getPlayer().getHero().recharge();
+        ((Hero)game3.getPlayer().getHero()).recharge();
         game1.getJoystick().up();
         game2.getJoystick().up();
         game3.getJoystick().up();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -322,7 +325,7 @@ public class SingleTest {
 
         game1.getJoystick().up();
         game2.getJoystick().up();
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -332,7 +335,7 @@ public class SingleTest {
 
         dice(-1, -1);
         game3.getJoystick().left();
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -342,7 +345,7 @@ public class SingleTest {
 
         game3.getJoystick().act();
         game2.getJoystick().up();
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼ ☻ ☼\n" +
@@ -351,7 +354,7 @@ public class SingleTest {
                 "☼   ☼\n");
 
         game2.getJoystick().down();
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -368,7 +371,7 @@ public class SingleTest {
         dice(1, 0);
         game2.newGame();
         dice(-1, -1);
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -384,7 +387,7 @@ public class SingleTest {
         game2.getJoystick().right();
         game3.getJoystick().left();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼   ☼\n" +
                 "☼   ☼\n" +
@@ -398,13 +401,13 @@ public class SingleTest {
     public void shodOneBulletPack() {
 
         dice(2, 1);
-        game1.tick();
+        field.tick();
         dice(-1, -1);
-        game1.tick();
+        field.tick();
         dice(-1, -1);
-        game1.tick();
+        field.tick();
         dice(1, 1);
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼  7☼\n" +
                 "☼   ☼\n" +
@@ -427,17 +430,17 @@ public class SingleTest {
         game6.newGame();
 
         dice(2, 1);// появляются 2 баллет пака
-        game1.tick();
+        field.tick();
         dice(1, 1);
-        game1.tick();
+        field.tick();
 
         dice(-1, -1);// не появляется камень и бомба
-        game1.tick();
+        field.tick();
         dice(-1, -1);
-        game1.tick();
+        field.tick();
 
         dice(0, 1);// не появляется 3-й баллет пак
-        game1.tick();
+        field.tick();
 
         asrtFl1("☼ 77☼\n" +
                 "☼   ☼\n" +

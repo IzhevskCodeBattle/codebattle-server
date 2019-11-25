@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,40 +24,42 @@ package com.codenjoy.dojo.services;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 @Component
-public class AutoSaver implements Tickable {
+public class AutoSaver extends Suspendable implements Tickable {
 
     public static final int TICKS = 30;
 
-    @Autowired
-    private SaveService saveService;
-
+    @Autowired private SaveService save;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
-
     private boolean justStart = true;
     private int count = 0;
 
+    @Value("${game.save.auto}")
+    public void setActive(boolean active) {
+        super.setActive(active);
+    }
+
     @Override
     public void tick() {
+        if (!active) {
+            return;
+        }
+
         if (justStart) {
             justStart = false;
-            saveService.loadAll();
+            save.loadAll();
+            java.awt.Toolkit.getDefaultToolkit().beep();
         } else {
             count++;
             if (count % TICKS == (TICKS - 1)) {
                 // executor.submit потому что sqlite тормозит при сохранении
-                executor.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        saveService.saveAll();
-                    }
-                });
+                executor.submit(() -> save.saveAll());
             }
         }
     }

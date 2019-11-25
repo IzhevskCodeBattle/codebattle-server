@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,6 +24,7 @@ package com.codenjoy.dojo.snake.model;
 
 
 import com.codenjoy.dojo.services.Direction;
+import com.codenjoy.dojo.services.EventListener;
 import com.codenjoy.dojo.services.PointImpl;
 import com.codenjoy.dojo.snake.model.artifacts.EmptySpace;
 import com.codenjoy.dojo.snake.model.artifacts.Tail;
@@ -33,29 +34,30 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static com.codenjoy.dojo.services.PointImpl.pt;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-/**
- * User: oleksandr.baglai
- * Date: 3/10/13
- * Time: 2:51 PM
- */
 public class DirectionTest {
 
     private Field board;
     private Hero snake;
+    private EventListener listener;
 
     @Before
     public void setup() {
         board = mock(Field.class);
         when(board.getSize()).thenReturn(100);
-        when(board.getAt(any(PointImpl.class))).thenReturn(new EmptySpace(new PointImpl(0, 0)));
+        when(board.getAt(any(PointImpl.class))).thenReturn(new EmptySpace(pt(0, 0)));
 
         snake = new Hero(50, 50);
+        when(board.createSnake()).thenReturn(snake);
+        listener = mock(EventListener.class);
+        Player player = new Player(listener);
+        player.newHero(board);
     }
 
     @Test

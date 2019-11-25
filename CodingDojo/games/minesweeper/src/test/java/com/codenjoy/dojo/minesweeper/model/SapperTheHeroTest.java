@@ -4,7 +4,7 @@ package com.codenjoy.dojo.minesweeper.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,16 +24,18 @@ package com.codenjoy.dojo.minesweeper.model;
 
 
 import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.services.settings.Parameter;
-import com.codenjoy.dojo.services.settings.SimpleParameter;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.codenjoy.dojo.services.PointImpl.pt;
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
-import static junit.framework.Assert.*;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -53,9 +55,9 @@ public class SapperTheHeroTest {
 
     @Before
     public void gameStart() {
-        board = new Minesweeper(v(BOARD_SIZE), v(MINES_COUNT), v(CHARGE_COUNT), NO_MINES, listener, printer);
-        board.newGame();
-        sapper = board.getSapper();
+        board = new Minesweeper(v(BOARD_SIZE), v(MINES_COUNT), v(CHARGE_COUNT), NO_MINES);
+        board.newGame(new Player(listener));
+        sapper = board.sapper();
         mines = board.getMines();
         listener = mock(EventListener.class);
     }
@@ -81,27 +83,27 @@ public class SapperTheHeroTest {
     @Test
     public void shouldBoardSizeMoreThanOne_whenGameStart() {
         Parameter<Integer> boardSize = v(0);
-        new Minesweeper(boardSize, v(MINES_COUNT), v(CHARGE_COUNT), NO_MINES, listener, printer).newGame();
+        new Minesweeper(boardSize, v(MINES_COUNT), v(CHARGE_COUNT), NO_MINES).newGame(new Player(listener));
         assertEquals(5, boardSize.getValue().intValue());
     }
 
     @Test
     public void shouldMinesCountLessThenAllCells_whenGameStart() {
         Parameter<Integer> minesCount = v(100);
-        new Minesweeper(v(2), minesCount, v(CHARGE_COUNT), NO_MINES, listener, printer).newGame();
+        new Minesweeper(v(2), minesCount, v(CHARGE_COUNT), NO_MINES).newGame(new Player(listener));
         assertEquals(12, minesCount.getValue().intValue());
     }
 
     @Test
     public void shouldMineDetectorChargeMoreThanMines_whenGameStart() {
         Parameter<Integer> chargeCount = v(CHARGE_COUNT);
-        new Minesweeper(v(BOARD_SIZE), v(10), chargeCount, NO_MINES, listener, printer).newGame();;
+        new Minesweeper(v(BOARD_SIZE), v(10), chargeCount, NO_MINES).newGame(new Player(listener));
         assertEquals(10, chargeCount.getValue().intValue());
     }
 
     @Test
     public void shouldBoardSizeSpecify_whenGameStart() {
-        board = new Minesweeper(v(10), v(MINES_COUNT), v(CHARGE_COUNT), NO_MINES, listener, printer);
+        board = new Minesweeper(v(10), v(MINES_COUNT), v(CHARGE_COUNT), NO_MINES);
         assertEquals(10, board.size());
     }
 
@@ -122,7 +124,7 @@ public class SapperTheHeroTest {
 
     @Test
     public void shouldSapperBeAtBoardDefaultPosition() {
-        assertEquals(sapper, new PointImpl(1, 1));
+        assertEquals(sapper, pt(1, 1));
     }
 
     @Test
@@ -192,7 +194,7 @@ public class SapperTheHeroTest {
     }
 
     private void placeMineUpFromSapper() {
-        Point result = new PointImpl(sapper.getX(), sapper.getY() + 1);
+        Point result = pt(sapper.getX(), sapper.getY() + 1);
         if (!mines.contains(result)) {
             board.createMineOnPositionIfPossible(result);
         }
@@ -283,7 +285,7 @@ public class SapperTheHeroTest {
                 "☼***☼\n" +
                 "☼☺**☼\n" +
                 "☼ **☼\n" +
-                "☼☼☼☼☼\n", board.getBoardAsString());
+                "☼☼☼☼☼\n", getBoardAsString(board));
 
         board.useMineDetectorToGivenDirection(Direction.DOWN);
 //        board.useMineDetectorToGivenDirection(Direction.UP);  // there is bomb
@@ -295,7 +297,7 @@ public class SapperTheHeroTest {
                 "☼***☼\n" +
                 "☼1☺*☼\n" +
                 "☼‼**☼\n" +
-                "☼☼☼☼☼\n", board.getBoardAsString());
+                "☼☼☼☼☼\n", getBoardAsString(board));
 
         board.useMineDetectorToGivenDirection(Direction.DOWN);
         board.useMineDetectorToGivenDirection(Direction.UP);
@@ -307,7 +309,7 @@ public class SapperTheHeroTest {
                 "☼*‼*☼\n" +
                 "☼‼‼☺☼\n" +
                 "☼‼‼*☼\n" +
-                "☼☼☼☼☼\n", board.getBoardAsString());
+                "☼☼☼☼☼\n", getBoardAsString(board));
 
         board.useMineDetectorToGivenDirection(Direction.DOWN);
         board.useMineDetectorToGivenDirection(Direction.UP);
@@ -318,10 +320,16 @@ public class SapperTheHeroTest {
                 "☼☻‼‼☼\n" +
                 "☼‼‼☺☼\n" +
                 "☼‼‼‼☼\n" +
-                "☼☼☼☼☼\n", board.getBoardAsString());
+                "☼☼☼☼☼\n", getBoardAsString(board));
 
         assertFalse(sapper.isDead());
         assertTrue(board.isGameOver());
+    }
+
+    private String getBoardAsString(Field board) {
+        return (String) new PrinterFactoryImpl<Elements, Player>()
+                .getPrinter(board.reader(),
+                        new Player(listener)).print();
     }
 
 }

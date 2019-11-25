@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.settings;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -30,6 +30,7 @@ import java.util.List;
  * Для каждой константы (отличаются они по имени) будет создан враппер, который ты сможешь
  * проинитить значением по-умолчанию и в дальнейшем пользоваться в коде игры, заместь
  * непосредственного захардкодженного значения. Магия в том, что они отображатся на адмике после выбора твоей игры.
+ *
  * @see Parameter
  */
 public interface Settings {
@@ -45,16 +46,31 @@ public interface Settings {
      */
     Parameter<?> addEditBox(String name);
 
-    /**
-     * @deprecated Пока не реализовано
-     */
     Parameter<?> addSelect(String name, List<Object> strings);
 
     /**
-     * @deprecated Пока не реализовано
+     * @param name имя константы
+     * @return враппер над константой boolean типа
      */
     Parameter<Boolean> addCheckBox(String name);
 
 
-    Parameter<?> getParameter(String name);
+    <T> Parameter<T> getParameter(String name);
+
+    void removeParameter(String name);
+
+    /**
+     * @return true - если были изменения настроек
+     */
+    boolean changed();
+
+    /**
+     * @return Список имен параметров, которые поменялись
+     */
+    List<String> whatChanged();
+
+    /**
+     * Так ты сообщаешь что отреагировал на все изменения.
+     */
+    void changesReacted();
 }

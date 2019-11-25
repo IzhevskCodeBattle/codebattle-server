@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.dao;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,14 +23,16 @@ package com.codenjoy.dojo.services.dao;
  */
 
 
-import com.codenjoy.dojo.services.BoardLog;
-import com.codenjoy.dojo.services.Player;
-import com.codenjoy.dojo.services.PlayerGame;
-import com.codenjoy.dojo.services.PlayerGames;
-import com.codenjoy.dojo.services.jdbc.*;
-import org.springframework.stereotype.Component;
+import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.jdbc.ConnectionThreadPoolFactory;
+import com.codenjoy.dojo.services.jdbc.CrudConnectionThreadPool;
+import com.codenjoy.dojo.services.jdbc.JDBCTimeUtils;
+import org.springframework.beans.factory.annotation.Value;
 
-import java.sql.*;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -38,40 +40,31 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Component
-public class ActionLogger {
+public class ActionLogger extends Suspendable {
 
-    private final int ticksPerSave;
+    @Value("${board.save.ticks}")
+    private int ticks;
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
-    private Queue<BoardLog> cache = new ConcurrentLinkedQueue<BoardLog>();
+    private Queue<BoardLog> cache = new ConcurrentLinkedQueue<>();
     private int count;
-    private boolean active;
 
     private CrudConnectionThreadPool pool;
 
-    public ActionLogger(ConnectionThreadPoolFactory factory, int ticksPerSave) {
-        this.ticksPerSave = ticksPerSave;
+    public ActionLogger(ConnectionThreadPoolFactory factory) {
         pool = factory.create("CREATE TABLE IF NOT EXISTS player_boards (" +
                     "time varchar(255), " +
                     "player_name varchar(255), " +
                     "game_type varchar(255), " +
-                    "score int, " +
+                    "score varchar(255), " +
+                    "command varchar(255), " +
                     "board varchar(10000));");
         active = false;
         count = 0;
     }
 
-    public void pause() {
-        active = false;
-    }
-
-    public void resume() {
-        active = true;
-    }
-
-    public boolean isRecording() {
-        return active;
+    public void setTicks(int ticks) {
+        this.ticks = ticks;
     }
 
     void removeDatabase() {
@@ -79,74 +72,90 @@ public class ActionLogger {
     }
 
     public void saveToDB() {
-        pool.run(new For<Void>() {
-            @Override
-            public Void run(Connection connection) {
-                String sql = "INSERT INTO player_boards " +
-                        "(time, player_name, game_type, score, board) " +
-                        "VALUES (?,?,?,?,?);";
+        pool.run(connection -> {
+            String sql = "INSERT INTO player_boards " +
+                    "(time, player_name, game_type, score, command, board) " +
+                    "VALUES (?,?,?,?,?,?);";
 
-                BoardLog data = null;
-                try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-                    int size = cache.size();
-                    for (int i = 0; i < size; i++) {
-                        data = cache.poll();
-                        if (data == null) {
-                            break;
-                        }
-
-                        stmt.setString(1, JDBCTimeUtils.toString(new Date(data.getTime())));
-                        stmt.setString(2, data.getPlayerName());
-                        stmt.setString(3, data.getGameType());
-                        stmt.setInt(4, data.getScore());
-                        stmt.setString(5, data.getBoard());
-                        stmt.addBatch();
+            BoardLog data;
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                int size = cache.size();
+                for (int i = 0; i < size; i++) {
+                    data = cache.poll();
+                    if (data == null) {
+                        break;
                     }
-                    stmt.executeBatch();
-                } catch (SQLException e) {
-                    throw new RuntimeException("Error saving log", e);
+
+                    stmt.setString(1, JDBCTimeUtils.toString(new Date(data.getTime())));
+                    stmt.setString(2, data.getPlayerName());
+                    stmt.setString(3, data.getGameType());
+                    stmt.setString(4, data.getScore().toString());
+                    stmt.setString(5, data.getCommand());
+                    stmt.setString(6, data.getBoard());
+                    stmt.addBatch();
                 }
-                return null;
+                stmt.executeBatch();
+            } catch (SQLException e) {
+                throw new RuntimeException("Error saving log", e);
             }
+            return null;
         });
     }
 
     public void log(PlayerGames playerGames) {
         if (!active || playerGames.size() == 0) return;
 
-        long tick = System.currentTimeMillis();
+        long tick = now();
         for (PlayerGame playerGame : playerGames) {
             Player player = playerGame.getPlayer();
             cache.add(new BoardLog(tick,
                     player.getName(),
                     player.getGameName(),
                     player.getScore(),
-                    playerGame.getGame().getBoardAsString().toString()));
+                    playerGame.getGame().getBoardAsString().toString(),
+                    playerGame.popLastCommand()));
         }
 
-        if (count++ % ticksPerSave == 0) {
+        if (count++ % ticks == 0) {
             // executor.submit потому что sqlite тормозит при сохранении
-            executor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    saveToDB();
-                }
-            });
+            executor.submit(() -> saveToDB());
         }
+    }
+
+    protected long now() {
+        return System.currentTimeMillis();
     }
 
     public List<BoardLog> getAll() {
         return pool.select("SELECT * FROM player_boards;",
-                new ObjectMapper<List<BoardLog>>() {
-                    @Override
-                    public List<BoardLog> mapFor(ResultSet resultSet) throws SQLException {
-                        List<BoardLog> result = new LinkedList<BoardLog>();
-                        while (resultSet.next()) {
-                            result.add(new BoardLog(resultSet));
-                        }
-                        return result;
-                    }
+                rs -> getBoardLogs(rs));
+    }
+
+    private LinkedList<BoardLog> getBoardLogs(ResultSet rs) throws SQLException {
+        return new LinkedList<BoardLog>(){{
+                while (rs.next()) {
+                    add(new BoardLog(rs));
                 }
-        );
+            }};
+    }
+
+    // TODO test me
+    public long getLastTime(String player) {
+        return pool.select("SELECT MAX(time) AS time FROM player_boards WHERE player_name = ?;",
+                new Object[]{ player },
+                rs -> (rs.next()) ? JDBCTimeUtils.getTimeLong(rs) : 0);
+    }
+
+    // TODO test me
+    public List<BoardLog> getBoardLogsFor(String player, long time, int count) {
+        return pool.select(
+                    "SELECT * FROM (SELECT * FROM player_boards WHERE player_name = ? AND time <= ? ORDER BY time ASC LIMIT ?) AS before" +
+                    " UNION " +
+                    "SELECT * FROM (SELECT * FROM player_boards WHERE player_name = ? AND time > ? ORDER BY time ASC LIMIT ?) AS after;",
+                new Object[]{
+                    player, JDBCTimeUtils.toString(new java.util.Date(time)), count + 1,
+                    player, JDBCTimeUtils.toString(new java.util.Date(time)), count
+                },
+                rs -> getBoardLogs(rs));
     }
 }

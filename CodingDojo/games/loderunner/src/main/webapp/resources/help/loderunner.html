@@ -2,7 +2,7 @@
   #%L
   Codenjoy - it's a dojo-like platform from developers to developers.
   %%
-  Copyright (C) 2016 Codenjoy
+  Copyright (C) 2018 Codenjoy
   %%
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as
@@ -23,55 +23,77 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <title>Loderunner codenjoy — как играть? | Игры на работе</title>
-    <link href="files/style.css" media="all" type="text/css" rel="stylesheet">
+    <link href="../css/all.min.css" media="all" type="text/css" rel="stylesheet">
+    <link href="../css/custom.css" rel="stylesheet">
+
+    <script src="../js/all.min.js"></script>
 </head>
 <body style="background-color: white;"
       class="single single-post postid-170 single-format-standard logged-in admin-bar singular one-column content customize-support">
-<a target="_blank" href="https://github.com/codenjoyme"><img style="position: absolute; top: 0; right: 0; border: 0;z-index: 100;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"></a>
+<div id="settings" page="rules"></div>
+<a target="_blank" href="https://github.com/codenjoyme/codenjoy"><img style="position: absolute; top: 0; right: 0; border: 0;z-index: 100;" src="../../resources/img/fork-me.png" alt="Fork me on GitHub"></a>
 <div id="page" class="hfeed">
     <div id="main">
         <div id="primary">
             <div id="content" role="main">
-
-
                 <header class="entry-header">
                     <h1 class="entry-title">Loderunner codenjoy — как играть?</h1>
                 </header>
 
                 <div class="entry-content">
-                    <div class="page-restrict-output"><p>В принципе, игровой сервер доступен
-                        сейчас в целях ознакомления
-                        <a href="/codenjoy-contest">
-                            http://codenjoy.com/codenjoy-contest</a></p>
-                        <p>В чем суть игры?</p>
+                    <div class="page-restrict-output">
+                        <p>Игровой demo-сервер доступен так же в интернете 24/7
+                            в целях ознакомления <a href="http://codenjoy.com/codenjoy-contest">
+                                http://codenjoy.com/codenjoy-contest</a></p>
+
+                        <p>Игра с открытым исходным кодом. Для реализации своей игры, исправления
+                            ошибок в текущей и внесения других правок необходимо для начала
+                            <a href="https://github.com/codenjoyme/codenjoy">форкнуть проект</a>.
+                            В корне репозитория есть описание в файле Readme.md - там описано, что делать дальше.</p>
+
+                        <p>По возникающим вопросам, пиши в <a href="skype:alexander.baglay">skype:alexander.baglay</a>
+                            или на почту <a href="mailto:apofig@gmail.com">apofig@gmail.com</a></p>
+
+                        <h2>В чем суть игры?</h2>
+
                         <p>Надо написать своего бота для героя, который обыграет героев других
                             игроков по очкам. Все играют на одном поле.
                             Герой может передвигаться по свободным ячейкам во все четыре стороны.</p>
-						<p>Герой может вскарабкаться по лестнице (ввер/вниз), а так же передвигаться
+                        <p>Герой может вскарабкаться по лестнице (ввер/вниз), а так же передвигаться
                             по трубе (влево/вправо). С трубы можно спрыгнуть вниз. Герой падает до тех
                             пор, пока не приземлится. </p>
-						<p>На своем пути герой может повстречать золото и врага. За золото
+                        <p>На своем пути герой может повстречать золото и врага. За золото
                             герой получит бонусные очки. За врага - штрафные :).</p>
-						<p>Враг - это охотник, беленький бот, который следит за жертвой, пока
+                        <p>Враг - это охотник, беленький бот, который следит за жертвой, пока
                             ее не настигнет - в этот момент герой отправляется в байтовый рай. </p>
-						<p>Каждый игрок может просверлить ямку в разрушаемой стене (есть еще
+                        <p>Каждый игрок может просверлить ямку в разрушаемой стене (есть еще
                             неразрушаемые). Ямка со временем зарастает. Так можно спастись от охотника.</p>
                         <p>Штрафные очки так же предусмотрены за падение самого героя в свою
                             или чужую ямку из которой он не сможет выбраться.
                             Если ямка чужая - конкурент-участник получит очки. </p>
                         <p>Если просверленная ямка создает дыру в полу, то герой может пролететь
                             сквозь нее не застрявая.</p>
-						<p>Очки зарабатываются во время собирания золота и устранение конкурентов в ямках.</p>
+                        <p>Очки зарабатываются во время собирания золота и устранение конкурентов в ямках.</p>
                         <p>За каждую новую кучку золота герой получает немного больше очков,
                             чем за предыдущую. Счетчик сбрасывается при потере героя - выгодно
                             собирать золото и не терять героя. Очки суммируются. Побеждает игрок
                             с большим числом очков (до условленного времени).</p>
-                        <p>Итак, игрок регистрируется на сервере, указывая свой userName</p>
-                        <p>Далее необходимо подключиться <a href="/codenjoy-contest/resources/user/loderunner-servers.zip">из кода</a> к серверу через вебсокеты.
-                            Адрес для подключения к игре на сервере http://codenjoy.com:</p>
-                        <pre>ws://tetrisj.jvmhost.net:12270/codenjoy-contest/ws?user=userName</pre>
-                        <p>После этого клиент будет регулярно (каждую секунду) получать строку
-                            символов — с закодированным состоянием доски. Формат таков</p>
+
+                        <p>Итак, игрок <a href="register?gameName=loderunner">
+                            регистрируется на сервере</a>, указывая свой email</p>
+                        <p>Далее необходимо подключиться <a href="resources/user/loderunner-servers.zip">из кода</a>
+                            к серверу через вебсокеты. Это Maven проект и подойдет он для игры на JVM языках.
+                            Как его запустить смотри в корне проекта в файле README.txt</p>
+                        <p>Для других языков придется написать свой клиент (а после пошарить с нами на почту: apofig@gmail.com)</p>
+                        <p>Адрес для подключения к игре на сервере http://codenjoy.com:</p>
+                        <pre>ws://codenjoy.com:80/codenjoy-contest/ws?user=3edq63tw0bq4w4iem7nb&code=12345678901234567890</pre>
+                        <p>Адрес для подключения к игре на сервере, развернутом в локальной сети:</p>
+                        <pre>ws://server_ip:8080/codenjoy-contest/ws?user=3edq63tw0bq4w4iem7nb&code=12345678901234567890</pre>
+                        <p>Тут 'user' - id игрока, a 'code' - твой security token, его ты можешь получить из адресной
+                            строки браузера после регистрации/логина</p>
+                        <p>После подключения клиент будет регулярно (каждую секунду) получать строку
+                            символов — с закодированным состоянием поля. Формат таков</p>
+
                         <pre>^board=(.*)$</pre>
                         <p>с помощью этого regexp можно выкусить строку доски.
                             Вот пример строки от сервера:</p>
@@ -121,15 +143,15 @@
                         <p>Стена со временем зарастает. Когда процес начинается - мы видим таймер</p>
                         <pre>PIT_FILL("1234")</pre>
                         <p>Неразрушаемая стена - в ней ничего просверлить не получится</p>
-						<pre>UNDESTROYABLE_WALL('☼')</pre>
+                        <pre>UNDESTROYABLE_WALL('☼')</pre>
                         <p>В момент сверления мы видим процесс так</p>
                         <pre>DRILL_PIT('*')</pre>
                         <p>Золото - его надо собирать</p>
                         <pre>GOLD('$')</pre>
-						<p>Лестница и труба - по ним можно перемещаться по уровню</p>
+                        <p>Лестница и труба - по ним можно перемещаться по уровню</p>
                         <pre>LADDER('H')
-PIPE('~')</pre>			
-						<p>Твой герой в зависимости от того, чем он сейчас занят отображается
+PIPE('~')</pre>            
+                        <p>Твой герой в зависимости от того, чем он сейчас занят отображается
                             следующими символами</p>
                         <pre>HERO_DIE('Ѡ')
 HERO_DRILL_LEFT('Я')
@@ -154,7 +176,7 @@ ENEMY_LEFT('«')
 ENEMY_RIGHT('»')
 ENEMY_PIPE_LEFT('&lt;')
 ENEMY_PIPE_RIGHT('&gt;')
-ENEMY_PIT('X')</pre>			
+ENEMY_PIT('X')</pre>            
                         <p>Игра пошаговая, каждую секунду сервер посылает твоему клиенту (боту)
                             состояние обновленного поля на текущий момент и ожидает ответа команды
                             герою. За следующую секунду игрок должен успеть дать команду герою.
@@ -167,11 +189,13 @@ ENEMY_PIT('X')</pre>
                             не имеет значения - будет просверлена дырка слева. Если игрок будет
                             использовать только одну команду ACT то дырка просверлится в направлении,
                             куда смотрит герой. </p>
+                        <p>Если вдруг герой попал в ловушкуц и выбраться оттуда он не может -
+                            вызови команду ACT(0) и герой совершит акт суицида, после чего он
+                            появится в новом месте.</p>
                         <p>Первая задача – написать websocket клиента, который подключится к
                             серверу. Затем заставить героя слушаться команды. Таким образом,
                             игрок подготовится к основной игре. Основная задача – вести осмысленную
                             игру и победить.</p>
-                        <p>По возникающим вопросам, обращайтесь в skype: alexander.baglay</p>
                     </div>
                 </div>
             </div>

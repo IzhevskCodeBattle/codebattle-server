@@ -2,7 +2,7 @@
   #%L
   Codenjoy - it's a dojo-like platform from developers to developers.
   %%
-  Copyright (C) 2016 Codenjoy
+  Copyright (C) 2018 Codenjoy
   %%
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as
@@ -27,40 +27,28 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html;">
     <title>Codenjoy</title>
-    <script src="${ctx}/resources/js/google-analytics.js"></script>
 
-    <link href="${ctx}/resources/css/bootstrap.css" rel="stylesheet">
-    <script src="${ctx}/resources/js/jquery/jquery-3.1.0.js"></script>
-    <script src="${ctx}/resources/js/hotkeys.js"></script>
-    <script>
-        $(document).ready(function () {
-            initHotkeys('${gameName}', '${ctx}/');
-        });
-    </script>
+    <link href="${ctx}/resources/css/all.min.css" rel="stylesheet">
+    <link href="${ctx}/resources/css/custom.css" rel="stylesheet">
+    <jsp:include page="common-inclusion.jsp" />
 </head>
 <body>
+    <div id="settings" page="main" contextPath="${ctx}" gameName="${gameName}"></div>
     <%@include file="forkMe.jsp"%>
 
     <div class="page-header">
         <h1>Hi ${(user!=null)?user:ip}, please:</h1>
     </div>
-    <ol>
-        <li><a href="${ctx}/help">How to start</a></li>
-        <c:if test="${!registered}">
-        <li><a href="${ctx}/register">Register/Login</a></li>
-        </c:if>
-        <c:if test="${registered}">
-            <li><a href="${ctx}/register?remove_me&code=${code}">Unregister</a></li>
-        </c:if>
-        <li>Check game board</li>
-        <c:forEach items="${gameNames}" var="gameName">
-            - <a href="${ctx}/board/game/${gameName}">${gameName}</a></br>
-        </c:forEach>
-        <li>Active players</li>
-        <c:forEach items="${statistics}" var="data">
-            - <a href="${ctx}/board/player/${data.name}">${data.name}</a> ${data.score}</br>
-        </c:forEach>
-        </ol>
-    </div>
-<body>
+        <div><a href="${ctx}/help">How to start</a></div>
+        <div>Check game board</div>
+        <div>
+            <ul>
+            <c:forEach items="${gameNames}" var="gameName">
+                <li>
+                    <div>${gameName.value}: <a class="gameView" gameName="${gameName.key}" href="${ctx}/board/game/${gameName.key}?viewOnly=true">View</a> | <a id="rejoin-${gameName.key}" href="${ctx}/board/rejoining/${gameName.key}">Join</a></div>
+                </li>
+            </c:forEach>
+            </ul>
+        </div>
+</body>
 </html>

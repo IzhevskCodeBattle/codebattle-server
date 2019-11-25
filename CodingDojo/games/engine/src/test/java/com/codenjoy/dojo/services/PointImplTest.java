@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,19 +23,16 @@ package com.codenjoy.dojo.services;
  */
 
 
-import junit.framework.Assert;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static com.codenjoy.dojo.services.PointImpl.*;
 
 public class PointImplTest {
 
     @Test
     public void shouldSaveXY() {
-        Point pt = new PointImpl(10, 12);
+        Point pt = pt(10, 12);
 
         assertEquals(10, pt.getX());
         assertEquals(12, pt.getY());
@@ -43,7 +40,7 @@ public class PointImplTest {
 
     @Test
     public void shouldSaveXY_staticMethod() {
-        Point pt = PointImpl.pt(10, 12);
+        Point pt = pt(10, 12);
 
         assertEquals(10, pt.getX());
         assertEquals(12, pt.getY());
@@ -51,34 +48,34 @@ public class PointImplTest {
 
     @Test
     public void shouldPrintToString() {
-        Point pt = new PointImpl(10, 12);
+        Point pt = pt(10, 12);
 
         assertEquals("[10,12]", pt.toString());
     }
 
     @Test
      public void shouldCopyConstructor() {
-        Point pt = new PointImpl(new PointImpl(10, 12));
+        Point pt = new PointImpl(pt(10, 12));
 
         assertEquals("[10,12]", pt.toString());
     }
 
     @Test
     public void shouldItsMe() {
-        Point pt = new PointImpl(10, 12);
+        Point pt = pt(10, 12);
 
         assertTrue(pt.itsMe(10, 12));
         assertFalse(pt.itsMe(10 + 1, 12));
         assertFalse(pt.itsMe(10, 12 + 1));
 
-        assertTrue(pt.itsMe(new PointImpl(10, 12)));
-        assertFalse(pt.itsMe(new PointImpl(10 + 1, 12)));
-        assertFalse(pt.itsMe(new PointImpl(10, 12 + 1)));
+        assertTrue(pt.itsMe(pt(10, 12)));
+        assertFalse(pt.itsMe(pt(10 + 1, 12)));
+        assertFalse(pt.itsMe(pt(10, 12 + 1)));
     }
 
     @Test
     public void shouldIsOutOf_byY() {
-        Point pt = new PointImpl(10, 12);
+        Point pt = pt(10, 12);
 
         assertTrue(pt.isOutOf(9));
         assertTrue(pt.isOutOf(10));
@@ -90,7 +87,7 @@ public class PointImplTest {
 
     @Test
     public void shouldIsOutOf_byX() {
-        Point pt = new PointImpl(12, 10);
+        Point pt = pt(12, 10);
 
         assertTrue(pt.isOutOf(9));
         assertTrue(pt.isOutOf(10));
@@ -102,21 +99,21 @@ public class PointImplTest {
 
     @Test
     public void shouldIsOutOf_byYNegative() {
-        Point pt = new PointImpl(10, -12);
+        Point pt = pt(10, -12);
 
         assertTrue(pt.isOutOf(14));
     }
 
     @Test
     public void shouldIsOutOf_byXNegative() {
-        Point pt = new PointImpl(-12, 10);
+        Point pt = pt(-12, 10);
 
         assertTrue(pt.isOutOf(14));
     }
 
     @Test
     public void shouldIsOutOfDelta_from0() {
-        Point pt = new PointImpl(1, 5);
+        Point pt = pt(1, 5);
 
         assertFalse(pt.isOutOf(0, 0, 20));
         assertFalse(pt.isOutOf(1, 0, 20));
@@ -135,7 +132,7 @@ public class PointImplTest {
 
     @Test
     public void shouldIsOutOfDelta_fromSize() {
-        Point pt = new PointImpl(10, 15);
+        Point pt = pt(10, 15);
 
         assertFalse(pt.isOutOf(0, 0, 20));
         assertFalse(pt.isOutOf(0, 1, 20));
@@ -154,32 +151,32 @@ public class PointImplTest {
 
     @Test
     public void shouldDistance() {
-        Point pt = new PointImpl(10, 15);
+        Point pt = pt(10, 15);
 
-        assertEquals(0.0, pt.distance(new PointImpl(10, 15)));
-        assertEquals(11.180339887498949, pt.distance(new PointImpl(20, 20)));
+        assertEquals(0.0, pt.distance(pt(10, 15)), 0.001);
+        assertEquals(11.180339887498949, pt.distance(pt(20, 20)), 0.001);
     }
 
     @Test
     public void shouldEqualsAndHashCode() {
-        Point pt = new PointImpl(10, 15);
+        Point pt = pt(10, 15);
 
-        assertTrue(pt.equals(new PointImpl(10, 15)));
-        assertFalse(pt.equals(new PointImpl(10 + 1, 15)));
-        assertFalse(pt.equals(new PointImpl(10, 15 + 1)));
+        assertTrue(pt.equals(pt(10, 15)));
+        assertFalse(pt.equals(pt(10 + 1, 15)));
+        assertFalse(pt.equals(pt(10, 15 + 1)));
         assertFalse(pt.equals(null));
         assertFalse(pt.equals(new Object()));
 
-        assertEquals(pt.hashCode(), new PointImpl(10, 15).hashCode());
-        assertNotSame(pt.hashCode(), new PointImpl(10 + 1, 15).hashCode());
-        assertNotSame(pt.hashCode(), new PointImpl(10, 15 + 1).hashCode());
+        assertEquals(pt.hashCode(), pt(10, 15).hashCode());
+        assertNotSame(pt.hashCode(), pt(10 + 1, 15).hashCode());
+        assertNotSame(pt.hashCode(), pt(10, 15 + 1).hashCode());
     }
 
     @Test
     public void shouldMove() {
-        Point pt = new PointImpl(10, 15);
+        Point pt = pt(10, 15);
 
-        pt.move(new PointImpl(20, 23));
+        pt.move(pt(20, 23));
 
         assertEquals("[20,23]", pt.toString());
 
@@ -189,8 +186,30 @@ public class PointImplTest {
     }
 
     @Test
+    public void shouldDefaultConstructor() {
+        Point pt = new PointImpl();
+
+        assertEquals("[-1,-1]", pt.toString());
+    }
+
+    @Test
+    public void shouldSet() {
+        Point pt = pt(10, 15);
+
+        pt.setX(20);
+        pt.setY(23);
+
+        assertEquals("[20,23]", pt.toString());
+
+        pt.setX(40);
+        pt.setY(43);
+
+        assertEquals("[40,43]", pt.toString());
+    }
+
+    @Test
     public void shouldCopy() {
-        Point pt = new PointImpl(10, 15);
+        Point pt = pt(10, 15);
 
         Point pt2 = pt.copy();
         pt.move(1, 2);
@@ -201,29 +220,41 @@ public class PointImplTest {
 
     @Test
     public void shouldChange() {
-        Point pt = new PointImpl(10, 15);
+        Point pt = pt(10, 15);
 
-        pt.change(new PointImpl(12, -23));
+        pt.change(pt(12, -23));
 
         assertEquals("[22,-8]", pt.toString());
     }
 
     @Test
     public void shouldCompareTo() {
-        Point pt = new PointImpl(10, 15);
+        Point pt = pt(10, 15);
 
-        assertEquals(1, pt.compareTo(new PointImpl(10, 14)));
-        assertEquals(0, pt.compareTo(new PointImpl(10, 15)));
-        assertEquals(-1, pt.compareTo(new PointImpl(10, 16)));
+        assertEquals(1, pt.compareTo(pt(10, 14)));
+        assertEquals(0, pt.compareTo(pt(10, 15)));
+        assertEquals(-1, pt.compareTo(pt(10, 16)));
 
-        assertEquals(1, pt.compareTo(new PointImpl(9, 15)));
-        assertEquals(0, pt.compareTo(new PointImpl(10, 15)));
-        assertEquals(-1, pt.compareTo(new PointImpl(11, 15)));
+        assertEquals(1, pt.compareTo(pt(9, 15)));
+        assertEquals(0, pt.compareTo(pt(10, 15)));
+        assertEquals(-1, pt.compareTo(pt(11, 15)));
 
-        assertEquals(1, pt.compareTo(new PointImpl(9, 100)));
-        assertEquals(0, pt.compareTo(new PointImpl(10, 15)));
-        assertEquals(-1, pt.compareTo(new PointImpl(11, 1)));
+        assertEquals(1, pt.compareTo(pt(9, 100)));
+        assertEquals(0, pt.compareTo(pt(10, 15)));
+        assertEquals(-1, pt.compareTo(pt(11, 1)));
 
         assertEquals(-1, pt.compareTo(null));
+    }
+
+    @Test
+    public void shouldRelative() {
+        Point pt = pt(10, 15);
+
+        assertEquals("[9,14]", pt.relative(pt(1, 1)).toString());
+        assertEquals("[8,14]", pt.relative(pt(2, 1)).toString());
+        assertEquals("[9,13]", pt.relative(pt(1, 2)).toString());
+        assertEquals("[11,16]", pt.relative(pt(-1, -1)).toString());
+        assertEquals("[10,15]", pt.relative(pt(0, 0)).toString());
+        assertEquals("[-30,15]", pt.relative(pt(40, 0)).toString());
     }
 }

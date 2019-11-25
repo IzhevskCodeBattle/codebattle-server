@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,16 +23,13 @@ package com.codenjoy.dojo.bomberman.model;
  */
 
 
+import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.PointImpl;
 
 import java.util.LinkedList;
 import java.util.List;
+import static com.codenjoy.dojo.services.PointImpl.*;
 
-/**
- * User: oleksandr.baglai
- * Date: 3/7/13
- * Time: 11:59 PM
- */
 public class BoomEngineOriginal implements BoomEngine {
 
     private Hero bomberman;
@@ -42,8 +39,8 @@ public class BoomEngineOriginal implements BoomEngine {
     }
 
     @Override
-    public List<Blast> boom(List<? extends PointImpl> barriers, int boardSize, PointImpl source, int radius) {
-        List<Blast> blasts = new LinkedList<Blast>();
+    public List<Blast> boom(List<? extends Point> barriers, int boardSize, Point source, int radius) {
+        List<Blast> blasts = new LinkedList<>();
 
         add(barriers, boardSize, blasts, source.getX(), source.getY());
 
@@ -84,8 +81,8 @@ public class BoomEngineOriginal implements BoomEngine {
         return blasts;
     }
 
-    private boolean add(List<? extends PointImpl> barriers, int boardSize, List<Blast> blasts, int x, int y) {
-        PointImpl pt = new PointImpl(x, y);
+    private boolean add(List<? extends Point> barriers, int boardSize, List<Blast> blasts, int x, int y) {
+        Point pt = pt(x, y);
 
         if (!isOnBoard(pt, boardSize)) {
             return false;
@@ -102,7 +99,7 @@ public class BoomEngineOriginal implements BoomEngine {
         return true;
     }
 
-    private boolean isOnBoard(PointImpl pt, int boardSize) {
+    private boolean isOnBoard(Point pt, int boardSize) {
         return pt.getX() >= 0 && pt.getY() >= 0 && pt.getX() < boardSize && pt.getY() < boardSize;
     }
 }

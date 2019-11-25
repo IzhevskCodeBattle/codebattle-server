@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,11 +23,13 @@ package com.codenjoy.dojo.battlecity.model;
  */
 
 
-import com.codenjoy.dojo.services.CharElements;
+import com.codenjoy.dojo.services.printer.CharElements;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 public enum Elements implements CharElements {
 
@@ -77,16 +79,12 @@ public enum Elements implements CharElements {
     public final char ch;
     int power;
 
-    // TODO test me
     private static List<Elements> result = null;
     public static Collection<Elements> getConstructions() {
         if (result == null) {
-            result = new LinkedList<Elements>();
-            for (Elements element : values()) {
-                if (element.name().startsWith(CONSTRUCTION.name())) {
-                    result.add(element);
-                }
-            }
+            result = Arrays.stream(values())
+                    .filter(e -> e.name().startsWith(CONSTRUCTION.name()))
+                    .collect(toList());
         }
         return result;
     }

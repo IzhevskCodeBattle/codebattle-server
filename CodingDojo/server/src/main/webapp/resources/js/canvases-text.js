@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -21,12 +21,19 @@
  */
 var currentBoardSize = null;
 
-function initCanvasesText(contextPath, players, allPlayersScreen, singleBoardGame, boardSize, gameName, enablePlayerInfo){
+function initCanvasesText(contextPath, players, allPlayersScreen,
+                multiplayerType, boardSize, gameName,
+                enablePlayerInfo, enablePlayerInfoLevel, drawBoard)
+{
     var canvases = {};
     var infoPools = {};
     currentBoardSize = boardSize;
     loadCanvasesData();
     var reloading = false;
+
+    function fromEmail(email) {
+        return email.split('@')[0];
+    }
 
     function toId(email) {
         return email.replace(/[@.]/gi, "_");
@@ -92,8 +99,8 @@ function initCanvasesText(contextPath, players, allPlayersScreen, singleBoardGam
         playersList.forEach(function (player) {
             var playerName = player.name;
             var id = toId(playerName);
-            var name = playerName.split('@')[0];
-            var visible = (allPlayersScreen || !enablePlayerInfo) ? 'none' : '';
+            var name = fromEmail(player.readableName);
+            var visible = (allPlayersScreen || !enablePlayerInfoLevel) ? 'none' : 'block';
             templateData.push({name : name, id : id, visible : visible })
         });
         $('#players_container script').tmpl(templateData).appendTo('#players_container');
@@ -116,25 +123,44 @@ function initCanvasesText(contextPath, players, allPlayersScreen, singleBoardGam
         });
     }
 
-    function decode(char) {
-        return plots[char];
-    }
+    var getBoardDrawer = function(canvas, playerName, playerData) {
+        var data = playerData.board;
 
-    function drawBoardForPlayer(playerName, gameName, data, heroesData) {
-        var canvas = canvases[playerName];
-        canvas.resizeHeight(data.history.length + 1);
-        canvas.clear();
-
-        for (var index in data.history) {
-            var value = data.history[index];
-            if (!value.valid) color = '#900';
-            if (value.valid) color = '#090';
-
-            canvas.drawText(value.question, {x:7, y:1 + parseInt(index)}, color);
+        var clear = function() {
+            canvas.resizeHeight(data.history.length + 1);
+            canvas.clear();
         }
 
-        canvas.drawText(data.nextQuestion, {x:7, y:1 + parseInt(data.history.length)}, '#099');
+        var drawLines = function() {
+            for (var index in data.history) {
+                var value = data.history[index];
+                if (!value.valid) color = '#900';
+                if (value.valid) color = '#090';
+
+                canvas.drawText(value.question, {x:7, y:1 + parseInt(index)}, color);
+            }
+
+            if (!!data.nextQuestion) {
+                canvas.drawText(data.nextQuestion, {x:7, y:1 + parseInt(data.history.length)}, '#099');
+            }
+        }
+
+        return {
+            clear : clear,
+            drawLines : drawLines,
+            canvas : canvas,
+            drawText: canvas.drawText,
+            playerName : playerName,
+            playerData : playerData
+        };
     }
+
+    function defaultDrawBoard(drawer) {
+        drawer.clear();
+        drawer.drawLines();
+    }
+
+    drawBoard = (!!drawBoard) ? drawBoard : defaultDrawBoard;
 
     function calculateTextSize(text) {
         var div = $("#width_calculator_container");
@@ -162,7 +188,7 @@ function initCanvasesText(contextPath, players, allPlayersScreen, singleBoardGam
             return;
         }
 
-        var text = '<center>' + infoPool.join('<br><br>') + '</center>';
+        var text = '<center>' + infoPool.join('<br>') + '</center>';
         infoPool.splice(0, infoPool.length);
 
         var canvas = $("#" + toId(playerName));
@@ -177,7 +203,7 @@ function initCanvasesText(contextPath, players, allPlayersScreen, singleBoardGam
 
         score.html(text);
 
-        score.show().delay(300).fadeOut(1600, function() {
+        score.show().delay(700).fadeOut(200, function() {
             score.hide();
 
             showScoreInformation(playerName, '');
@@ -199,7 +225,10 @@ function initCanvasesText(contextPath, players, allPlayersScreen, singleBoardGam
             });
         };
 
-        var drawText = function(name, pt, color) {
+        var drawText = function(text, pt, color) {
+            if (!text) {
+                console.warn("Text to draw is undefined or empty");
+            }
             canvas.drawText({
                 fillStyle: color,
                 strokeStyle: '#000',
@@ -207,7 +236,7 @@ function initCanvasesText(contextPath, players, allPlayersScreen, singleBoardGam
                 x: (pt.x) * plotSize, y: (pt.y) * plotSize,
                 fontSize: 16,
                 fontFamily: 'Verdana, sans-serif',
-                text: name
+                text: text
             });
         }
 
@@ -291,11 +320,16 @@ function initCanvasesText(contextPath, players, allPlayersScreen, singleBoardGam
             reloadCanvasesData();
         }
 
-        drawBoardForPlayer(playerName, data.gameName, data.board, data.heroesData);
+       var canvas = canvases[playerName];
+       canvas.boardSize = boardSize;
+       drawBoard(getBoardDrawer(canvas, playerName, data));
+
         $("#score_" + toId(playerName)).text(data.score);
+
         showScoreInformation(playerName, data.info);
+
         if (!allPlayersScreen) {
-            $("#level_" + toId(playerName)).text(data.level);
+            $("#level_" + toId(playerName)).text(data.heroesData.coordinates[playerName].level + 1);
         }
     }
 }

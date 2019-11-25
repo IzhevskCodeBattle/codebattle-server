@@ -4,7 +4,7 @@ package com.codenjoy.dojo.minesweeper.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,11 +23,6 @@ package com.codenjoy.dojo.minesweeper.services;
  */
 
 
-/**
- * User: oleksandr.baglai
- * Date: 3/23/13
- * Time: 11:42 PM
- */
 public enum Events {
     KILL_ON_MINE, DESTROY_MINE, FORGET_CHARGE, NO_MORE_CHARGE, CLEAN_BOARD, WIN;
 }

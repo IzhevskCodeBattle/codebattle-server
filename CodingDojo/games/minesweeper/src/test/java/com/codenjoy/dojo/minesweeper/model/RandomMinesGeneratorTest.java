@@ -4,7 +4,7 @@ package com.codenjoy.dojo.minesweeper.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,16 +23,18 @@ package com.codenjoy.dojo.minesweeper.model;
  */
 
 
+import com.codenjoy.dojo.services.EventListener;
 import com.codenjoy.dojo.services.Point;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.RandomDice;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
 public class RandomMinesGeneratorTest {
 
@@ -85,7 +87,7 @@ public class RandomMinesGeneratorTest {
     }
 
     private List<Mine> generate() {
-        return new RandomMinesGenerator().get(10, new MockBoard());
+        return new RandomMinesGenerator(new RandomDice()).get(10, new MockBoard());
     }
 
     private class MockBoard extends Minesweeper {
@@ -94,8 +96,8 @@ public class RandomMinesGeneratorTest {
                 public List<Mine> get(int count, Field board) {
                     return Arrays.asList();
                 }
-            }, null, new PrinterFactoryImpl());
-            newGame();
+            });
+            newGame(new Player(mock(EventListener.class)));
         }
     }
 }

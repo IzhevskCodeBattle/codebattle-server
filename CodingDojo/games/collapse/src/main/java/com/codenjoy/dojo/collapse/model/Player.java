@@ -4,7 +4,7 @@ package com.codenjoy.dojo.collapse.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,57 +25,28 @@ package com.codenjoy.dojo.collapse.model;
 
 import com.codenjoy.dojo.collapse.services.Events;
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.Joystick;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
 
-public class Player {
+public class Player extends GamePlayer<Hero, Field> {
 
-    private EventListener listener;
-    private int maxScore;
-    private int score;
-    private Joystick joystick;
+    Hero hero;
 
     public Player(EventListener listener) {
-        this.listener = listener;
-        clearScore();
+        super(listener);
     }
 
-    private void increaseScore() {
-        score = score + 1;
-        maxScore = Math.max(maxScore, score);
-    }
-
-    public int getMaxScore() {
-        return maxScore;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    public void event(Events event) {
-        switch (event) {
-            case SUCCESS: increaseScore(); break;
-        }
-
-        if (listener != null) {
-            listener.event(event);
-        }
-    }
-
-    private void gameOver() {
-        score = 0;
-    }
-
-    public void clearScore() {
-        score = 0;
-        maxScore = 0;
-    }
-
-    public Joystick getJoystick() {
-        return joystick;
+    @Override
+    public Hero getHero() {
+        return hero;
     }
 
     public void newHero(Field field) {
-        joystick = field.getJoystick();
+        hero = new Hero();
+        hero.init(field);
+    }
+
+    @Override
+    public boolean isAlive() {
+        return hero != null;
     }
 }

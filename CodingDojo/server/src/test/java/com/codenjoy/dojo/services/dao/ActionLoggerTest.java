@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.dao;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,15 +24,17 @@ package com.codenjoy.dojo.services.dao;
 
 
 import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.dao.ActionLogger;
 import com.codenjoy.dojo.services.jdbc.SqliteConnectionThreadPoolFactory;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.MultiplayerType;
+import com.codenjoy.dojo.services.printer.BoardReader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Random;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -42,7 +44,22 @@ public class ActionLoggerTest {
 
     @Before
     public void setup() {
-        logger = new ActionLogger(new SqliteConnectionThreadPoolFactory("target/logs.db" + new Random().nextInt()), 1);
+        String dbFile = "target/logs.db" + new Random().nextInt();
+        logger = new ActionLogger(
+                    new SqliteConnectionThreadPoolFactory(dbFile,
+                            new ContextPathGetter() {
+                                @Override
+                                public String getContext() {
+                                    return "context";
+                                }
+                            }))
+        {
+            @Override
+            protected long now() {
+                return 123456789L;
+            }
+        };
+        logger.setTicks(1);
     }
 
     @After
@@ -56,8 +73,8 @@ public class ActionLoggerTest {
 
         act();
 
-        assertEquals("[BoardLog{playerName='player1', board='board1', gameType='game1', score=123}, " +
-                "BoardLog{playerName='player2', board='board2', gameType='game2', score=234}]", logger.getAll().toString());
+        assertEquals("[BoardLog{playerName='player1', time='123456789', board='board1', command='[]', gameType='game1', score=123}, " +
+                "BoardLog{playerName='player2', time='123456789', board='board2', command='[]', gameType='game2', score=234}]", logger.getAll().toString());
     }
 
     @Test
@@ -68,7 +85,7 @@ public class ActionLoggerTest {
     }
 
     private void act() throws InterruptedException {
-        PlayerGames playerGames = new PlayerGames(mock(Statistics.class));
+        PlayerGames playerGames = new PlayerGames();
 
         addPlayer(playerGames, "board1", 123, "player1", "game1");
         addPlayer(playerGames, "board2", 234, "player2", "game2");
@@ -79,11 +96,19 @@ public class ActionLoggerTest {
     }
 
     private void addPlayer(PlayerGames playerGames, String board, int value, String name, String gameName) {
-        Game game = getBoard(board);
         PlayerScores score = getScore(value);
+        Player player = new Player(name, "127.0.0.1", PlayerTest.mockGameType(gameName), score, null);
+        player.setEventListener(mock(InformationCollector.class));
 
-        Player player = new Player(name, "127.0.0.1", PlayerTest.mockGameType(gameName), score, null, Protocol.WS);
-        playerGames.add(player, game, mock(PlayerController.class));
+        TestUtils.Env env = TestUtils.getPlayerGame(playerGames, player,
+                inv -> {
+                    GameField field = mock(GameField.class);
+                    when(field.reader()).thenReturn(mock(BoardReader.class));
+                    return field;
+                },
+                MultiplayerType.SINGLE,
+                null,
+                parameters -> board);
     }
 
     private PlayerScores getScore(int value) {
@@ -92,9 +117,4 @@ public class ActionLoggerTest {
         return score;
     }
 
-    private Game getBoard(String board) {
-        Game game = mock(Game.class);
-        when(game.getBoardAsString()).thenReturn(board);
-        return game;
-    }
 }

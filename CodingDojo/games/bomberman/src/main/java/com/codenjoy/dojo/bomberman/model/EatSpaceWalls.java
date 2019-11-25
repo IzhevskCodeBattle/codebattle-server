@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -28,11 +28,6 @@ import com.codenjoy.dojo.services.settings.Parameter;
 
 import java.util.List;
 
-/**
- * User: sanja
- * Date: 21.04.13
- * Time: 0:17
- */
 public class EatSpaceWalls extends WallsDecorator implements Walls { // TODO протестить класс
 
     private static final boolean WITH_MEAT_CHOPPERS = true;
@@ -95,7 +90,7 @@ public class EatSpaceWalls extends WallsDecorator implements Walls { // TODO п�
         }
 
         if (c == maxc) {
-            throw new  RuntimeException("Dead loop at MeatChoppers.generate!");
+            throw new  RuntimeException("Dead loop at EatSpaceWalls.generate!");
         }
     }
 }

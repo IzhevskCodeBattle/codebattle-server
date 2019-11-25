@@ -4,7 +4,7 @@ package com.codenjoy.dojo.chess.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,58 +24,24 @@ package com.codenjoy.dojo.chess.model;
 
 
 import com.codenjoy.dojo.chess.model.figures.Figure;
+import com.codenjoy.dojo.chess.model.figures.Korol;
 import com.codenjoy.dojo.chess.services.Events;
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.Joystick;
-import com.codenjoy.dojo.services.joystick.ActJoystick;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class Player extends ActJoystick implements Joystick {
+public class Player extends GamePlayer<Korol, Field>{
 
-    private EventListener listener;
-    private int maxScore;
-    private int score;
     List<Figure> figures = new LinkedList<Figure>();
+
     private boolean isWhite;
 
     public Player(EventListener listener) {
-        this.listener = listener;
-        clearScore();
+        super(listener);
     }
 
-    private void increaseScore() {
-        score = score + 1;
-        maxScore = Math.max(maxScore, score);
-    }
-
-    public int getMaxScore() {
-        return maxScore;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    public void event(Events event) {
-        switch (event) {
-            case WIN: increaseScore(); break;
-        }
-
-        if (listener != null) {
-            listener.event(event);
-        }
-    }
-
-    private void gameOver() {
-        score = 0;
-    }
-
-    public void clearScore() {
-        score = 0;
-        maxScore = 0;
-    }
 
     public void initFigures(Field field) {
         List<Figure> figures = field.getFigures(false);
@@ -93,12 +59,18 @@ public class Player extends ActJoystick implements Joystick {
         return figures;
     }
 
-    public boolean isAlive() {
-        return true; // TODO
+    @Override
+    public Korol getHero() {
+        return null; // TODO implement me
     }
 
     @Override
-    public void act(int... p) {
-        // TODO
+    public void newHero(Field field) {
+        // TODO implement me
     }
+
+    public boolean isAlive() {
+        return true; // TODO implement me
+    }
+
 }

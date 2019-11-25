@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.model.artifacts;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -28,7 +28,7 @@ import com.codenjoy.dojo.snake.model.Walls;
 
 public interface ArtifactGenerator {
 
-	Apple generateApple(Hero snake, Apple apple, Stone stone, Walls walls, int boardSize);
-	
-	Stone generateStone(Hero snake, Apple apple, Walls walls, int boardSize);
+    Apple generateApple(Hero snake, Apple apple, Stone stone, Walls walls, int boardSize);
+
+    Stone generateStone(Hero snake, Apple apple, Walls walls, int boardSize);
 }

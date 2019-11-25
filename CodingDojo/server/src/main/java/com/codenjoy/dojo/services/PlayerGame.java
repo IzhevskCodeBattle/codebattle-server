@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,18 +23,28 @@ package com.codenjoy.dojo.services;
  */
 
 
+import com.codenjoy.dojo.services.lock.LockedGame;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.nullobj.NullPlayer;
+import com.codenjoy.dojo.services.nullobj.NullPlayerGame;
+
+import java.util.function.Consumer;
+
 public class PlayerGame implements Tickable {
 
     private Player player;
     private Game game;
-    private PlayerController controller;
-    private Tickable lazyJoystick;
+    private LazyJoystick joystick;
 
-    public PlayerGame(Player player, Game game, PlayerController controller, Tickable lazyJoystick) {
+    public PlayerGame(Player player, Game game) {
         this.player = player;
         this.game = game;
-        this.controller = controller;
-        this.lazyJoystick = lazyJoystick;
+        this.joystick = new LazyJoystick(game);
+    }
+
+    // only for searching
+    public static PlayerGame by(Game game) {
+        return new PlayerGame(null, game);
     }
 
     @Override
@@ -51,7 +61,16 @@ public class PlayerGame implements Tickable {
         if (o instanceof PlayerGame) {
             PlayerGame pg = (PlayerGame)o;
 
-            return pg.player.equals(player);
+            if (player == null || pg.getPlayer() == null) {
+                return LockedGame.equals(pg.game, game);
+            }
+            return player.equals(pg.player);
+        }
+
+        if (o instanceof GameField) {
+            GameField gf = (GameField)o;
+
+            return game.getField() == gf;
         }
 
         return false;
@@ -62,9 +81,12 @@ public class PlayerGame implements Tickable {
         return player.hashCode();
     }
 
-    public void remove() {
-        controller.unregisterPlayerTransport(player);
-        game.destroy();
+    public void remove(Consumer<PlayerGame> onRemove) {
+        if (onRemove != null) {
+            onRemove.accept(this);
+        }
+        game.close();
+        player.close();
     }
 
     public Player getPlayer() {
@@ -75,20 +97,36 @@ public class PlayerGame implements Tickable {
         return game;
     }
 
-    public PlayerController getController() {
-        return controller;
+    public GameField getField() {
+        return game.getField();
     }
 
     @Override
     public String toString() {
-        return String.format("PlayerGame[player=%s, game=%s, controller=%s]",
+        return String.format("PlayerGame[player=%s, game=%s]",
                 player,
-                game.getClass().getSimpleName(),
-                controller.getClass().getSimpleName());
+                game.getClass().getSimpleName());
     }
 
     @Override
     public void tick() {
-        lazyJoystick.tick();
+        joystick.tick();
+    }
+
+    public Joystick getJoystick() {
+        return joystick;
+    }
+
+    public GameType getGameType() {
+        return player.getGameType();
+    }
+
+    public String popLastCommand() {
+        return joystick.popLastCommands();
+    }
+
+    public void clearScore() {
+        player.clearScore();
+        game.clearScore();
     }
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.a2048.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -32,7 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static com.codenjoy.dojo.services.PointImpl.pt;
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 public class NumbersTest {
 

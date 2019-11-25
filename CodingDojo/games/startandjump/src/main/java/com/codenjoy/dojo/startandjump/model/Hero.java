@@ -4,7 +4,7 @@ package com.codenjoy.dojo.startandjump.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,14 +23,11 @@ package com.codenjoy.dojo.startandjump.model;
  */
 
 
+import com.codenjoy.dojo.services.multiplayer.PlayerHero;
 import com.codenjoy.dojo.startandjump.services.HeroStatus;
 import com.codenjoy.dojo.services.*;
 
-/**
- * Это реализация героя. Обрати внимание, что он имплементит {@see Joystick}, а значит может быть управляем фреймворком
- * Так же он имплементит {@see Tickable}, что значит - есть возможность его оповещать о каждом тике игры.
- */
-public class Hero extends PointImpl implements Joystick, Tickable, State<Elements, Player> {
+public class Hero extends PlayerHero<Field> implements State<Elements, Player> {
 
     private boolean alive;
     private Direction direction;
@@ -44,10 +41,6 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
         direction = null;
         alive = true;
     }
-
-//    public void init(Field field) {
-//        this.field = field;
-//    }
 
     @Override
     public void down() {
@@ -74,11 +67,6 @@ public class Hero extends PointImpl implements Joystick, Tickable, State<Element
     @Override
     public void act(int... p) {
         if (!alive) return;
-    }
-
-    @Override
-    public void message(String command) {
-        // do nothing, this should never happen
     }
 
     @Override

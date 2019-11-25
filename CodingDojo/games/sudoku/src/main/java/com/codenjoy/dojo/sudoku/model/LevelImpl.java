@@ -4,7 +4,7 @@ package com.codenjoy.dojo.sudoku.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -58,7 +58,7 @@ public class LevelImpl implements Level {
             char ch = map.charAt(index);
             char mch = mask.charAt(index);
             if (ch != Elements.BORDER.ch) {
-                result.add(new Cell(xy.getXY(index), Integer.valueOf("" + ch), mch != '?'));
+                result.add(new Cell(xy.getXY(index), Integer.parseInt("" + ch), mch != '?'));
             }
         }
 

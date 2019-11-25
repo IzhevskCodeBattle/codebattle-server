@@ -4,7 +4,7 @@ package com.codenjoy.dojo.a2048.client.ai;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,7 +25,7 @@ package com.codenjoy.dojo.a2048.client.ai;
 
 import com.codenjoy.dojo.a2048.model.Elements;
 import com.codenjoy.dojo.a2048.model.Numbers;
-import com.codenjoy.dojo.client.Direction;
+import com.codenjoy.dojo.services.Direction;
 
 public class CharNumbers {
 
@@ -72,11 +72,7 @@ public class CharNumbers {
     }
 
     public void move(Direction direction) {
-        numbers.move(convert(direction));
-    }
-
-    private com.codenjoy.dojo.services.Direction convert(Direction direction) {
-        return com.codenjoy.dojo.services.Direction.valueOf(direction.value());
+        numbers.move(direction);
     }
 
     public void addNew() {

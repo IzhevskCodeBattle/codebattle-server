@@ -4,7 +4,7 @@ package com.codenjoy.dojo.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,123 +23,213 @@ package com.codenjoy.dojo.client;
  */
 
 
-import org.eclipse.jetty.websocket.WebSocket;
-import org.eclipse.jetty.websocket.WebSocketClient;
-import org.eclipse.jetty.websocket.WebSocketClientFactory;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.websocket.api.RemoteEndpoint;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.UpgradeException;
+import org.eclipse.jetty.websocket.api.annotations.*;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 
-import java.io.File;
+import java.net.ConnectException;
 import java.net.URI;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.net.URISyntaxException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class WebSocketRunner {
+public class WebSocketRunner implements Closeable {
 
     public static final String DEFAULT_USER = "apofig@gmail.com";
-    private static final String LOCAL = "127.0.0.1:8080";
-    private static final String REMOTE = "tetrisj.jvmhost.net:12270";
+    private static final String LOCALHOST = "127.0.0.1";
+    public static final String WS_URI_PATTERN = "%s://%s/%s/ws?user=%s&code=%s";
+    public static final String BOARD_FORMAT = "^board=(.*)$";
+    public static final Pattern BOARD_PATTERN = Pattern.compile(BOARD_FORMAT);
+    public static String BOT_EMAIL_SUFFIX = "-super-ai@codenjoy.com";
 
-    private static boolean printToConsole = true;
-    private static Map<String, WebSocketRunner> clients = new ConcurrentHashMap<>();
+    public static boolean PRINT_TO_CONSOLE = true;
+    public static int TIMEOUT = 10000;
+    public static Integer ATTEMPTS = 5;
 
-    private static String getUrl() {
-        return REMOTE;
-    }
-
-    public enum Host {
-        // подключение клиента к удаленному серваку
-        REMOTE(WebSocketRunner.getUrl()),
-
-        // используется для запуска AI бота на локали сервера, без печати в консоль трешняка
-        REMOTE_LOCAL(WebSocketRunner.getUrl()),
-
-        // работа клиента с локальным серваком
-        LOCAL(WebSocketRunner.LOCAL);
-
-        public String host;
-        public String uri;
-
-        Host(String host) {
-            this.host = host;
-            this.uri = "ws://" + host + "/codenjoy-contest/ws";
-        }
-    }
-
-    private WebSocket.Connection connection;
+    private Session session;
+    private WebSocketClient client;
     private Solver solver;
     private ClientBoard board;
-    private WebSocketClientFactory factory;
     private Runnable onClose;
+    private boolean forceClose;
+    private URI uri;
 
     public WebSocketRunner(Solver solver, ClientBoard board) {
         this.solver = solver;
         this.board = board;
+        this.forceClose = false;
     }
 
-    public static WebSocketRunner run(Host host, String userName, Solver solver, ClientBoard board) throws Exception {
-        // если запускаем на серваке бота, то в консоль не принтим
-        printToConsole = (host != Host.REMOTE_LOCAL);
-
-        // на локали файлик LOCAL означает что мы игнорим что выбрал игрок
-        if (new File("LOCAL").exists()) {
-            host = Host.LOCAL;
-        }
-
-        return run(host.uri, userName, solver, board);
+    public static WebSocketRunner runClient(String url, Solver solver, ClientBoard board) {
+        UrlParser parser = new UrlParser(url);
+        return run(parser.protocol, parser.server, parser.context,
+                parser.userName, parser.code,
+                solver, board, ATTEMPTS);
     }
 
-    public static WebSocketRunner run(String uri, String userName, Solver solver, ClientBoard board) throws Exception {
-        if (clients.containsKey(userName)) {
-            return clients.get(userName);
-        }
-        final WebSocketRunner client = new WebSocketRunner(solver, board);
-        client.start(uri, userName);
-        Runtime.getRuntime().addShutdownHook(new Thread(){
-            @Override
-            public void run() {
-                client.stop();
-            }
-        });
-
-        clients.put(userName, client);
-        return client;
+    public static WebSocketRunner runAI(String aiName, String code, Solver solver, ClientBoard board) {
+        PRINT_TO_CONSOLE = false;
+        return run(UrlParser.WS_PROTOCOL, LOCALHOST + ":" + CodenjoyContext.getPort(),
+                CodenjoyContext.getContext(), aiName, code, solver, board, 1);
     }
 
-    private void stop() {
+    private static WebSocketRunner run(String protocol,
+                                       String server, String context,
+                                       String userName, String code,
+                                       Solver solver, ClientBoard board,
+                                       int countAttempts) {
+        return run(getUri(protocol, server, context, userName, code), solver, board, countAttempts);
+    }
+
+    private static URI getUri(String protocol, String server, String context, String userName, String code) {
         try {
-            connection.close();
-            factory.stop();
+            String url = String.format(WS_URI_PATTERN, protocol, server, context, userName, code);
+            return new URI(url);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static WebSocketRunner run(URI uri, Solver solver, ClientBoard board, int countAttempts) {
+        try {
+            WebSocketRunner client = new WebSocketRunner(solver, board);
+            client.start(uri, countAttempts);
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                if (client != null) {
+                    client.close();
+                }
+            }));
+
+            return client;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void start(URI uri, int countAttempts) throws Exception {
+        this.uri = uri;
+
+        client = createClient();
+        client.start();
+
+        onClose = () -> {
+            if (forceClose || solver instanceof OneCommandSolver) {
+                return;
+            }
+
+            printReconnect();
+            connectLoop(countAttempts);
+        };
+
+        connectLoop(countAttempts);
+    }
+
+    private WebSocketClient createClient() {
+        if (UrlParser.WSS_PROTOCOL.equals(uri.getScheme())) {
+            SslContextFactory ssl = new SslContextFactory(true);
+            ssl.setValidateCerts(false);
+            return new WebSocketClient(ssl);
+        }
+
+        if (UrlParser.WS_PROTOCOL.equals(uri.getScheme())) {
+            return new WebSocketClient();
+        }
+
+        throw new UnsupportedOperationException("Unsupported WebSocket protocol: " + uri.getScheme());
+    }
+
+    @Override
+    public void close() {
+        forceClose = true;
+        try {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+            client = null;
         } catch (Exception e) {
             print(e);
         }
     }
 
-    private void start(final String server, final String userName) throws Exception {
-        final Pattern urlPattern = Pattern.compile("^board=(.*)$");
+    @WebSocket
+    public class ClientSocket {
 
-        factory = new WebSocketClientFactory();
-        factory.start();
+        @OnWebSocketConnect
+        public void onConnect(Session session) {
+            print("Opened connection " + session.toString());
+        }
 
-        final WebSocketClient client = factory.newWebSocketClient();
-
-        onClose = new Runnable() {
-            @Override
-            public void run() {
-                printReconnect();
-                connectLoop(server, userName, urlPattern, client);
+        @OnWebSocketClose
+        public void onClose(int closeCode, String message) {
+            if (onClose != null) {
+                onClose.run();
             }
-        };
+            print("Closed with message: '" + message + "' and code: " + closeCode);
+        }
 
-        connectLoop(server, userName, urlPattern, client);
+        @OnWebSocketError
+        public void onError(Session session, Throwable reason) {
+            if (isUnauthorizedAccess(reason)) {
+                print("Connection error: Unauthorized access. Please register user and/or write valid EMAIL/CODE in the client.");
+            } else {
+                print("Error with message: '" + reason.toString());
+            }
+        }
+
+        @OnWebSocketMessage
+        public void onMessage(String data) {
+            try {
+                Matcher matcher = BOARD_PATTERN.matcher(data);
+                if (!matcher.matches()) {
+                    throw new IllegalArgumentException("Unexpected board format, should be: " + BOARD_FORMAT);
+                }
+
+                board.forString(matcher.group(1));
+                print("Board: " + board);
+
+                String answer = solver.get(board);
+                print("Answer: " + answer);
+
+                RemoteEndpoint remote = session.getRemote();
+                if (remote == null) { // TODO to understand why this can happen?
+                    WebSocketRunner.this.tryToConnect();
+                    return;
+                }
+                remote.sendString(answer);
+            } catch (Exception e) {
+                print("Error processing data: " + data);
+                print(e);
+            }
+            printBreak();
+        }
     }
 
-    private void connectLoop(String server, String userName, Pattern urlPattern, WebSocketClient client) {
-        while (true) {
+    private boolean isUnauthorizedAccess(Throwable exception) {
+        return exception instanceof UpgradeException
+                && ((UpgradeException) exception).getResponseStatusCode() == 401;
+    }
+
+    private boolean isConnectionRefused(Throwable exception) {
+        return exception instanceof ConnectException
+                && "Connection refused: no further information".equals(exception.getMessage());
+    }
+
+    private void connectLoop(int countAttempts) {
+        while (countAttempts-- > 0) {
             try {
-                tryToConnect(server, userName, urlPattern, client);
+                tryToConnect();
                 break;
+            } catch (ExecutionException e) {
+                print(e.toString());
+                if (!isUnauthorizedAccess(e.getCause()) && !isConnectionRefused(e.getCause())) {
+                    print(e);
+                }
+                printReconnect();
             } catch (Exception e) {
                 print(e);
                 printReconnect();
@@ -150,50 +240,18 @@ public class WebSocketRunner {
     private void printReconnect() {
         print("Waiting before reconnect...");
         printBreak();
-        sleep(5000);
+        sleep(TIMEOUT);
     }
 
-    private void tryToConnect(String server, String userName, final Pattern urlPattern, WebSocketClient client) throws Exception {
-        URI uri = new URI(server + "?user=" + userName);
-        print(String.format("Connecting '%s' to '%s'...", userName, uri));
+    private void tryToConnect() throws Exception {
+        print(String.format("Connecting to '%s'...", uri));
 
-        if (connection != null) {
-            connection.close();
+        if (session != null) {
+            session.close();
         }
 
-        connection = client.open(uri, new WebSocket.OnTextMessage() {
-            public void onOpen(Connection connection) {
-                print("Opened connection " + connection.toString());
-            }
-
-            public void onClose(int closeCode, String message) {
-                if (onClose != null) {
-                    onClose.run();
-                }
-                print("Closed with message: '" + message + "' and code: " + closeCode);
-            }
-
-            public void onMessage(String data) {
-                print("Data from server: " + data);
-                try {
-                    Matcher matcher = urlPattern.matcher(data);
-                    if (!matcher.matches()) {
-                        throw new RuntimeException("Error parsing data: " + data);
-                    }
-
-                    board.forString(matcher.group(1));
-                    print("Board: " + board);
-
-                    String answer = solver.get(board);
-                    print("Answer: " + answer);
-
-                    connection.sendMessage(answer);
-                } catch (Exception e) {
-                    print(e);
-                }
-                printBreak();
-            }
-        }).get(5000, TimeUnit.MILLISECONDS);
+        session = client.connect(new ClientSocket(), uri)
+                .get(TIMEOUT, TimeUnit.MILLISECONDS);
     }
 
     private void sleep(int mills) {
@@ -209,13 +267,13 @@ public class WebSocketRunner {
     }
 
     public static void print(String message) {
-        if (printToConsole) {
+        if (PRINT_TO_CONSOLE) {
             System.out.println(message);
         }
     }
 
     private void print(Exception e) {
-        if (printToConsole) {
+        if (PRINT_TO_CONSOLE) {
             e.printStackTrace(System.out);
         }
     }

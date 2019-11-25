@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,13 +26,8 @@ package com.codenjoy.dojo.bomberman.model;
 import com.codenjoy.dojo.services.State;
 
 import static com.codenjoy.dojo.bomberman.model.Elements.DESTROYED_WALL;
-import static com.codenjoy.dojo.bomberman.model.Elements.DESTROY_WALL;
+import static com.codenjoy.dojo.bomberman.model.Elements.DESTROYABLE_WALL;
 
-/**
- * User: oleksandr.baglai
- * Date: 3/8/13
- * Time: 8:22 PM
- */
 public class DestroyWall extends Wall implements State<Elements, Player> {
     public DestroyWall(int x, int y) {
         super(x, y);
@@ -56,7 +51,7 @@ public class DestroyWall extends Wall implements State<Elements, Player> {
         if (blast != null) {
             return DESTROYED_WALL;
         } else {
-            return DESTROY_WALL;
+            return DESTROYABLE_WALL;
         }
     }
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.joystick;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,13 +25,6 @@ package com.codenjoy.dojo.services.joystick;
 
 import com.codenjoy.dojo.services.Joystick;
 
-/**
- * Created by indigo on 2016-11-23.
- */
-public abstract class DirectionActJoystick implements Joystick {
+public interface DirectionActJoystick extends Joystick, NoMessageJoystick {
 
-    @Override
-    public void message(String command) {
-        // do nothing
-    }
 }

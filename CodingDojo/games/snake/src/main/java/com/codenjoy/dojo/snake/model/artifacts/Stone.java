@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.model.artifacts;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,21 +29,16 @@ import com.codenjoy.dojo.snake.model.Hero;
 
 
 public class Stone extends EateablePoint implements Element, State<Elements, Object> {
-	
-	public Stone(int x, int y) {
-		super(x, y);
-	}
 
-	@Override
-	public String toString() {
-		return String.format("Позиция камня x:%s, y:%s", getX(), getY());
-	}
+    public Stone(int x, int y) {
+        super(x, y);
+    }
 
-	@Override
-	public void affect(Hero snake) {
-		snake.eatStone();
+    @Override
+    public void affect(Hero snake) {
+        snake.eatStone();
         super.affect(snake);
-	}
+    }
 
     @Override
     public Elements state(Object player, Object... alsoAtPoint) {

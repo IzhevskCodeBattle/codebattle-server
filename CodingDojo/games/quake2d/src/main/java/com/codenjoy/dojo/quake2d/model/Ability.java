@@ -4,7 +4,7 @@ package com.codenjoy.dojo.quake2d.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -55,11 +55,13 @@ public class Ability extends PointImpl implements State<Elements, Player> {
     public Elements state(Player player, Object... alsoAtPoint) {
         if (abilityType == Type.WEAPON){
             return Elements.SUPER_ATTACK;
-        } else if (abilityType == Type.DEFENCE) {
-            return Elements.SUPER_DEFENCE;
-        } else {
-            return Elements.HEALTH_PACKAGE;
         }
+
+        if (abilityType == Type.DEFENCE) {
+            return Elements.SUPER_DEFENCE;
+        }
+
+        return Elements.HEALTH_PACKAGE;
     }
 
     public Type getAbilityType() {

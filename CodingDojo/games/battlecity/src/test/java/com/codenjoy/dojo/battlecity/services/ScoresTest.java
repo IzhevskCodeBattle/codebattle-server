@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,7 +29,7 @@ import com.codenjoy.dojo.services.settings.SettingsImpl;
 import org.junit.Before;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * User: sanja
@@ -41,14 +41,19 @@ public class ScoresTest {
 
     private Settings settings;
     private Integer killYourTankPenalty;
-    private Integer killOtherTankScore;
+    private Integer killOtherHeroTankScore;
+    private Integer killOtherAITankScore;
 
     public void killYourTank() {
         scores.event(Events.KILL_YOUR_TANK);
     }
 
-    public void killOtherTank() {
-        scores.event(Events.KILL_OTHER_TANK);
+    public void killOtherAITank() {
+        scores.event(Events.KILL_OTHER_AI_TANK);
+    }
+
+    public void killOtherHeroTank(int amount) {
+        scores.event(Events.KILL_OTHER_HERO_TANK.apply(amount));
     }
 
     @Before
@@ -57,32 +62,38 @@ public class ScoresTest {
         scores = new Scores(0, settings);
 
         killYourTankPenalty = settings.getParameter("Kill your tank penalty").type(Integer.class).getValue();
-        killOtherTankScore = settings.getParameter("Kill other tank score").type(Integer.class).getValue();
+        killOtherAITankScore = settings.getParameter("Kill other AI tank score").type(Integer.class).getValue();
+        killOtherHeroTankScore = settings.getParameter("Kill other hero tank score").type(Integer.class).getValue();
     }
 
     @Test
     public void shouldCollectScores() {
         scores = new Scores(140, settings);
 
-        killOtherTank();  //+100
-        killOtherTank();  //+100
-        killOtherTank();  //+100
+        killOtherHeroTank(1);
+        killOtherHeroTank(2);
+        killOtherHeroTank(3);
+        killOtherAITank();
+        killOtherAITank();
 
-        killYourTank();  //-50
+        killYourTank();
 
-        assertEquals(140 + 3*killOtherTankScore - killYourTankPenalty, scores.getScore());
+        assertEquals(140
+                + (1 + 2 + 3)*killOtherHeroTankScore
+                + 2*killOtherAITankScore
+                - killYourTankPenalty, scores.getScore());
     }
 
     @Test
     public void shouldStillZeroAfterDead() {
-        killYourTank();    //-50
+        killYourTank();
 
         assertEquals(0, scores.getScore());
     }
 
     @Test
     public void shouldClearScore() {
-        killOtherTank();    // +10
+        killOtherHeroTank(1);
 
         scores.clear();
 

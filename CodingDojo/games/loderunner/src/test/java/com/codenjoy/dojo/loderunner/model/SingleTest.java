@@ -4,7 +4,7 @@ package com.codenjoy.dojo.loderunner.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,30 +26,27 @@ package com.codenjoy.dojo.loderunner.model;
 import com.codenjoy.dojo.loderunner.services.Events;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.Game;
+import com.codenjoy.dojo.services.multiplayer.Single;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
-/**
- * User: sanja
- * Date: 19.12.13
- * Time: 5:22
- */
 public class SingleTest {
 
     private Dice dice;
     private EventListener listener1;
-    private Single game1;
+    private Game game1;
     private EventListener listener2;
-    private Single game2;
-    private Loderunner loderunner;
+    private Game game2;
+    private Loderunner field;
     private EventListener listener3;
-    private Single game3;
+    private Game game3;
     private PrinterFactory printerFactory = new PrinterFactoryImpl();
 
     // появляется другие игроки, игра становится мультипользовательской
@@ -94,7 +91,7 @@ public class SingleTest {
         game2.getJoystick().left();
         game3.getJoystick().right();
 
-        game1.tick(); // достаточно тикнуть у одной доски
+        field.tick(); 
 
         atGame1(
                 "☼☼☼☼☼☼\n" +
@@ -121,9 +118,9 @@ public class SingleTest {
                 "☼☼☼☼☼☼\n");
 
         game1.getJoystick().act();
-        game3.destroy();
+        game3.close();
 
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼ R  ☼\n" +
@@ -139,18 +136,22 @@ public class SingleTest {
                 "☼####☼\n" +
                 "☼☼☼☼☼☼\n");
 
-        atGame3("☼☼☼☼☼☼\n" +
-                "☼ (  ☼\n" +
-                "☼##*#☼\n" +
-                "☼)  $☼\n" +
-                "☼####☼\n" +
-                "☼☼☼☼☼☼\n");
+        try {
+            atGame3("☼☼☼☼☼☼\n" +
+                    "☼ (  ☼\n" +
+                    "☼##*#☼\n" +
+                    "☼)  $☼\n" +
+                    "☼####☼\n" +
+                    "☼☼☼☼☼☼\n");
+        } catch (IllegalStateException e) {
+            assertEquals("No board for this player", e.getMessage());
+        }
 
         game1.getJoystick().right();
 
-        game1.tick();
-        game1.tick();
-        game1.tick();
+        field.tick();
+        field.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -170,7 +171,7 @@ public class SingleTest {
         game1.getJoystick().act();
         game2.getJoystick().right();
 
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -187,10 +188,10 @@ public class SingleTest {
                 "☼☼☼☼☼☼\n");
 
         for (int c = 2; c < Brick.DRILL_TIMER; c++) {
-            game1.tick();
+            field.tick();
         }
 
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -214,7 +215,7 @@ public class SingleTest {
 
         game2.newGame();
 
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼(   ☼\n" +
@@ -234,7 +235,7 @@ public class SingleTest {
 
         when(dice.next(anyInt())).thenReturn(1, 2);
 
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼(   ☼\n" +
@@ -252,16 +253,6 @@ public class SingleTest {
 
         verify(listener1).event(Events.GET_GOLD);
 
-        assertEquals(1, game1.getCurrentScore());
-        assertEquals(1, game1.getMaxScore());
-
-        assertEquals(0, game2.getCurrentScore());
-        assertEquals(0, game2.getMaxScore());
-
-        game1.clearScore();
-
-        assertEquals(0, game1.getCurrentScore());
-        assertEquals(0, game1.getMaxScore());
     }
 
     // можно ли проходить героям друг через дурга? Нет
@@ -285,7 +276,7 @@ public class SingleTest {
                 "☼☼☼☼☼☼\n");
 
         game1.getJoystick().right();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -295,7 +286,7 @@ public class SingleTest {
                 "☼☼☼☼☼☼\n");
 
         game2.getJoystick().left();
-        game2.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -326,7 +317,7 @@ public class SingleTest {
 
         game1.getJoystick().right();
         game2.getJoystick().down();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -337,7 +328,7 @@ public class SingleTest {
 
         game1.getJoystick().up();
         game2.getJoystick().down();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -348,7 +339,7 @@ public class SingleTest {
 
         game1.getJoystick().up();
         game2.getJoystick().down();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -379,7 +370,7 @@ public class SingleTest {
 
         game1.getJoystick().right();
         game2.getJoystick().left();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -397,7 +388,7 @@ public class SingleTest {
 
         game1.getJoystick().right();
         game2.getJoystick().left();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -408,7 +399,7 @@ public class SingleTest {
 
         game1.getJoystick().right();
         game2.getJoystick().left();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -441,7 +432,7 @@ public class SingleTest {
         game1.getJoystick().act();
         game2.getJoystick().left();
         game2.getJoystick().act();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -471,7 +462,7 @@ public class SingleTest {
                 "☼####☼\n" +
                 "☼☼☼☼☼☼\n");
 
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -502,7 +493,7 @@ public class SingleTest {
 
         setupPlayer1(2, 4);
         setupPlayer2(2, 2);
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -511,7 +502,7 @@ public class SingleTest {
                 "☼ Є  ☼\n" +
                 "☼☼☼☼☼☼\n");
 
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -521,7 +512,7 @@ public class SingleTest {
                 "☼☼☼☼☼☼\n");
 
         game1.getJoystick().down();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -536,7 +527,7 @@ public class SingleTest {
         shouldICantStayAtOtherHeroHeadWhenOnPipe();
 
         game2.getJoystick().left();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -545,7 +536,7 @@ public class SingleTest {
                 "☼)~  ☼\n" +
                 "☼☼☼☼☼☼\n");
 
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -555,7 +546,7 @@ public class SingleTest {
                 "☼☼☼☼☼☼\n");
 
         game2.getJoystick().right();  // нельзя входить в друг в друга :) даже на трубе
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -565,7 +556,7 @@ public class SingleTest {
                 "☼☼☼☼☼☼\n");
 
         game1.getJoystick().left();  // нельзя входить в друг в друга :) даже на трубе
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -587,7 +578,7 @@ public class SingleTest {
 
         setupPlayer1(2, 4);
         setupPlayer2(3, 4);
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -597,7 +588,7 @@ public class SingleTest {
                 "☼☼☼☼☼☼\n");
 
         game2.getJoystick().left();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -607,7 +598,7 @@ public class SingleTest {
                 "☼☼☼☼☼☼\n");
 
         game1.getJoystick().right();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -618,7 +609,7 @@ public class SingleTest {
 
         game1.getJoystick().right();
         game2.getJoystick().left();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -642,21 +633,24 @@ public class SingleTest {
 
     private void setupPlayer2(int x, int y) {
         listener2 = mock(EventListener.class);
-        game2 = new Single(loderunner, listener2, printerFactory);
+        game2 = new Single(new Player(listener2), printerFactory);
+        game2.on(field);
         when(dice.next(anyInt())).thenReturn(x, y);
         game2.newGame();
     }
 
     private void setupPlayer3(int x, int y) {
         listener3 = mock(EventListener.class);
-        game3 = new Single(loderunner, listener3, printerFactory);
+        game3 = new Single(new Player(listener3), printerFactory);
+        game3.on(field);
         when(dice.next(anyInt())).thenReturn(x, y);
         game3.newGame();
     }
 
     private void setupPlayer1(int x, int y) {
         listener1 = mock(EventListener.class);
-        game1 = new Single(loderunner, listener1, printerFactory);
+        game1 = new Single(new Player(listener1), printerFactory);
+        game1.on(field);
         when(dice.next(anyInt())).thenReturn(x, y);
         game1.newGame();
     }
@@ -664,7 +658,7 @@ public class SingleTest {
     private void setupGm(String map) {
         Level level = new LevelImpl(map);
         dice = mock(Dice.class);
-        loderunner = new Loderunner(level, dice);
+        field = new Loderunner(level, dice);
     }
 
     @Test
@@ -679,7 +673,7 @@ public class SingleTest {
                 "☼☼☼☼☼☼\n");
 
         game1.getJoystick().left();
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -688,7 +682,7 @@ public class SingleTest {
                 "☼####☼\n" +
                 "☼☼☼☼☼☼\n");
 
-        game1.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -710,7 +704,7 @@ public class SingleTest {
                 "☼☼☼☼☼☼\n");
 
         game2.getJoystick().right();
-        game2.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +
@@ -719,7 +713,7 @@ public class SingleTest {
                 "☼####☼\n" +
                 "☼☼☼☼☼☼\n");
 
-        game2.tick();
+        field.tick();
 
         atGame1("☼☼☼☼☼☼\n" +
                 "☼    ☼\n" +

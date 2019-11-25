@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -19,20 +19,52 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-function initLeadersTable(contextPath, playerName, code, onSetup, onDrawItem){
+function initLeadersTable(contextPath, playerName, code, onDrawItem, onParseValue){
 
     var leaderboard = $("#leaderboard");
     leaderboard.show();
 
-    function getFirstValue(data) {
-        return data[Object.keys(data)[0]];
+    function getAllValues(data) {
+        var result = {};
+        var players = Object.keys(data);
+        for (var index in players) {
+            var player = players[index];
+            var scores = data[player].scores;
+            var scoresPlayers = Object.keys(scores);
+            for (var index2 in scoresPlayers) {
+                var player2 = scoresPlayers[index2];
+                var score = scores[player2];
+                result[player2] = score;
+            }
+        }
+        return result;
+    }
+
+    function getReadableNames(data) {
+        var result = {};
+        var players = Object.keys(data);
+        for (var index in players) {
+            var player = players[index];
+            var names = data[player].heroesData.readableNames;
+            var namesPlayers = Object.keys(names);
+            for (var index2 in namesPlayers) {
+                var player2 = namesPlayers[index2];
+                var name = names[player2];
+                result[player2] = name;
+            }
+        }
+        return result;
     }
 
     function sortByScore(data) {
         var vals = new Array();
 
         for (i in data) {
-            vals.push([i, data[i]])
+            var score = data[i];
+            if (!!onParseValue) {
+                score = onParseValue(score);
+            }
+            vals.push([i, score, data[i]])
         }
         vals = vals.sort(function(a, b) {
             return b[1] - a[1];
@@ -41,10 +73,18 @@ function initLeadersTable(contextPath, playerName, code, onSetup, onDrawItem){
         var result = new Object();
 
         for (i in vals) {
-            result[vals[i][0]] = vals[i][1];
+            result[vals[i][0]] = vals[i][2];
         }
 
         return result;
+    }
+
+    function fromEmail(email) {
+        return email.split('@')[0];
+    }
+
+    function toName(email) {
+        return fromEmail(email.replace(' ', '&nbsp;'));
     }
 
     function drawLeaderTable(data) {
@@ -52,20 +92,20 @@ function initLeadersTable(contextPath, playerName, code, onSetup, onDrawItem){
             $("#table-logs-body").empty();
             return;
         }
-        data = getFirstValue(data);
-        data = data.scores;
-        if (data == null) {
+        var scores = getAllValues(data);
+        var readableNames = getReadableNames(data);
+        if (scores == null) {
             $("#table-logs-body").empty();
             return;
         }
 
-        data = sortByScore(data);
+        scores = sortByScore(scores);
 
         if (!onDrawItem) {
             onDrawItem = function(count, you, link, name, score) {
                 return '<tr>' +
                         '<td>' + count + '</td>' +
-                        '<td>' + you + '<a href="' + link + '">' + name + '</a></td>' +
+                        '<td>' + '<a href="' + link + '">' + name + '</a>' + you + '</td>' +
                         '<td class="center">' + score + '</td>' +
                     '</tr>';
             }
@@ -73,16 +113,16 @@ function initLeadersTable(contextPath, playerName, code, onSetup, onDrawItem){
 
         var tbody = '';
         var count = 0;
-        $.each(data, function (email, score) {
-            var name = email.substring(0, email.indexOf('@'));
-            if (name == 'chatLog') {
-                return;
+        $.each(scores, function (email, score) {
+            var name = toName(readableNames[email]);
+
+            var you = '';
+            if (!!playerName) {
+                you = (name == toName(readableNames[playerName]))?"*":"";
             }
 
-            var you = (name == playerName)?"=> ":"";
-
             count++;
-            var link = contextPath + 'board/player/' + email + ((!!code)?('?code=' + code):"");
+            var link = contextPath + '/board/player/' + email + ((!!code)?('?code=' + code):"");
             tbody += onDrawItem(count, you, link, name, score);
 
         });
@@ -105,8 +145,4 @@ function initLeadersTable(contextPath, playerName, code, onSetup, onDrawItem){
             drawLeaderTable(data);
         }
     });
-
-    if (!!onSetup) {
-        onSetup(leaderboard);
-    }
 };

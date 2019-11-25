@@ -4,7 +4,7 @@ package com.codenjoy.dojo.loderunner.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,109 +23,36 @@ package com.codenjoy.dojo.loderunner.services;
  */
 
 
-import com.codenjoy.dojo.client.WebSocketRunner;
-import com.codenjoy.dojo.loderunner.client.ai.ApofigSolver;
+import com.codenjoy.dojo.client.ClientBoard;
+import com.codenjoy.dojo.client.Solver;
+import com.codenjoy.dojo.loderunner.client.Board;
+import com.codenjoy.dojo.loderunner.client.ai.AISolver;
 import com.codenjoy.dojo.loderunner.model.*;
 import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.hero.GameMode;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.MultiplayerType;
 import com.codenjoy.dojo.services.settings.Parameter;
-import com.codenjoy.dojo.services.settings.Settings;
-import com.codenjoy.dojo.services.settings.SettingsImpl;
 
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
 
-/**
- * User: oleksandr.baglai
- * Date: 8/17/13
- * Time: 7:47 PM
- */
 public class GameRunner extends AbstractGameType implements GameType {
 
-    public final static boolean SINGLE = GameMode.SINGLE_MODE;
     private final Level level;
-    private Loderunner loderunner;
 
     public GameRunner() {
         new Scores(0, settings);  // TODO сеттринги разделены по разным классам, продумать архитектуру
-        level = new LevelImpl(
-                "☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼" +
-                "☼          $      »           ~~~~~~~~~           ~~~~~~~☼" +
-                "☼##H########################H#H $     H##########H       ☼" +
-                "☼  H$              $        H######H  H     $    H#☼☼☼☼☼#☼" +
-                "☼H☼☼#☼☼H    H#########H $   H#     H#####H#####H##  ~~~~~☼" +
-                "☼H $   H    H         H#####H#  $  H ~   H     H  ~~     ☼" +
-                "☼H#☼#☼#H    H         H  ~~~ #####H#     H     H    ~~   ☼" +
-                "☼H  ~  H~~~~H~~~~~~   H           H   H######H##      ~~$☼" +
-                "☼H     H    H  $  H###☼☼☼☼☼☼H☼    H~~~H      H          #☼" +
-                "☼H     H $  H#####H         H     H      H#########H     ☼" +
-                "☼☼###☼##☼##☼H         H###H##    H##     H#   $   ##     ☼" +
-                "☼☼###☼~~~~  H         H   H######H######### H###H #####H#☼" +
-                "☼☼$  ☼ »    H   ~~~~~~H   H $    H          H#$#H   $  H ☼" +
-                "☼########H###☼☼☼☼     H  ############   ###### ##########☼" +
-                "☼        H     $      H        $             $           ☼" +
-                "☼H##########################H########~~~####H############☼" +
-                "☼H   $             ~~~      H               H    $       ☼" +
-                "☼#######H#######            H###~~~~      ############H  ☼" +
-                "☼       H~~~~~~~~~~     $   H     »                   H  ☼" +
-                "☼       H    ##H   #######H##########~~~~~~~H######## H  ☼" +
-                "☼       H    ##H          H                 H   $$$$  H  ☼" +
-                "☼##H#####    ########H#######~~~~  ~~~#########~~~~~  H  ☼" +
-                "☼  H         $       H            $               ~~~~H  ☼" +
-                "☼#########H##########H        #☼☼☼☼☼☼#   ☼☼☼☼☼☼☼      H  ☼" +
-                "☼         H          H        ~      ~   $    $       H  ☼" +
-                "☼☼☼     $ H~~~~~~~~~~H   $     ######   ###########   H  ☼" +
-                "☼    H######         #######H     $     ~~~~~~~~~~~~~~H  ☼" +
-                "☼H☼  H  ◄        $          H  H####H        $        H  ☼" +
-                "☼H☼☼#☼☼☼☼☼☼☼☼☼☼☼☼###☼☼☼☼☼☼☼☼H☼☼☼☼☼☼☼☼#☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼#☼" +
-                "☼H       $    ~~H~~~~☼☼☼☼☼☼☼H☼☼☼☼☼☼☼    $  H   ~~~~~~~~~H☼" +
-                "☼H~~~~  ######  H    $    H☼H☼H $      ####H  ☼  $$$    H☼" +
-                "☼H      $       ##H#######H☼H☼H######H     ###☼☼☼☼☼☼☼☼ ~H☼" +
-                "☼H#########     $ H    ~~~H☼H☼H~~~$  H~~~~~ ##  $$$   ~ H☼" +
-                "☼H        ###H####H##H     ☼H☼       H     ###☼☼☼☼☼☼ ~  H☼" +
-                "☼H           H      #######☼H☼#####  H#####   ~~~~~~~ ~ H☼" +
-                "☼~~~~~~~~~~~~H       H~~~~~☼H☼~~~~~  H    $        ~ ~  H☼" +
-                "☼     H    »  $      H     ☼H☼     ##########H          H☼" +
-                "☼ ### #############H H#####☼H☼    $          H ######## H☼" +
-                "☼H                 H       ☼H☼#######        H   $      H☼" +
-                "☼H#####    $    H##H####      $         ###H#########   H☼" +
-                "☼H      H######### H   ############        H    $       H☼" +
-                "☼H##    H  $       H~~~~~~$     $          H #######H## H☼" +
-                "☼~~~~#####H#   ~~~~H         ########H     H        H   H☼" +
-                "☼         H        H  $   ~~~~~~~~   H     H        H   H☼" +
-                "☼   ########H    ######H##        ##############    H   H☼" +
-                "☼$          H  $       H       $~~~~~           ##H#####H☼" +
-                "☼H    ###########H     H#####H         H##H       H     H☼" +
-                "☼H###            H     H     ###########  ##H###  H     H☼" +
-                "☼H  ######  ##H######  H  $            $    H   ##H###  H☼" +
-                "☼H     $      H ~~~~~##H###H »   #########H##           H☼" +
-                "☼    H########H#       H   ######         H  $          H☼" +
-                "☼ ###H  $     H         ~~~~~H      ##H###H####H###     H☼" +
-                "☼    H########H#########     H        H        H        H☼" +
-                "☼H   H      $                H        H        H  $     H☼" +
-                "☼H  ####H######         #####H########H##      H#####   H☼" +
-                "☼H      H      H#######H         $             H        H☼" +
-                "☼##############H   $   H#################################☼" +
-                "☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼");
-    }
-
-    private Loderunner newGame() {
-        return new Loderunner(level, new RandomDice());
+        level = new LevelImpl(getMap());
     }
 
     @Override
-    public PlayerScores getPlayerScores(int score) {
-        return new Scores(score, settings);
+    public PlayerScores getPlayerScores(Object score) {
+        return new Scores((Integer) score, settings);
     }
 
     @Override
-    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
-        if (!SINGLE || loderunner == null) {
-            loderunner = newGame();
-        }
-
-        Game game = new Single(loderunner, listener, factory);
-        game.newGame();
-        return game;
+    public GameField createGame(int levelNumber) {
+        return new Loderunner(level, getDice());
     }
 
     @Override
@@ -144,13 +71,26 @@ public class GameRunner extends AbstractGameType implements GameType {
     }
 
     @Override
-    public boolean isSingleBoard() {
-        return SINGLE;
+    public Class<? extends Solver> getAI() {
+        return AISolver.class;
     }
 
     @Override
-    public boolean newAI(String aiName) {
-        ApofigSolver.start(aiName, WebSocketRunner.Host.REMOTE_LOCAL);
-        return true;
+    public Class<? extends ClientBoard> getBoard() {
+        return Board.class;
+    }
+
+    @Override
+    public MultiplayerType getMultiplayerType() {
+        return MultiplayerType.MULTIPLE;
+    }
+
+    @Override
+    public GamePlayer createPlayer(EventListener listener, String playerName) {
+        return new Player(listener);
+    }
+
+    protected String getMap() {
+        return Level1.get();
     }
 }

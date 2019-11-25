@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -51,7 +51,11 @@ public interface Point extends Comparable<Point> {
     /**
      * @return cloned object.
      */
-    PointImpl copy();
+    Point copy();
+
+    void setX(int x);
+
+    void setY(int y);
 
     /**
      * @return true if points has equals X and Y coordinates.
@@ -88,4 +92,22 @@ public interface Point extends Comparable<Point> {
      * @param delta Increment.
      */
     void change(Point delta);
+
+    /**
+     * Changes current point in given direction
+     * @param direction one of 8 directions
+     */
+    void change(QDirection direction);
+
+    /**
+     * Changes current point in given direction
+     * @param direction one of 4 directions
+     */
+    void change(Direction direction);
+
+    /**
+     * @param offset
+     * @return this.x - offset.x, this.y - offset.y
+     */
+    Point relative(Point offset);
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,11 +29,6 @@ import com.codenjoy.dojo.services.State;
 import static com.codenjoy.dojo.bomberman.model.Elements.DEAD_MEAT_CHOPPER;
 import static com.codenjoy.dojo.bomberman.model.Elements.MEAT_CHOPPER;
 
-/**
- * User: oleksandr.baglai
- * Date: 3/8/13
- * Time: 8:22 PM
- */
 public class MeatChopper extends Wall implements State<Elements, Player> {
 
     private Direction direction;

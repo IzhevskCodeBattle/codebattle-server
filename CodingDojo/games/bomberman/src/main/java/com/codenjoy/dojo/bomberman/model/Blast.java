@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -28,11 +28,6 @@ import com.codenjoy.dojo.services.State;
 
 import static com.codenjoy.dojo.bomberman.model.Elements.BOOM;
 
-/**
- * User: sanja
- * Date: 20.04.13
- * Time: 15:46
- */
 public class Blast extends PointImpl implements State<Elements, Player> {
 
     private Hero bomberman;

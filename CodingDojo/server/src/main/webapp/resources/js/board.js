@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -20,8 +20,32 @@
  * #L%
  */
 
-function loadPlayers(onLoad) {
-    loadData('rest/game/' + game.gameName + '/players', function(players) {
+pages = pages || {};
+
+pages.board = function() {
+    game.gameName = getSettings('gameName');
+    game.playerName = getSettings('playerName');
+    game.readableName = getSettings('readableName');
+    game.code = getSettings('code');
+    game.allPlayersScreen = getSettings('allPlayersScreen');
+    game.contextPath = getSettings('contextPath');
+
+    initBoardPage(game, initBoardComponents);
+    initHotkeys();
+}
+
+function initBoardPage(game, onLoad) {
+    loadData('/rest/player/' + game.playerName + '/' + game.code + '/wantsToPlay/' + game.gameName, function(gameData) {
+        game.contextPath = gameData.context;
+        game.multiplayerType = gameData.gameType.multiplayerType;
+        game.boardSize = gameData.gameType.boardSize;
+        game.registered = gameData.registered;
+
+        game.isGraphicOrTextGame = gameData.sprites.length > 0;
+        game.spriteElements = gameData.sprites;
+        game.alphabet = gameData.alphabet;
+
+        var players = gameData.players;
         if (game.allPlayersScreen) {
             game.players = players;
         } else {
@@ -32,99 +56,62 @@ function loadPlayers(onLoad) {
             }
         }
 
-        onLoad(game.players);
-    });
-}
-
-function initBoardPage(game) {
-    loadContext(function(events, ctx) {
-        loadData('rest/game/' + game.gameName + '/type', function(playerGameInfo) {
-            game.singleBoardGame = playerGameInfo.singleBoard;
-            game.boardSize = playerGameInfo.boardSize;
-
-            loadData('rest/player/' + game.playerName + '/check/' + game.code, function(registered) {
-                game.registered = registered;
-
-                loadData('rest/sprites/' + game.gameName + '/exists', function(isGraphicOrTextGame) {
-                    game.isGraphicOrTextGame = isGraphicOrTextGame;
-
-                    loadPlayers(function(players) {
-                        initBoardComponents(game);
-                    });
-                });
-            });
-        });
+        if (!!onLoad) {
+            onLoad(game);
+        }
     });
 }
 
 function initBoardComponents(game) {
     initBoards(game.players, game.allPlayersScreen,
-            game.gameName, game.contextPath);
+            game.gameName, game.playerName, game.contextPath);
 
-    if (game.isGraphicOrTextGame) {
+    if (typeof initCanvasesGame == 'function') {
+        initCanvasesGame(game.contextPath, game.players, game.allPlayersScreen,
+                    game.multiplayerType, game.boardSize,
+                    game.gameName, game.enablePlayerInfo,
+                    game.enablePlayerInfoLevel,
+                    game.sprites, game.alphabet, game.spriteElements,
+                    game.drawBoard);
+    } else if (game.isGraphicOrTextGame) {
         initCanvases(game.contextPath, game.players, game.allPlayersScreen,
-                    game.singleBoardGame, game.boardSize,
-                    game.gameName, game.enablePlayerInfo, game.sprites);
+                    game.multiplayerType, game.boardSize,
+                    game.gameName, game.enablePlayerInfo,
+                    game.enablePlayerInfoLevel,
+                    game.sprites, game.alphabet, game.spriteElements,
+                    game.drawBoard);
     } else {
         initCanvasesText(game.contextPath, game.players, game.allPlayersScreen,
-                        game.singleBoardGame, game.boardSize,
-                        game.gameName, game.enablePlayerInfo);
+                        game.multiplayerType, game.boardSize,
+                        game.gameName, game.enablePlayerInfo,
+                        game.enablePlayerInfoLevel, game.drawBoard);
     }
 
     if (game.enableDonate) {
         initDonate(game.contextPath);
     }
 
-    initJoystick(game.playerName, game.registered,
-            game.code, game.contextPath,
-            game.enableAlways);
+    if (typeof initJoystick == 'function') {
+        if (!!game.playerName) {
+            initJoystick(game.playerName, game.registered,
+                game.code, game.contextPath);
+        }
+    }
 
     if (game.enableLeadersTable) {
-        initLeadersTable(game.contextPath, game.playerName, game.code,
-                function(leaderboard) {
-                    if (!!$("#glasses")) {
-                        $(window).resize(resize);
-                        resize();
-                    }
-                    function resize() {
-                        var width = leaderboard.width();
-                        var margin = 30;
-
-                        $("#glasses").width($(window).width() - width - 3*margin)
-                                .css({ marginLeft: margin, marginTop: margin });
-
-                        leaderboard.width(width).css({ position: "absolute",
-                                        marginLeft: 0, marginTop: margin,
-                                        top: 0, left: $("#glasses").width()});
-                    }
-                });
+        initLeadersTable(game.contextPath, game.playerName, game.code);
     }
 
-    var gameInfo = '<h3><a href="' + game.contextPath + 'resources/help/' + game.gameName + '.html" target="_blank">How to play ' + game.gameName + '</a></h3>';
-
-    if (game.enableChat) {
-        initChat(game.playerName, game.registered,
-                game.code, game.contextPath,
-                game.gameName);
-
-        if (game.enableInfo) {
-            $("#chat-container").prepend(gameInfo);
-        }
-    } else {
-        if (game.enableInfo) {
-            $("#leaderboard").append(gameInfo);
-        }
+    if (!game.enableForkMe) {
+        $("#fork-me").hide();
     }
+
     if (!game.enableInfo) {
-        $("#fork-me").hide(gameInfo);
-    }
-
-    if (game.enableHotkeys) {
-        initHotkeys(game.gameName, game.contextPath);
+        $("#how-to-play").hide();
     }
 
     if (game.enableAdvertisement) {
-        initAdvertisement();
+        initAdvertisement(game.contextPath);
     }
 
     if (game.showBody) {
@@ -139,5 +126,9 @@ function initBoardComponents(game) {
         if (!!game.onBoardPageLoad) {
             game.onBoardPageLoad();
         }
+    }
+
+    if (typeof setupMouseWheelZoom == 'function') {
+        setupMouseWheelZoom();
     }
 }

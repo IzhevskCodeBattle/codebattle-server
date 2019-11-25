@@ -4,7 +4,7 @@ package com.codenjoy.dojo.pong.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -47,11 +47,7 @@ public class Panel extends PointImpl implements State<Elements, Player>, Barrier
 
     @Override
     public Elements state(Player player, Object... alsoAtPoint) {
-        if (owner == player.getHero()) {
-            return Elements.HERO;
-        } else {
-            return Elements.PANEL;
-        }
+        return (owner == player.getHero()) ? Elements.HERO : Elements.PANEL;
     }
 
 }

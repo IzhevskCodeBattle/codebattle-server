@@ -4,7 +4,7 @@ package com.codenjoy.dojo.moebius.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,7 +23,7 @@ package com.codenjoy.dojo.moebius.model;
  */
 
 
-import com.codenjoy.dojo.services.CharElements;
+import com.codenjoy.dojo.services.printer.CharElements;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.Point;
 
@@ -31,7 +31,7 @@ import static com.codenjoy.dojo.services.PointImpl.pt;
 
 public enum Elements implements CharElements {
 
-    LEFT_UP('╝', pt(-1, 0), pt(0, 1)), // TODO Тут тоже зеркалирование по Y
+    LEFT_UP('╝', pt(-1, 0), pt(0, 1)),
     UP_RIGHT('╚', pt(0, 1), pt(1, 0)),
     RIGHT_DOWN('╔', pt(1, 0), pt(0, -1)),
     DOWN_LEFT('╗', pt(0, -1), pt(-1, 0)),

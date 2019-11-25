@@ -4,7 +4,7 @@ package com.codenjoy.dojo.a2048.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,11 +23,15 @@ package com.codenjoy.dojo.a2048.services;
  */
 
 
-import com.codenjoy.dojo.a2048.client.ai.ApofigSolver;
+import com.codenjoy.dojo.a2048.client.Board;
+import com.codenjoy.dojo.a2048.client.ai.AISolver;
 import com.codenjoy.dojo.a2048.model.*;
-import com.codenjoy.dojo.client.WebSocketRunner;
+import com.codenjoy.dojo.client.ClientBoard;
+import com.codenjoy.dojo.client.Solver;
 import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.hero.GameMode;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.MultiplayerType;
 import com.codenjoy.dojo.services.settings.Parameter;
 import com.codenjoy.dojo.services.settings.Settings;
 
@@ -36,24 +40,19 @@ import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
 public class GameRunner extends AbstractGameType implements GameType {
 
     private Level level;
-    private A2048 game;
 
     public GameRunner() {
         level = new LevelImpl();
     }
 
     @Override
-    public PlayerScores getPlayerScores(int score) {
-        return new Scores(score);
+    public PlayerScores getPlayerScores(Object score) {
+        return new Scores((Integer) score);
     }
 
     @Override
-    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
-        game = new A2048(level, new RandomDice());
-
-        Game game = new Single(this.game, listener, factory);
-        game.newGame();
-        return game;
+    public GameField createGame(int levelNumber) {
+        return new A2048(level, getDice());
     }
 
     @Override
@@ -77,13 +76,22 @@ public class GameRunner extends AbstractGameType implements GameType {
     }
 
     @Override
-    public boolean isSingleBoard() {
-        return GameMode.NOT_SINGLE_MODE;
+    public MultiplayerType getMultiplayerType() {
+        return MultiplayerType.SINGLE;
     }
 
     @Override
-    public boolean newAI(String aiName) {
-        ApofigSolver.start(aiName, WebSocketRunner.Host.REMOTE_LOCAL);
-        return true;
+    public GamePlayer createPlayer(EventListener listener, String playerName) {
+        return new Player(listener);
+    }
+
+    @Override
+    public Class<? extends Solver> getAI() {
+        return AISolver.class;
+    }
+
+    @Override
+    public Class<? extends ClientBoard> getBoard() {
+        return Board.class;
     }
 }

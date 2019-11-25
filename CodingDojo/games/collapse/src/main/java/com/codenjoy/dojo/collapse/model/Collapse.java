@@ -4,7 +4,7 @@ package com.codenjoy.dojo.collapse.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,14 +24,17 @@ package com.codenjoy.dojo.collapse.model;
 
 
 import com.codenjoy.dojo.collapse.services.Events;
-import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.joystick.DirectionActJoystick;
+import com.codenjoy.dojo.services.Dice;
+import com.codenjoy.dojo.services.Direction;
+import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.printer.BoardReader;
 
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 
-public class Collapse implements Tickable, Field {
+import static com.codenjoy.dojo.services.PointImpl.pt;
+
+public class Collapse implements Field {
 
     private final Dice dice;
     private Container<Point, Cell> cells;
@@ -39,9 +42,6 @@ public class Collapse implements Tickable, Field {
 
     private final int size;
     private Container<Point, Wall> walls;
-
-    private Point act;
-    private Direction direction;
 
     private boolean gameOver;
 
@@ -59,7 +59,10 @@ public class Collapse implements Tickable, Field {
         fall();
         fillNew();
 
-        if (act != null && direction != null) {
+        Hero hero = hero();
+        Point act = hero.getAct();
+        Direction direction = hero.getDirection();
+        if (hero.getAct() != null && direction != null) {
             Cell cell = cells.get(act);
             if (cell == null) return;
 
@@ -72,21 +75,24 @@ public class Collapse implements Tickable, Field {
             checkClear(cell, cellTo);
         }
 
-        act = null;
-        direction = null;
+        hero.tick();
+    }
+
+    private Hero hero() {
+        return player.getHero();
     }
 
     private void fall() {
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
-                Point pt = PointImpl.pt(x, y);
+                Point pt = pt(x, y);
                 if (walls.contains(pt)) continue;
 
                 Cell cell = cells.get(pt);
                 if (cell == null) {
                     Cell cell2 = null;
                     for (int y2 = y + 1; y2 < size; y2++) {
-                        Point pt2 = PointImpl.pt(x, y2);
+                        Point pt2 = pt(x, y2);
                         if (walls.contains(pt2)) break;
 
                         cell2 = cells.get(pt2);
@@ -96,7 +102,7 @@ public class Collapse implements Tickable, Field {
                     if (cell2 == null) break;
 
                     cells.remove(cell2);
-                    Cell newCell = new Cell(PointImpl.pt(x, y), cell2.getNumber());
+                    Cell newCell = new Cell(pt(x, y), cell2.getNumber());
                     cells.add(newCell);
                 }
             }
@@ -112,7 +118,7 @@ public class Collapse implements Tickable, Field {
         while (!toCheck.isEmpty()) {
             Cell current = toCheck.removeLast();
 
-            for (Direction dir : Direction.values()) {
+            for (Direction dir : Direction.getValues()) {
                 Point pt = dir.change(current);
                 Cell next = cells.get(pt);
                 if (next == null) continue;
@@ -143,7 +149,7 @@ public class Collapse implements Tickable, Field {
     private void fillNew() {
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
-                Point pt = PointImpl.pt(x, y);
+                Point pt = pt(x, y);
                 if (walls.contains(pt)) continue;
 
                 Cell cell = cells.get(pt);
@@ -155,7 +161,8 @@ public class Collapse implements Tickable, Field {
         }
     }
 
-    public int getSize() {
+    @Override
+    public int size() {
         return size;
     }
 
@@ -173,57 +180,13 @@ public class Collapse implements Tickable, Field {
         return cells.values();
     }
 
+    @Override
     public boolean isGameOver() {
         return gameOver;
     }
 
     public Collection<Wall> getWalls() {
         return walls.values();
-    }
-
-    @Override
-    public Joystick getJoystick() {
-        return new DirectionActJoystick() {
-            @Override
-            public void down() {
-                direction = Direction.DOWN;
-            }
-
-            @Override
-            public void up() {
-                direction = Direction.UP;
-            }
-
-            @Override
-            public void left() {
-                direction = Direction.LEFT;
-            }
-
-            @Override
-            public void right() {
-                direction = Direction.RIGHT;
-            }
-
-            @Override
-            public void act(int... p) {
-                if (gameOver) return;
-
-                if (p.length != 2) {
-                    return;
-                }
-
-                if (check(p[0])) return;
-                if (check(p[1])) return;
-
-                int x = p[0];
-                int y = p[1];
-                act = PointImpl.pt(x, y);
-            }
-        };
-    }
-
-    private boolean check(int i) {
-        return (i >= size || i < 0);
     }
 
     public BoardReader reader() {
@@ -237,10 +200,10 @@ public class Collapse implements Tickable, Field {
 
             @Override
             public Iterable<? extends Point> elements() {
-                List<Point> result = new LinkedList<Point>();
-                result.addAll(Collapse.this.walls.values());
-                result.addAll(Collapse.this.cells.values());
-                return result;
+                return new LinkedList<Point>(){{
+                    addAll(Collapse.this.walls.values());
+                    addAll(Collapse.this.cells.values());
+                }};
             }
         };
     }

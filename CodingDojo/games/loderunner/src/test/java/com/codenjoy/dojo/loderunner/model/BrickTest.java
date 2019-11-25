@@ -4,7 +4,7 @@ package com.codenjoy.dojo.loderunner.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,18 +26,14 @@ package com.codenjoy.dojo.loderunner.model;
 import com.codenjoy.dojo.services.PointImpl;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
+import static com.codenjoy.dojo.services.PointImpl.pt;
+import static org.junit.Assert.assertEquals;
 
-/**
- * User: sanja
- * Date: 17.12.13
- * Time: 15:21
- */
 public class BrickTest {
 
     @Test
     public void test() {
-        Brick brick = new Brick(new PointImpl(0, 0));
+        Brick brick = new Brick(pt(0, 0));
 
         assertEquals(Elements.BRICK, brick.state(null));
 

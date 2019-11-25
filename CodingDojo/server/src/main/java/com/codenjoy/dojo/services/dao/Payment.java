@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.dao;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -33,7 +33,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
 
-@Component
 public class Payment {
 
     private CrudConnectionThreadPool pool;
@@ -53,16 +52,8 @@ public class Payment {
     public boolean canPlay(final String email, final String gameType) {
         return pool.select("SELECT till FROM payments WHERE email = ? AND game_type = ?;",
                 new Object[]{email, gameType},
-                new ObjectMapper<Boolean>() {
-                    @Override
-                    public Boolean mapFor(ResultSet resultSet) throws SQLException {
-                        if (resultSet.next()) {
-                            return resultSet.getLong("till") > Calendar.getInstance().getTime().getTime();
-                        } else {
-                            return false;
-                        }
-                    }
-                }
+                rs -> rs.next() && rs.getLong("till")
+                        > Calendar.getInstance().getTime().getTime()
         );
     }
 
@@ -86,16 +77,7 @@ public class Payment {
     public long till(String email, String gameType) {
         return pool.select("SELECT till FROM payments WHERE email = ? AND game_type = ?;",
                 new Object[]{email, gameType},
-                new ObjectMapper<Long>() {
-                    @Override
-                    public Long mapFor(ResultSet resultSet) throws SQLException {
-                        if (resultSet.next()) {
-                            return resultSet.getLong("till");
-                        } else {
-                            return 0L;
-                        }
-                    }
-                }
+                rs -> rs.next() ? rs.getLong("till") : 0L
         );
     }
 }

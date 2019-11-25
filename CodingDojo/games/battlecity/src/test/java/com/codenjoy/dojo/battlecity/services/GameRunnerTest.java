@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,24 +25,22 @@ package com.codenjoy.dojo.battlecity.services;
 
 import com.codenjoy.dojo.services.EventListener;
 import com.codenjoy.dojo.services.GameType;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
+import com.codenjoy.dojo.utils.TestUtils;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-import static junit.framework.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
 
-/**
- * User: sanja
- * Date: 14.12.13
- * Time: 7:41
- */
 public class GameRunnerTest {
     @Test
     public void testNoNPE() {
         GameType gameType = new GameRunner();
         assertEquals(34, gameType.getBoardSize().getValue().intValue());
 
-        gameType.newGame(mock(EventListener.class), new PrinterFactoryImpl(), null);
+        TestUtils.buildGame(gameType,
+                Mockito.mock(EventListener.class),
+                new PrinterFactoryImpl());
         assertEquals(34, gameType.getBoardSize().getValue().intValue());
     }
 }

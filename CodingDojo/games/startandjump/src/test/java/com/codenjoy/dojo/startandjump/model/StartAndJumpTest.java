@@ -4,7 +4,7 @@ package com.codenjoy.dojo.startandjump.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,28 +24,22 @@ package com.codenjoy.dojo.startandjump.model;
 
 
 import com.codenjoy.dojo.startandjump.services.HeroStatus;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.startandjump.model.StartAndJump;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
 import com.codenjoy.dojo.utils.TestUtils;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
-import junit.framework.Assert;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-import static org.mockito.Matchers.anyInt;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
-/**
- * User: sanja
- * Date: 17.12.13
- * Time: 4:47
- */
 public class StartAndJumpTest {
 
     private StartAndJump game;

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.dao;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,23 +24,16 @@ package com.codenjoy.dojo.services.dao;
 
 
 import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.chat.ChatMessage;
-import com.codenjoy.dojo.services.chat.ChatServiceImpl;
-import com.codenjoy.dojo.services.chat.ChatServiceImplTest;
-import com.codenjoy.dojo.services.dao.PlayerGameSaver;
 import com.codenjoy.dojo.services.jdbc.SqliteConnectionThreadPoolFactory;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -51,7 +44,15 @@ public class PlayerGameSaverTest {
 
     @Before
     public void removeAll() {
-        saver = new PlayerGameSaver(new SqliteConnectionThreadPoolFactory("target/saves.db" + new Random().nextInt()));
+        String dbFile = "target/saves.db" + new Random().nextInt();
+        saver = new PlayerGameSaver(
+                new SqliteConnectionThreadPoolFactory(dbFile,
+                        new ContextPathGetter() {
+                            @Override
+                            public String getContext() {
+                                return "context";
+                            }
+                        }));
     }
 
     @After
@@ -64,9 +65,10 @@ public class PlayerGameSaverTest {
         PlayerScores scores = getScores(10);
         Information info = getInfo("Some info");
         GameService gameService = getGameService(scores);
-        Player player = new Player("vasia", "http://127.0.0.1:8888", PlayerTest.mockGameType("game"), scores, info, Protocol.HTTP);
+        Player player = new Player("vasia", "http://127.0.0.1:8888", PlayerTest.mockGameType("game"), scores, info);
 
-        saver.saveGame(player, "{'key':'value'}");
+        long now = System.currentTimeMillis();
+        saver.saveGame(player, "{'key':'value'}", now);
 
         PlayerSave loaded = saver.loadGame("vasia");
         assertEqualsProperties(player, loaded);
@@ -109,109 +111,13 @@ public class PlayerGameSaverTest {
     }
 
     @Test
-    public void shouldWorks_saveLoadChat() {
-        ChatServiceImpl chat = new ChatServiceImpl();
-        LinkedList<ChatMessage> messages = new LinkedList<ChatMessage>();
-        chat.setMessages(messages);
-        setTime(0);
-        chat.chat("apofig", "message1");
-        chat.chat("apofig", "message2");
-        chat.chat("apofig", "message3");
-        chat.chat("apofig", "message4");
-        chat.chat("apofig", "message5");
-        chat.chat("apofig", "message6");
-        chat.chat("apofig", "message7");
-
-        saver.saveChat(chat.getMessages());
-        messages.clear();
-
-        List<ChatMessage> chatMessages = saver.loadChat();
-        chat.setMessages(chatMessages);
-
-        assertEquals("apofig, НЛО прилетело и украло ваше сообщение\n" +
-                        "[15:03] apofig: message6\n" +
-                        "[15:03] apofig: message5\n" +
-                        "[15:03] apofig: message4\n" +
-                        "[15:03] apofig: message3\n" +
-                        "[15:03] apofig: message2\n" +
-                        "[15:03] apofig: message1\n",
-                StringEscapeUtils.unescapeJava(chat.getChatLog()));
-    }
-
-    @Test
-    public void shouldWorks_saveLoadChat_caseRussian() {
-        ChatServiceImpl chat = new ChatServiceImpl();
-        chat.setMessages(new LinkedList<ChatMessage>());
-        setTime(0);
-        chat.chat("apofig", "Привет Мир!");
-
-        saver.saveChat(chat.getMessages());
-
-        chat.setMessages(saver.loadChat());
-
-        assertEquals("[15:03] apofig: Привет Мир!\n",
-                StringEscapeUtils.unescapeJava(chat.getChatLog()));
-    }
-
-    private void setTime(int second) {
-        ChatServiceImplTest.setNowDate(2013, 9, 25, 15, 3, second);
-    }
-
-    @Test
-    public void shouldSaleOnlyLastMessages_saveLoadChat() {
-        ChatServiceImpl chat = new ChatServiceImpl();
-        LinkedList<ChatMessage> messages = new LinkedList<ChatMessage>();
-        chat.setMessages(messages);
-
-        setTime(0);
-        chat.chat("apofig", "message1");
-
-        setTime(1);
-        chat.chat("apofig", "message2");
-
-        setTime(2);
-        chat.chat("apofig", "message3");
-        assertEquals(TIME + 2000, messages.getLast().getTime().getTime());
-
-        saver.saveChat(chat.getMessages());
-
-        setTime(3);
-        chat.chat("apofig", "message4");
-
-        setTime(4);
-        chat.chat("apofig", "message5");
-
-        setTime(5);
-        chat.chat("apofig", "message6");
-
-        setTime(6);
-        chat.chat("apofig", "message7");
-
-        setTime(7);
-        assertEquals(TIME + 6000, messages.getLast().getTime().getTime());
-
-        saver.saveChat(chat.getMessages());
-
-        List<ChatMessage> chatMessages = saver.loadChat();
-        chat.setMessages(chatMessages);
-
-        assertEquals("apofig, НЛО прилетело и украло ваше сообщение\n" +
-                        "[15:03] apofig: message6\n" +
-                        "[15:03] apofig: message5\n" +
-                        "[15:03] apofig: message4\n" +
-                        "[15:03] apofig: message3\n" +
-                        "[15:03] apofig: message2\n" +
-                        "[15:03] apofig: message1\n",
-                StringEscapeUtils.unescapeJava(chat.getChatLog()));
-    }
-
-    @Test
     public void shouldWorks_getSavedList() {
-        Player player1 = new Player("vasia", "http://127.0.0.1:8888", PlayerTest.mockGameType("game"), getScores(10), getInfo("Some other info"), Protocol.HTTP);
-        Player player2 = new Player("katia", "http://127.0.0.3:7777", PlayerTest.mockGameType("game"), getScores(20), getInfo("Some info"), Protocol.WS);
+        Player player1 = new Player("vasia", "http://127.0.0.1:8888", PlayerTest.mockGameType("game"), getScores(10), getInfo("Some other info"));
+        Player player2 = new Player("katia", "http://127.0.0.3:7777", PlayerTest.mockGameType("game"), getScores(20), getInfo("Some info"));
 
-        saver.saveGame(player1, "{'key':'value'}");
-        saver.saveGame(player2, "{'key':'value'}");
+        long now = System.currentTimeMillis();
+        saver.saveGame(player1, "{'key':'value'}", now);
+        saver.saveGame(player2, "{'key':'value'}", now);
 
         assertEquals("[vasia, katia]", saver.getSavedList().toString());
     }

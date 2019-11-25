@@ -4,7 +4,7 @@ package com.codenjoy.dojo.bomberman.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,12 +22,6 @@ package com.codenjoy.dojo.bomberman.services;
  * #L%
  */
 
-
-/**
- * User: oleksandr.baglai
- * Date: 3/9/13
- * Time: 7:22 PM
- */
 public enum Events {
     KILL_DESTROY_WALL, KILL_MEAT_CHOPPER, KILL_BOMBERMAN, KILL_OTHER_BOMBERMAN;
 }

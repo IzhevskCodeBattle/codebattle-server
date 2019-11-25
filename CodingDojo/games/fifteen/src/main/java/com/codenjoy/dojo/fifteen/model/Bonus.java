@@ -4,7 +4,7 @@ package com.codenjoy.dojo.fifteen.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,10 +22,6 @@ package com.codenjoy.dojo.fifteen.model;
  * #L%
  */
 
-
-/**
- * Created by Administrator on 02.08.2015.
- */
 public class Bonus {
     private int moveCount;
     private int number;
@@ -41,5 +37,10 @@ public class Bonus {
 
     public int getNumber() {
         return number;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("moveCount: %s, number: %s", moveCount, number);
     }
 }
